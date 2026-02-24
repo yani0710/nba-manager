@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { api } from '../../api/client';
+import { EmptyState, PageHeader, SkeletonCard } from '../../components/ui';
 import './Schedule.css';
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -62,11 +63,16 @@ export function Schedule() {
   }, [availableMonths, monthCursor, currentSave?.data?.currentDate]);
 
   if (!currentSave?.data?.career?.teamShortName) {
-    return <div className="calendar-page"><h2>Calendar</h2><p>No team selected for this career.</p></div>;
+    return (
+      <div className="calendar-page">
+        <PageHeader title="Schedule" subtitle="Calendar and matchday skipping tools." />
+        <EmptyState title="No team selected" description="Start a career with a team to view the schedule calendar." />
+      </div>
+    );
   }
 
-  if (loading) return <div>Loading schedule...</div>;
-  if (!monthCursor) return <div className="calendar-page"><h2>Calendar</h2><p>No games scheduled yet.</p></div>;
+  if (loading) return <SkeletonCard />;
+  if (!monthCursor) return <div className="calendar-page"><PageHeader title="Schedule" subtitle="Calendar and matchday skipping tools." /><EmptyState title="No games scheduled" description="No calendar games are available yet." /></div>;
 
   const [yearStr, monthStr] = monthCursor.split('-');
   const year = Number(yearStr);
@@ -112,8 +118,8 @@ export function Schedule() {
 
   return (
     <div className="calendar-page">
+      <PageHeader title={`Schedule - ${currentSave.data.career.teamShortName}`} subtitle="Browse the season calendar and jump to the next matchday." />
       <div className="calendar-toolbar">
-        <h2>Calendar - {currentSave.data.career.teamShortName}</h2>
         <div className="calendar-actions">
           <button className="calendar-btn" onClick={() => advanceDays(1)}>Skip 1 Day</button>
           <button className="calendar-btn" onClick={() => advanceDays(3)}>Skip 3 Days</button>

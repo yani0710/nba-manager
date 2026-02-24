@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { EmptyState, PageHeader } from '../../components/ui';
 import { useGameStore } from '../../state/gameStore';
 
 const FOCUS_OPTIONS = [
@@ -107,10 +108,10 @@ export function TrainingPlayers() {
   };
 
   return (
-    <div className="player-detail-page">
-      <h2>Individual Training</h2>
-      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(320px, 420px) 1fr', alignItems: 'start' }}>
-        <div className="player-info-card">
+    <div>
+      <PageHeader title="Individual Training" subtitle="Manage save-scoped player training plans with focus and intensity presets." />
+      <div className="ui-card-grid" style={{ gridTemplateColumns: 'repeat(12, minmax(0,1fr))' }}>
+        <div className="ui-card ui-col-4">
           <h3 style={{ marginTop: 0 }}>Create / Update Plan</h3>
           {toast && (
             <div
@@ -143,7 +144,8 @@ export function TrainingPlayers() {
           <select
             value={selectedPlayerId}
             onChange={(e) => setSelectedPlayerId(e.target.value)}
-            style={{ width: '100%', minHeight: 42, padding: '8px 10px', marginBottom: 16 }}
+            className="ui-select"
+            style={{ marginBottom: 16 }}
           >
             <option value="">Select player</option>
             {filteredPlayers.map((p) => (
@@ -160,7 +162,7 @@ export function TrainingPlayers() {
                 <button
                   key={opt.value}
                   type="button"
-                  className={focus === opt.value ? 'btn-primary' : 'btn-small'}
+                  className={focus === opt.value ? 'ui-btn ui-btn-primary' : 'ui-btn'}
                   onClick={() => setFocus(opt.value)}
                 >
                   {opt.label}
@@ -176,7 +178,7 @@ export function TrainingPlayers() {
                 <button
                   key={opt.value}
                   type="button"
-                  className={intensity === opt.value ? 'btn-primary' : 'btn-small'}
+                  className={intensity === opt.value ? 'ui-btn ui-btn-primary' : 'ui-btn'}
                   onClick={() => setIntensity(opt.value)}
                 >
                   {opt.label}
@@ -194,17 +196,17 @@ export function TrainingPlayers() {
             </div>
           )}
 
-          <button className="btn-primary" onClick={onSave} disabled={!selected || saving}>
+          <button className="ui-btn ui-btn-primary" onClick={onSave} disabled={!selected || saving}>
             {saving ? 'Saving...' : 'Save Player Plan'}
           </button>
         </div>
 
-        <div className="player-info-card" style={{ minHeight: 420 }}>
+        <div className="ui-card ui-col-8" style={{ minHeight: 420 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             <h3 style={{ marginTop: 0, marginBottom: 10 }}>Saved Plans</h3>
             <button
               type="button"
-              className="btn-small"
+              className="ui-btn"
               onClick={async () => {
                 setLoadingPlans(true);
                 try {
@@ -221,44 +223,44 @@ export function TrainingPlayers() {
           {loadingPlans ? (
             <p>Loading saved plans...</p>
           ) : playerTrainingPlans.length === 0 ? (
-            <p>No saved player plans yet.</p>
+            <EmptyState title="No saved player plans" description="Save a player plan and it will appear here for edit/delete." />
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 860 }}>
+            <div className="ui-table-shell">
+              <table className="ui-table" style={{ minWidth: 860 }}>
                 <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
-                    <th style={{ padding: '8px 6px' }}>Player</th>
-                    <th style={{ padding: '8px 6px' }}>Pos</th>
-                    <th style={{ padding: '8px 6px' }}>Focus</th>
-                    <th style={{ padding: '8px 6px' }}>Intensity</th>
-                    <th style={{ padding: '8px 6px' }}>Form</th>
-                    <th style={{ padding: '8px 6px' }}>OVR (B/C)</th>
-                    <th style={{ padding: '8px 6px' }}>Fatigue</th>
-                    <th style={{ padding: '8px 6px' }}>Updated</th>
-                    <th style={{ padding: '8px 6px' }}>Actions</th>
+                  <tr>
+                    <th>Player</th>
+                    <th>Pos</th>
+                    <th>Focus</th>
+                    <th>Intensity</th>
+                    <th className="ui-num">Form</th>
+                    <th className="ui-num">OVR (B/C)</th>
+                    <th className="ui-num">Fatigue</th>
+                    <th>Updated</th>
+                    <th className="ui-num">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {playerTrainingPlans.map((plan) => (
-                    <tr key={`${plan.saveId}-${plan.playerId}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                      <td style={{ padding: '10px 6px' }}>
+                    <tr key={`${plan.saveId}-${plan.playerId}`}>
+                      <td>
                         <div style={{ fontWeight: 600 }}>{plan.player?.name || '--'}</div>
                         <div style={{ fontSize: 12, opacity: 0.7 }}>{plan.player?.team?.shortName || '--'}</div>
                       </td>
-                      <td style={{ padding: '10px 6px' }}>{plan.player?.pos || '--'}</td>
-                      <td style={{ padding: '10px 6px' }}>{plan.focus}</td>
-                      <td style={{ padding: '10px 6px' }}>{plan.intensity}</td>
-                      <td style={{ padding: '10px 6px' }}>{plan.player?.form ?? '--'}</td>
-                      <td style={{ padding: '10px 6px' }}>
+                      <td>{plan.player?.pos || '--'}</td>
+                      <td>{plan.focus}</td>
+                      <td>{plan.intensity}</td>
+                      <td className="ui-num">{plan.player?.form ?? '--'}</td>
+                      <td className="ui-num">
                         {plan.player?.overallBase ?? '--'} / {plan.player?.overallCurrent ?? '--'}
                       </td>
-                      <td style={{ padding: '10px 6px' }}>{plan.player?.fatigue ?? '--'}</td>
-                      <td style={{ padding: '10px 6px' }}>{fmtDate(plan.updatedAt)}</td>
-                      <td style={{ padding: '10px 6px', whiteSpace: 'nowrap' }}>
-                        <button type="button" className="btn-small" onClick={() => onEdit(plan)} style={{ marginRight: 8 }}>
+                      <td className="ui-num">{plan.player?.fatigue ?? '--'}</td>
+                      <td>{fmtDate(plan.updatedAt)}</td>
+                      <td className="ui-num" style={{ whiteSpace: 'nowrap' }}>
+                        <button type="button" className="ui-btn" onClick={() => onEdit(plan)} style={{ marginRight: 8 }}>
                           Edit
                         </button>
-                        <button type="button" className="btn-small" onClick={() => onDelete(plan)}>
+                        <button type="button" className="ui-btn" onClick={() => onDelete(plan)}>
                           Delete
                         </button>
                       </td>

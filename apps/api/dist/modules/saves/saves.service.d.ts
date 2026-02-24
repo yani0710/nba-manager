@@ -22,6 +22,14 @@ type SavePayload = {
     training?: {
         rating: number;
         trend: "up" | "steady" | "down";
+        teamProfiles?: Array<{
+            id: string;
+            name: string;
+            intensity: "low" | "balanced" | "high";
+            focus: "shooting" | "defense" | "fitness" | "balanced";
+            restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+        }>;
+        activeTeamProfileId?: string;
         weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
             intensity: "low" | "balanced" | "high";
             focus: "shooting" | "defense" | "fitness" | "balanced";
@@ -327,6 +335,14 @@ export declare class SavesService {
             training?: {
                 rating: number;
                 trend: "up" | "steady" | "down";
+                teamProfiles?: Array<{
+                    id: string;
+                    name: string;
+                    intensity: "low" | "balanced" | "high";
+                    focus: "shooting" | "defense" | "fitness" | "balanced";
+                    restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+                }>;
+                activeTeamProfileId?: string;
                 weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
                     intensity: "low" | "balanced" | "high";
                     focus: "shooting" | "defense" | "fitness" | "balanced";
@@ -703,6 +719,8 @@ export declare class SavesService {
         trainingPlan?: Partial<NonNullable<SavePayload["trainingPlan"]>>;
         weekPlan?: NonNullable<NonNullable<SavePayload["training"]>["weekPlan"]>;
         playerPlans?: NonNullable<NonNullable<SavePayload["training"]>["playerPlans"]>;
+        teamProfiles?: NonNullable<NonNullable<SavePayload["training"]>["teamProfiles"]>;
+        activeTeamProfileId?: string;
     }): Promise<{
         success: boolean;
         trainingPlan: {
@@ -712,6 +730,14 @@ export declare class SavesService {
         training: {
             rating: number;
             trend: "up" | "steady" | "down";
+            teamProfiles?: Array<{
+                id: string;
+                name: string;
+                intensity: "low" | "balanced" | "high";
+                focus: "shooting" | "defense" | "fitness" | "balanced";
+                restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+            }>;
+            activeTeamProfileId?: string;
             weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
                 intensity: "low" | "balanced" | "high";
                 focus: "shooting" | "defense" | "fitness" | "balanced";
@@ -732,6 +758,14 @@ export declare class SavesService {
         training: {
             rating: number;
             trend: "up" | "steady" | "down";
+            teamProfiles: {
+                id: string;
+                name: string;
+                intensity: "low" | "balanced" | "high";
+                focus: "shooting" | "defense" | "fitness" | "balanced";
+                restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+            }[];
+            activeTeamProfileId: string | null;
             weekPlan: {
                 Mon: {
                     intensity: "low" | "balanced" | "high";
@@ -959,6 +993,14 @@ export declare class SavesService {
         training: {
             rating: number;
             trend: "up" | "steady" | "down";
+            teamProfiles?: Array<{
+                id: string;
+                name: string;
+                intensity: "low" | "balanced" | "high";
+                focus: "shooting" | "defense" | "fitness" | "balanced";
+                restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+            }>;
+            activeTeamProfileId?: string;
             weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
                 intensity: "low" | "balanced" | "high";
                 focus: "shooting" | "defense" | "fitness" | "balanced";

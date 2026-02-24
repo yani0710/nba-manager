@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../state/gameStore';
-import './Topbar.css';
 
-export function Topbar({ title }) {
+export function Topbar({ title, breadcrumbs, actions = null, isDark = true, onToggleTheme = () => {} }) {
   const { currentSave, teams, inbox } = useGameStore();
   const [now, setNow] = useState(() => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   const careerTeamCode = currentSave?.data?.career?.teamShortName;
@@ -16,15 +15,22 @@ export function Topbar({ title }) {
   }, []);
 
   return (
-    <header className="topbar">
-      <h2>{title}</h2>
-      <div className="topbar-meta">
-        <span>{currentSave?.data?.currentDate || 'No Date'}</span>
-        <span>{now}</span>
-        <span>Inbox: {inbox?.unread ?? currentSave?.data?.inboxUnread ?? 0}</span>
-        <div className="team-badge">
+    <header className="ui-topbar">
+      <div>
+        <div className="ui-topbar-breadcrumbs">{breadcrumbs}</div>
+        <h2>{title}</h2>
+      </div>
+      <div className="ui-topbar-right">
+        {actions}
+        <span className="ui-topbar-pill">{now}</span>
+        <span className="ui-topbar-pill">Inbox {inbox?.unread ?? currentSave?.data?.inboxUnread ?? 0}</span>
+        <div className="ui-team-chip">
           {team?.logoPath ? <img src={team.logoPath} alt={team.shortName} /> : <span>{careerTeamCode || 'FA'}</span>}
+          <span>{team?.shortName || careerTeamCode || 'FA'}</span>
         </div>
+        <button type="button" className="ui-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
+          {isDark ? '☀' : '☾'}
+        </button>
       </div>
     </header>
   );

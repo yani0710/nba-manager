@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { api } from '../../api/client';
 import { PlayerCard } from '../../components/domain/PlayerCard';
+import { EmptyState, PageHeader } from '../../components/ui';
 import '../Player.css';
 
 const PAGE_SIZE = 24;
@@ -119,14 +120,16 @@ export function Player() {
     refresh();
   }, [currentSave?.currentDate, currentSave?.updatedAt]);
 
-  if (loading) return <div>Loading player...</div>;
+  if (loading) return <div className="ui-card">Loading player...</div>;
 
   if (selectedPlayer) {
     return (
       <div className="player-detail-page">
-        <button onClick={() => setSelectedPlayer(null)} className="btn-back">
-          Back to Players
-        </button>
+        <PageHeader
+          title={selectedPlayer.name}
+          subtitle={`${display(selectedPlayer.team?.shortName)} • ${display(selectedPlayer.position)} • Player Profile`}
+          actions={<button onClick={() => setSelectedPlayer(null)} className="ui-btn">Back to Players</button>}
+        />
 
         <div className="player-profile-grid">
           <div className="player-info-card">
@@ -211,7 +214,7 @@ export function Player() {
 
   return (
     <div className="player-detail-page">
-      <h2>Players</h2>
+      <PageHeader title="Players" subtitle="Search, scan flip cards, and open detailed player profiles." />
       <input
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
@@ -224,11 +227,12 @@ export function Player() {
           <PlayerCard key={player.id} player={player} onOpen={onOpenProfile} />
         ))}
       </div>
+      {pagedPlayers.length === 0 ? <EmptyState title="No players found" description="Try a different search by player, team, or position." /> : null}
 
       <div className="players-pagination">
-        <button className="btn-small" disabled={safePage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>Prev</button>
+        <button className="ui-btn" disabled={safePage <= 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>Prev</button>
         <span>Page {safePage} / {totalPages}</span>
-        <button className="btn-small" disabled={safePage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>Next</button>
+        <button className="ui-btn" disabled={safePage >= totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}>Next</button>
       </div>
     </div>
   );

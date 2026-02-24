@@ -645,6 +645,8 @@ class SavesService {
                 ...(data.training?.playerPlans ?? {}),
                 ...(payload.playerPlans ?? {}),
             },
+            teamProfiles: payload.teamProfiles ?? data.training?.teamProfiles ?? [],
+            activeTeamProfileId: payload.activeTeamProfileId ?? data.training?.activeTeamProfileId,
         };
         const updated = await prisma_1.default.save.update({
             where: { id: saveId },
@@ -665,6 +667,8 @@ class SavesService {
             training: {
                 rating: data.training?.rating ?? 74,
                 trend: data.training?.trend ?? "steady",
+                teamProfiles: data.training?.teamProfiles ?? [],
+                activeTeamProfileId: data.training?.activeTeamProfileId ?? null,
                 weekPlan: {
                     ...this.buildDefaultWeekPlan(),
                     ...(data.training?.weekPlan ?? {}),

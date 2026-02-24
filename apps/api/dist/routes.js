@@ -12,6 +12,7 @@ const players_routes_1 = __importDefault(require("./modules/players/players.rout
 const games_routes_1 = __importDefault(require("./modules/games/games.routes"));
 const coaches_routes_1 = __importDefault(require("./modules/coaches/coaches.routes"));
 const prisma_1 = __importDefault(require("./config/prisma"));
+const enrichPlayers_1 = require("./data/enrichPlayers");
 function readImportHealthLocal() {
     const filePath = node_path_1.default.resolve(__dirname, "..", "data", "import_health.json");
     if (!node_fs_1.default.existsSync(filePath))
@@ -98,6 +99,25 @@ function setupRoutes(app) {
             numberOfPlayersUpdated: state.playersUpdated ?? null,
             averageOverall: state.averageOverall ?? null,
         });
+    });
+    app.get("/api/debug/salaries-roster-health", async (req, res, next) => {
+        try {
+            const roster = await (0, enrichPlayers_1.enrichPlayersFromSalariesRoster)();
+            res.json({
+                source: "nba_salaries_clean.csv",
+                ...roster.health,
+                perTeamMissing: Object.fromEntries([...roster.byTeam.entries()].map(([teamCode, players]) => [
+                    teamCode,
+                    {
+                        total: players.length,
+                        missing: players.filter((p) => !p.enrichmentMatched).length,
+                    },
+                ])),
+            });
+        }
+        catch (err) {
+            next(err);
+        }
     });
     // API Routes
     app.use("/api/saves", saves_routes_1.default);

@@ -1,62 +1,67 @@
 import prisma from "../../config/prisma";
+import { enrichPlayersFromSalariesRoster } from "../../data/enrichPlayers";
 
 export class TeamsService {
   async getAllTeams(saveId?: number) {
+    const salariesRoster = await enrichPlayersFromSalariesRoster();
     const teams = await prisma.team.findMany({
       include: {
-        players: { where: { active: true } },
         homeGames: true,
         awayGames: true,
       },
       orderBy: { name: "asc" },
     });
-    return this.attachTeamState(teams, saveId);
+    const withRoster = teams.map((team) => ({
+      ...team,
+      players: salariesRoster.byTeam.get(team.shortName) ?? [],
+      rosterMissingEnrichmentCount: (salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
+    }));
+    return this.attachTeamState(withRoster, saveId);
   }
 
   async getTeamById(id: number, saveId?: number) {
+    const salariesRoster = await enrichPlayersFromSalariesRoster();
     const team = await prisma.team.findUnique({
       where: { id },
       include: {
-        players: { where: { active: true } },
         homeGames: true,
         awayGames: true,
       },
     });
     if (!team) return null;
-    const [withState] = await this.attachTeamState([team], saveId);
+    const [withState] = await this.attachTeamState([{
+      ...team,
+      players: salariesRoster.byTeam.get(team.shortName) ?? [],
+      rosterMissingEnrichmentCount: (salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
+    }], saveId);
     return withState ?? null;
   }
 
   async getTeamByName(name: string, saveId?: number) {
+    const salariesRoster = await enrichPlayersFromSalariesRoster();
     const team = await prisma.team.findUnique({
       where: { name },
-      include: { players: { where: { active: true } } },
     });
     if (!team) return null;
-    const [withState] = await this.attachTeamState([team], saveId);
+    const [withState] = await this.attachTeamState([{
+      ...team,
+      players: salariesRoster.byTeam.get(team.shortName) ?? [],
+      rosterMissingEnrichmentCount: (salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
+    }], saveId);
     return withState ?? null;
   }
 
   async getRosterByTeamId(id: number, saveId?: number) {
+    const salariesRoster = await enrichPlayersFromSalariesRoster();
     const team = await prisma.team.findUnique({
       where: { id },
-      include: {
-        players: {
-          where: { active: true },
-          include: {
-            contracts: {
-              include: { contractYears: true },
-            },
-          },
-          orderBy: [{ position: "asc" }, { name: "asc" }],
-        },
-      },
     });
 
     if (!team) {
       return null;
     }
 
+    const roster = salariesRoster.byTeam.get(team.shortName) ?? [];
     return {
       id: team.id,
       name: team.name,
@@ -65,7 +70,12 @@ export class TeamsService {
       conference: team.conference,
       division: team.division,
       logoPath: team.logoPath,
-      roster: team.players,
+      roster: roster.slice().sort((a, b) => String(a.position ?? "").localeCompare(String(b.position ?? "")) || a.name.localeCompare(b.name)),
+      rosterSource: "nba_salaries_clean.csv",
+      rosterEnrichment: {
+        total: roster.length,
+        missing: roster.filter((p) => !p.enrichmentMatched).length,
+      },
       teamState: await this.readSingleTeamState(saveId, team.id),
     };
   }

@@ -317,10 +317,10 @@ export const useGameStore = create((set, get) => ({
     set({ currentSave: data });
   },
 
-  saveTrainingConfig: async ({ trainingPlan, weekPlan, playerPlans }) => {
+  saveTrainingConfig: async ({ trainingPlan, weekPlan, playerPlans, teamProfiles, activeTeamProfileId }) => {
     const save = get().currentSave;
     if (!save) return;
-    await api.saves.saveTrainingPlan(save.id, { trainingPlan, weekPlan, playerPlans });
+    await api.saves.saveTrainingPlan(save.id, { trainingPlan, weekPlan, playerPlans, teamProfiles, activeTeamProfileId });
     const { data } = await api.saves.getById(save.id);
     set({ currentSave: data });
   },

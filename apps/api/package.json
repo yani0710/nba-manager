@@ -24,6 +24,7 @@
     "import:impact": "ts-node scripts/import/importImpactSeason.ts",
     "import:salaries": "ts-node scripts/import/importSalaries.ts",
     "recalc:ratings": "ts-node scripts/recalcRatings.ts",
+    "report:salaries-roster": "ts-node scripts/reportSalariesRosterMismatches.ts",
     "etl:import:players": "ts-node scripts/import/importBioPlayers.ts",
     "etl:import:gamelogs": "ts-node scripts/import/importGameLogs.ts",
     "etl:import:advanced": "ts-node scripts/import/importAdvancedSeason.ts",

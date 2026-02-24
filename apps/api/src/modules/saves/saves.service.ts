@@ -30,6 +30,14 @@ type SavePayload = {
   training?: {
     rating: number;
     trend: "up" | "steady" | "down";
+    teamProfiles?: Array<{
+      id: string;
+      name: string;
+      intensity: "low" | "balanced" | "high";
+      focus: "shooting" | "defense" | "fitness" | "balanced";
+      restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+    }>;
+    activeTeamProfileId?: string;
     weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
       intensity: "low" | "balanced" | "high";
       focus: "shooting" | "defense" | "fitness" | "balanced";
@@ -782,6 +790,8 @@ export class SavesService {
       trainingPlan?: Partial<NonNullable<SavePayload["trainingPlan"]>>;
       weekPlan?: NonNullable<NonNullable<SavePayload["training"]>["weekPlan"]>;
       playerPlans?: NonNullable<NonNullable<SavePayload["training"]>["playerPlans"]>;
+      teamProfiles?: NonNullable<NonNullable<SavePayload["training"]>["teamProfiles"]>;
+      activeTeamProfileId?: string;
     },
   ) {
     const save = await this.getSaveById(saveId);
@@ -805,6 +815,8 @@ export class SavesService {
         ...(data.training?.playerPlans ?? {}),
         ...(payload.playerPlans ?? {}),
       },
+      teamProfiles: payload.teamProfiles ?? data.training?.teamProfiles ?? [],
+      activeTeamProfileId: payload.activeTeamProfileId ?? data.training?.activeTeamProfileId,
     };
 
     const updated = await prisma.save.update({
@@ -828,6 +840,8 @@ export class SavesService {
       training: {
         rating: data.training?.rating ?? 74,
         trend: data.training?.trend ?? "steady",
+        teamProfiles: data.training?.teamProfiles ?? [],
+        activeTeamProfileId: data.training?.activeTeamProfileId ?? null,
         weekPlan: {
           ...this.buildDefaultWeekPlan(),
           ...(data.training?.weekPlan ?? {}),

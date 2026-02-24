@@ -6,6 +6,7 @@ import playersRoutes from "./modules/players/players.routes";
 import gamesRoutes from "./modules/games/games.routes";
 import coachesRoutes from "./modules/coaches/coaches.routes";
 import prisma from "./config/prisma";
+import { enrichPlayersFromSalariesRoster } from "./data/enrichPlayers";
 
 function readImportHealthLocal() {
   const filePath = path.resolve(__dirname, "..", "data", "import_health.json");
@@ -103,6 +104,27 @@ export function setupRoutes(app: any): void {
       numberOfPlayersUpdated: state.playersUpdated ?? null,
       averageOverall: state.averageOverall ?? null,
     });
+  });
+
+  app.get("/api/debug/salaries-roster-health", async (req: any, res: any, next: any) => {
+    try {
+      const roster = await enrichPlayersFromSalariesRoster();
+      res.json({
+        source: "nba_salaries_clean.csv",
+        ...roster.health,
+        perTeamMissing: Object.fromEntries(
+          [...roster.byTeam.entries()].map(([teamCode, players]) => [
+            teamCode,
+            {
+              total: players.length,
+              missing: players.filter((p) => !p.enrichmentMatched).length,
+            },
+          ]),
+        ),
+      });
+    } catch (err) {
+      next(err);
+    }
   });
 
   // API Routes

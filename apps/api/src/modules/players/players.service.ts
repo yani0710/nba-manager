@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma";
+import { enrichPlayersFromSalariesRoster } from "../../data/enrichPlayers";
 
 const contractSelect = {
   id: true,
@@ -16,18 +17,12 @@ const contractSelect = {
 
 export class PlayersService {
   async getPlayersByTeamId(teamId: number, includeInactive = false, saveId?: number) {
-    const players = await prisma.player.findMany({
-      where: {
-        teamId,
-        ...(includeInactive ? {} : { active: true }),
-      },
-      include: {
-        team: true,
-        contracts: { select: contractSelect },
-        gameStats: true,
-      },
-    });
-    return this.attachSaveState(players, saveId);
+    const team = await prisma.team.findUnique({ where: { id: teamId }, select: { id: true, shortName: true } });
+    if (!team) return [];
+    const salariesRoster = await enrichPlayersFromSalariesRoster();
+    const roster = salariesRoster.byTeam.get(team.shortName) ?? [];
+    const filtered = includeInactive ? roster : roster;
+    return this.attachSaveStateToRoster(filtered, saveId);
   }
 
   async getPlayerById(id: number, saveId?: number) {
@@ -128,6 +123,32 @@ export class PlayersService {
         form: state?.form ?? (player as { form?: number }).form ?? 60,
         fatigue: state?.fatigue ?? 10,
         morale: state?.morale ?? 65,
+        overall: currentOverall,
+        overallCurrent: currentOverall,
+        effectiveOverall: currentOverall,
+      };
+    });
+  }
+
+  private async attachSaveStateToRoster<T extends { id: number | null; overall?: number | null; overallCurrent?: number | null; form?: number | null; fatigue?: number | null; morale?: number | null }>(
+    players: T[],
+    saveId?: number,
+  ) {
+    if (!saveId || players.length === 0) return players;
+    const save = await prisma.save.findUnique({ where: { id: saveId }, select: { data: true } });
+    const payload = (save?.data ?? {}) as {
+      playerState?: Record<string, { form?: number; fatigue?: number; morale?: number; effectiveOverall?: number }>;
+    };
+    const playerState = payload.playerState ?? {};
+    return players.map((player) => {
+      if (!player.id) return player;
+      const state = playerState[String(player.id)];
+      const currentOverall = state?.effectiveOverall ?? player.overallCurrent ?? player.overall ?? null;
+      return {
+        ...player,
+        form: state?.form ?? player.form ?? null,
+        fatigue: state?.fatigue ?? player.fatigue ?? null,
+        morale: state?.morale ?? player.morale ?? null,
         overall: currentOverall,
         overallCurrent: currentOverall,
         effectiveOverall: currentOverall,

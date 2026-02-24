@@ -1,107 +1,38 @@
 export declare class PlayersService {
-    getPlayersByTeamId(teamId: number, includeInactive?: boolean, saveId?: number): Promise<({
-        team: {
+    getPlayersByTeamId(teamId: number, includeInactive?: boolean, saveId?: number): Promise<{
+        rosterSource: "nba_salaries_clean.csv";
+        rosterName: string;
+        rosterTeamCode: string;
+        salary: number | null;
+        contractEndYear: number | null;
+        guaranteed: number | null;
+        enrichmentMatched: boolean;
+        enrichmentWarning?: string;
+        id: number | null;
+        name: string;
+        teamId: number | null;
+        team?: {
             id: number;
             name: string;
             shortName: string;
-            nbaTeamId: number | null;
-            city: string;
-            createdAt: Date;
-            updatedAt: Date;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-            form: number;
-            morale: number;
-        };
-        contracts: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            playerId: number;
-            salary: number | null;
-            startYear: number | null;
-            endYear: number | null;
-            averageAnnualValue: number | null;
-            contractType: string | null;
-            currentYearSalary: number | null;
-            contractYears: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                salary: number;
-                season: string;
-                contractId: number;
-                guaranteed: boolean;
-            }[];
         } | null;
-        gameStats: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            playerId: number;
-            points: number;
-            gameId: number;
-            rebounds: number;
-            assists: number;
-        }[];
-    } & {
+        position: string | null;
         number: number | null;
-        id: number;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        form: number;
-        morale: number;
-        active: boolean;
-        externalRef: string | null;
         jerseyNumber: number | null;
-        position: string;
-        salary: number | null;
-        teamId: number;
-        firstName: string | null;
-        birthDate: Date | null;
-        age: number | null;
-        debutYear: number | null;
-        finalYear: number | null;
-        school: string | null;
-        hallOfFame: boolean | null;
+        overall: number | null;
+        overallBase: number | null;
+        overallCurrent: number | null;
+        form: number | null;
+        fatigue: number | null;
+        morale: number | null;
         heightCm: number | null;
         weightKg: number | null;
         nationality: string | null;
-        bioSource: string | null;
-        gamesCareer: number | null;
-        ptsCareer: number | null;
-        trbCareer: number | null;
-        astCareer: number | null;
-        fgPct: number | null;
-        fg3Pct: number | null;
-        ftPct: number | null;
-        efgPct: number | null;
-        per: number | null;
-        ws: number | null;
-        offensiveRating: number;
-        overallBase: number;
-        overall: number;
-        overallCurrent: number;
-        defensiveRating: number;
-        physicalRating: number;
-        iqRating: number;
-        fatigue: number;
-        formTrendDays: number;
-        lastFormSnapshot: number;
-        potential: number;
-        handedness: string | null;
-        primaryPosition: string;
-        secondaryPosition: string | null;
-        attributes: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
-        lastName: string | null;
-        nbaPlayerId: number | null;
-    })[]>;
+        birthDate: Date | null;
+        age: number | null;
+        externalRef: string | null;
+        attributes?: unknown;
+    }[]>;
     getPlayerById(id: number, saveId?: number): Promise<{
         scouting: {
             strengths: string[];
@@ -354,6 +285,7 @@ export declare class PlayersService {
         }[];
     }>;
     private attachSaveState;
+    private attachSaveStateToRoster;
     private buildStrengthsWeaknesses;
 }
 //# sourceMappingURL=players.service.d.ts.map

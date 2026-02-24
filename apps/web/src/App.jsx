@@ -10,12 +10,15 @@ import { Schedule } from './pages/Schedule';
 import { League } from './pages/League';
 import { Teams } from './pages/Teams';
 import { Player } from './pages/Player';
+import { Transfers } from './pages/Transfers';
+import { MatchCenter } from './pages/MatchCenter';
 import { Results } from './pages/Results';
 import { Matches } from './pages/Matches';
 import { SaveLoad } from './pages/SaveLoad';
 import { Start } from './pages/Start/index';
 import { useGameStore } from './state/gameStore';
 import './App.css';
+import './styles/ui-shell.css';
 
 function App() {
   const { currentPage } = useRouter();
@@ -41,8 +44,12 @@ function App() {
         return <Teams />;
       case 'players':
         return <Player />;
+      case 'transfers':
+        return <Transfers />;
       case 'matches':
         return <Matches />;
+      case 'match-center':
+        return <MatchCenter />;
       case 'results':
         return <Results />;
       case 'saves':
@@ -63,8 +70,10 @@ function App() {
       schedule: 'Schedule',
       league: 'League Standings',
       teams: 'Teams',
+      transfers: 'Transfers',
       players: 'Players',
       matches: 'Matches',
+      'match-center': 'Match Center',
       results: 'Results',
       saves: 'Saves',
     };

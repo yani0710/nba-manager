@@ -152,6 +152,8 @@ export class SavesController {
         trainingPlan: req.body?.trainingPlan ?? {},
         weekPlan: req.body?.weekPlan,
         playerPlans: req.body?.playerPlans,
+        teamProfiles: req.body?.teamProfiles,
+        activeTeamProfileId: req.body?.activeTeamProfileId,
       });
       res.json(data);
     } catch (err) {

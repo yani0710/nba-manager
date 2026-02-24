@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayersService = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
+const enrichPlayers_1 = require("../../data/enrichPlayers");
 const contractSelect = {
     id: true,
     playerId: true,
@@ -20,18 +21,13 @@ const contractSelect = {
 };
 class PlayersService {
     async getPlayersByTeamId(teamId, includeInactive = false, saveId) {
-        const players = await prisma_1.default.player.findMany({
-            where: {
-                teamId,
-                ...(includeInactive ? {} : { active: true }),
-            },
-            include: {
-                team: true,
-                contracts: { select: contractSelect },
-                gameStats: true,
-            },
-        });
-        return this.attachSaveState(players, saveId);
+        const team = await prisma_1.default.team.findUnique({ where: { id: teamId }, select: { id: true, shortName: true } });
+        if (!team)
+            return [];
+        const salariesRoster = await (0, enrichPlayers_1.enrichPlayersFromSalariesRoster)();
+        const roster = salariesRoster.byTeam.get(team.shortName) ?? [];
+        const filtered = includeInactive ? roster : roster;
+        return this.attachSaveStateToRoster(filtered, saveId);
     }
     async getPlayerById(id, saveId) {
         const player = await prisma_1.default.player.findUnique({
@@ -127,6 +123,28 @@ class PlayersService {
                 form: state?.form ?? player.form ?? 60,
                 fatigue: state?.fatigue ?? 10,
                 morale: state?.morale ?? 65,
+                overall: currentOverall,
+                overallCurrent: currentOverall,
+                effectiveOverall: currentOverall,
+            };
+        });
+    }
+    async attachSaveStateToRoster(players, saveId) {
+        if (!saveId || players.length === 0)
+            return players;
+        const save = await prisma_1.default.save.findUnique({ where: { id: saveId }, select: { data: true } });
+        const payload = (save?.data ?? {});
+        const playerState = payload.playerState ?? {};
+        return players.map((player) => {
+            if (!player.id)
+                return player;
+            const state = playerState[String(player.id)];
+            const currentOverall = state?.effectiveOverall ?? player.overallCurrent ?? player.overall ?? null;
+            return {
+                ...player,
+                form: state?.form ?? player.form ?? null,
+                fatigue: state?.fatigue ?? player.fatigue ?? null,
+                morale: state?.morale ?? player.morale ?? null,
                 overall: currentOverall,
                 overallCurrent: currentOverall,
                 effectiveOverall: currentOverall,
