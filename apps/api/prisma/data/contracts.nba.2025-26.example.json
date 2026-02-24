@@ -1,0 +1,24 @@
+[
+  {
+    "playerName": "LeBron James",
+    "contractType": "Standard",
+    "startYear": 2024,
+    "endYear": 2026,
+    "totalValue": 101355998,
+    "guaranteedValue": 101355998,
+    "annualValue": 50677999,
+    "currentYearSalary": 52627953,
+    "years": [
+      {
+        "season": "2024-25",
+        "salary": 48728245,
+        "guaranteed": true
+      },
+      {
+        "season": "2025-26",
+        "salary": 52627953,
+        "guaranteed": true
+      }
+    ]
+  }
+]

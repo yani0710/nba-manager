@@ -1,0 +1,80 @@
+{
+  "lastRatingsRecalcAt": "2026-02-22T12:40:28.357Z",
+  "seasonUsed": 2026,
+  "playersUpdated": 449,
+  "averageOverall": 59.56,
+  "top5Changes": [
+    {
+      "id": 7528,
+      "name": "Jalen Johnson",
+      "before": 91,
+      "after": 91,
+      "delta": 0
+    },
+    {
+      "id": 7635,
+      "name": "Kristaps Porziņģis",
+      "before": 59,
+      "after": 59,
+      "delta": 0
+    },
+    {
+      "id": 6962,
+      "name": "Trae Young",
+      "before": 71,
+      "after": 71,
+      "delta": 0
+    },
+    {
+      "id": 7620,
+      "name": "Onyeka Okongwu",
+      "before": 79,
+      "after": 79,
+      "delta": 0
+    },
+    {
+      "id": 7487,
+      "name": "Mouhamed Gueye",
+      "before": 55,
+      "after": 55,
+      "delta": 0
+    }
+  ],
+  "bottom5Changes": [
+    {
+      "id": 7412,
+      "name": "Bub Carrington",
+      "before": 50,
+      "after": 50,
+      "delta": 0
+    },
+    {
+      "id": 7654,
+      "name": "Will Riley",
+      "before": 50,
+      "after": 50,
+      "delta": 0
+    },
+    {
+      "id": 7531,
+      "name": "Tre Johnson",
+      "before": 50,
+      "after": 50,
+      "delta": 0
+    },
+    {
+      "id": 7737,
+      "name": "Cam Whitmore",
+      "before": 50,
+      "after": 50,
+      "delta": 0
+    },
+    {
+      "id": 7431,
+      "name": "Sharife Cooper",
+      "before": 50,
+      "after": 50,
+      "delta": 0
+    }
+  ]
+}

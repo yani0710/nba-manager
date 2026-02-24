@@ -1,0 +1,83 @@
+{
+  "files": {
+    "bio": {
+      "file": "NBA_PLAYERS.csv",
+      "matched": 5313,
+      "unmatched": 0,
+      "timestamp": "2026-02-22T12:40:14.977Z"
+    },
+    "advanced": {
+      "file": "Advanced.csv",
+      "season": 2026,
+      "matched": 527,
+      "unmatched": 7,
+      "timestamp": "2026-02-22T12:40:17.328Z"
+    },
+    "impact": {
+      "file": "D:\\nba-manager\\apps\\api\\data\\full_stats.csv",
+      "season": 2026,
+      "matched": 449,
+      "unmatched": 26,
+      "unmatchedSample": [
+        "Jock Landale (ATL)",
+        "Buddy Hield (ATL)",
+        "Egor Dëmin (BKN)",
+        "Xavier Tillman (BOS)",
+        "Collin Sexton (CHI)",
+        "Jaden Ivey (CHI)",
+        "Guerschon Yabusele (CHI)",
+        "Rob Dillingham (CHI)",
+        "Keon Ellis (CLE)",
+        "Tyus Jones (DAL)",
+        "AJ Johnson (DAL)",
+        "DaRon Holmes II (DEN)",
+        "Ronald Holland II (DET)",
+        "Jimmy Butler III (GSW)",
+        "Luke Kennard (LAL)",
+        "Scotty Pippen Jr. (MEM)",
+        "GG Jackson (MEM)",
+        "Ousmane Dieng (MIL)",
+        "Cam Thomas (MIL)",
+        "Trey Jemison III (NYK)"
+      ],
+      "timestamp": "2026-02-22T12:40:28.358Z"
+    },
+    "salaries": {
+      "file": "Salaries_2024_25.csv",
+      "matched": 0,
+      "unmatched": 0,
+      "unmatchedSample": [],
+      "timestamp": "2026-02-22T12:40:21.544Z"
+    },
+    "gamelogs": {
+      "file": "database_24_25.csv",
+      "matched": 13813,
+      "unmatched": 138,
+      "unmatchedSample": [
+        "Adam Flagler",
+        "Adama Sanogo",
+        "Alec Burks",
+        "Alex Ducas",
+        "Alex Len",
+        "Alex Reese",
+        "Alondes Williams",
+        "Andre Jackson",
+        "Armel Traoré",
+        "Ben Simmons",
+        "Bol Bol",
+        "Brandon Boston",
+        "Brandon Boston Jr.",
+        "Bruno Fernando",
+        "Cam Reddish",
+        "Cameron Payne",
+        "Carlton Carrington",
+        "Chris Duarte",
+        "Chuma Okeke",
+        "Cole Swider"
+      ],
+      "timestamp": "2026-02-22T12:40:24.933Z"
+    }
+  },
+  "lastUpdated": "2026-02-22T12:40:28.358Z",
+  "selectedSeason": 2026
+}

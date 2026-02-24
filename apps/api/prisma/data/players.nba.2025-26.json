@@ -1,0 +1,7202 @@
+[
+  {
+    "nbaPlayerId": 1,
+    "firstName": "Alex",
+    "lastName": "Abrines",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 2,
+    "firstName": "Jaylen",
+    "lastName": "Adams",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 3,
+    "firstName": "Steven",
+    "lastName": "Adams",
+    "number": 12,
+    "position": "C",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 4,
+    "firstName": "Bam",
+    "lastName": "Adebayo",
+    "number": 13,
+    "position": "C-F",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 5,
+    "firstName": "DeVaughn",
+    "lastName": "Akoon-Purcell",
+    "number": 44,
+    "position": "G-F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 6,
+    "firstName": "LaMarcus",
+    "lastName": "Aldridge",
+    "number": 21,
+    "position": "F",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 7,
+    "firstName": "Rawle",
+    "lastName": "Alkins",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 8,
+    "firstName": "Grayson",
+    "lastName": "Allen",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 9,
+    "firstName": "Jarrett",
+    "lastName": "Allen",
+    "number": 31,
+    "position": "C",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 10,
+    "firstName": "Al-Farouq",
+    "lastName": "Aminu",
+    "number": 5,
+    "position": "F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 11,
+    "firstName": "Justin",
+    "lastName": "Anderson",
+    "number": 10,
+    "position": "G-F",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 12,
+    "firstName": "Kyle",
+    "lastName": "Anderson",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 13,
+    "firstName": "Ryan",
+    "lastName": "Anderson",
+    "number": 31,
+    "position": "F",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 14,
+    "firstName": "Ike",
+    "lastName": "Anigbogu",
+    "number": 13,
+    "position": "C",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 15,
+    "firstName": "Giannis",
+    "lastName": "Antetokounmpo",
+    "number": 34,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 16,
+    "firstName": "Kostas",
+    "lastName": "Antetokounmpo",
+    "number": 37,
+    "position": "F",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 17,
+    "firstName": "Carmelo",
+    "lastName": "Anthony",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 18,
+    "firstName": "OG",
+    "lastName": "Anunoby",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 19,
+    "firstName": "Ryan",
+    "lastName": "Arcidiacono",
+    "number": 51,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 20,
+    "firstName": "Trevor",
+    "lastName": "Ariza",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 21,
+    "firstName": "D.J.",
+    "lastName": "Augustin",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 22,
+    "firstName": "Deandre",
+    "lastName": "Ayton",
+    "number": 5,
+    "position": "C",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 23,
+    "firstName": "Dwayne",
+    "lastName": "Bacon",
+    "number": 8,
+    "position": "G-F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 24,
+    "firstName": "Marvin",
+    "lastName": "Bagley III",
+    "number": 35,
+    "position": "F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 25,
+    "firstName": "Ron",
+    "lastName": "Baker",
+    "number": 31,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 26,
+    "firstName": "Wade",
+    "lastName": "Baldwin IV",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 27,
+    "firstName": "Lonzo",
+    "lastName": "Ball",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 28,
+    "firstName": "Mo",
+    "lastName": "Bamba",
+    "number": 5,
+    "position": "C",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 29,
+    "firstName": "J.J.",
+    "lastName": "Barea",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 30,
+    "firstName": "Harrison",
+    "lastName": "Barnes",
+    "number": 40,
+    "position": "F",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 31,
+    "firstName": "Will",
+    "lastName": "Barton",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 32,
+    "firstName": "Keita",
+    "lastName": "Bates-Diop",
+    "number": 13,
+    "position": "F",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 33,
+    "firstName": "Nicolas",
+    "lastName": "Batum",
+    "number": 33,
+    "position": "F-G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 34,
+    "firstName": "Jerryd",
+    "lastName": "Bayless",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 35,
+    "firstName": "Aron",
+    "lastName": "Baynes",
+    "number": 46,
+    "position": "C-F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 36,
+    "firstName": "Kent",
+    "lastName": "Bazemore",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 37,
+    "firstName": "Bradley",
+    "lastName": "Beal",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 38,
+    "firstName": "Malik",
+    "lastName": "Beasley",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 39,
+    "firstName": "Michael",
+    "lastName": "Beasley",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 40,
+    "firstName": "Marco",
+    "lastName": "Belinelli",
+    "number": 18,
+    "position": "G-F",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 41,
+    "firstName": "Jordan",
+    "lastName": "Bell",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 42,
+    "firstName": "DeAndre'",
+    "lastName": "Bembry",
+    "number": 95,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 43,
+    "firstName": "Dragan",
+    "lastName": "Bender",
+    "number": 35,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 44,
+    "firstName": "Davis",
+    "lastName": "Bertans",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 45,
+    "firstName": "Patrick",
+    "lastName": "Beverley",
+    "number": 21,
+    "position": "G",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 46,
+    "firstName": "Khem",
+    "lastName": "Birch",
+    "number": 24,
+    "position": "C",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 47,
+    "firstName": "Jabari",
+    "lastName": "Bird",
+    "number": 26,
+    "position": "G",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 48,
+    "firstName": "Bismack",
+    "lastName": "Biyombo",
+    "number": 18,
+    "position": "C",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 49,
+    "firstName": "Nemanja",
+    "lastName": "Bjelica",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 50,
+    "firstName": "Antonio",
+    "lastName": "Blakeney",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 51,
+    "firstName": "Eric",
+    "lastName": "Bledsoe",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 52,
+    "firstName": "Trevon",
+    "lastName": "Bluiett",
+    "number": 5,
+    "position": "G-F",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 53,
+    "firstName": "Bogdan",
+    "lastName": "Bogdanovic",
+    "number": 7,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 54,
+    "firstName": "Bojan",
+    "lastName": "Bogdanovic",
+    "number": 44,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 55,
+    "firstName": "Jonah",
+    "lastName": "Bolden",
+    "number": 43,
+    "position": "F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 56,
+    "firstName": "Isaac",
+    "lastName": "Bonga",
+    "number": 17,
+    "position": "G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 57,
+    "firstName": "Devin",
+    "lastName": "Booker",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 58,
+    "firstName": "Chris",
+    "lastName": "Boucher",
+    "number": 25,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 59,
+    "firstName": "Avery",
+    "lastName": "Bradley",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 60,
+    "firstName": "Tony",
+    "lastName": "Bradley",
+    "number": 13,
+    "position": "C",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 61,
+    "firstName": "Mikal",
+    "lastName": "Bridges",
+    "number": 25,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 62,
+    "firstName": "Miles",
+    "lastName": "Bridges",
+    "number": 0,
+    "position": "F",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 63,
+    "firstName": "Isaiah",
+    "lastName": "Briscoe",
+    "number": 13,
+    "position": "G",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 64,
+    "firstName": "Ryan",
+    "lastName": "Broekhoff",
+    "number": 45,
+    "position": "G-F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 65,
+    "firstName": "Malcolm",
+    "lastName": "Brogdon",
+    "number": 15,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 66,
+    "firstName": "Dillon",
+    "lastName": "Brooks",
+    "number": 3,
+    "position": "G-F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 67,
+    "firstName": "MarShon",
+    "lastName": "Brooks",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 68,
+    "firstName": "Troy",
+    "lastName": "Brown Jr.",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 69,
+    "firstName": "Bruce",
+    "lastName": "Brown",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 70,
+    "firstName": "Jaylen",
+    "lastName": "Brown",
+    "number": 7,
+    "position": "G",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 71,
+    "firstName": "Lorenzo",
+    "lastName": "Brown",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 72,
+    "firstName": "Sterling",
+    "lastName": "Brown",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 73,
+    "firstName": "Jalen",
+    "lastName": "Brunson",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 74,
+    "firstName": "Thomas",
+    "lastName": "Bryant",
+    "number": 3,
+    "position": "C",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 75,
+    "firstName": "Reggie",
+    "lastName": "Bullock",
+    "number": 25,
+    "position": "G-F",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 76,
+    "firstName": "Trey",
+    "lastName": "Burke",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 77,
+    "firstName": "Alec",
+    "lastName": "Burks",
+    "number": 18,
+    "position": "G",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 78,
+    "firstName": "Deonte",
+    "lastName": "Burton",
+    "number": 30,
+    "position": "G",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 79,
+    "firstName": "Jimmy",
+    "lastName": "Butler",
+    "number": 10,
+    "position": "G-F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 80,
+    "firstName": "Jose",
+    "lastName": "Calderon",
+    "number": 81,
+    "position": "G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 81,
+    "firstName": "Kentavious",
+    "lastName": "Caldwell-Pope",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 82,
+    "firstName": "Isaiah",
+    "lastName": "Canaan",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 83,
+    "firstName": "Clint",
+    "lastName": "Capela",
+    "number": 30,
+    "position": "C",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 84,
+    "firstName": "DeMarre",
+    "lastName": "Carroll",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 85,
+    "firstName": "Wendell",
+    "lastName": "Carter Jr.",
+    "number": 34,
+    "position": "F",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 86,
+    "firstName": "Michael",
+    "lastName": "Carter-Williams",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 87,
+    "firstName": "Jevon",
+    "lastName": "Carter",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 88,
+    "firstName": "Vince",
+    "lastName": "Carter",
+    "number": 15,
+    "position": "F-G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 89,
+    "firstName": "Alex",
+    "lastName": "Caruso",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 90,
+    "firstName": "Omri",
+    "lastName": "Casspi",
+    "number": 18,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 91,
+    "firstName": "Willie",
+    "lastName": "Cauley-Stein",
+    "number": 0,
+    "position": "C",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 92,
+    "firstName": "Troy",
+    "lastName": "Caupain",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 93,
+    "firstName": "Tyler",
+    "lastName": "Cavanaugh",
+    "number": 34,
+    "position": "F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 94,
+    "firstName": "Tyson",
+    "lastName": "Chandler",
+    "number": 6,
+    "position": "C",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 95,
+    "firstName": "Wilson",
+    "lastName": "Chandler",
+    "number": 21,
+    "position": "F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 96,
+    "firstName": "Joe",
+    "lastName": "Chealey",
+    "number": 31,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 97,
+    "firstName": "Marquese",
+    "lastName": "Chriss",
+    "number": 35,
+    "position": "F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 98,
+    "firstName": "Gary",
+    "lastName": "Clark",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 99,
+    "firstName": "Ian",
+    "lastName": "Clark",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 100,
+    "firstName": "Jordan",
+    "lastName": "Clarkson",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 101,
+    "firstName": "John",
+    "lastName": "Collins",
+    "number": 20,
+    "position": "F-C",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 102,
+    "firstName": "Zach",
+    "lastName": "Collins",
+    "number": 12,
+    "position": "F-C",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 103,
+    "firstName": "Darren",
+    "lastName": "Collison",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 104,
+    "firstName": "Mike",
+    "lastName": "Conley",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 105,
+    "firstName": "Pat",
+    "lastName": "Connaughton",
+    "number": 21,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 106,
+    "firstName": "Quinn",
+    "lastName": "Cook",
+    "number": 28,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 107,
+    "firstName": "DeMarcus",
+    "lastName": "Cousins",
+    "number": 4,
+    "position": "C",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 108,
+    "firstName": "Robert",
+    "lastName": "Covington",
+    "number": 33,
+    "position": "F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 109,
+    "firstName": "Allen",
+    "lastName": "Crabbe",
+    "number": 33,
+    "position": "G-F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 110,
+    "firstName": "Torrey",
+    "lastName": "Craig",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 111,
+    "firstName": "Jamal",
+    "lastName": "Crawford",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 112,
+    "firstName": "Jae",
+    "lastName": "Crowder",
+    "number": 99,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 113,
+    "firstName": "Dante",
+    "lastName": "Cunningham",
+    "number": 33,
+    "position": "F",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 114,
+    "firstName": "Seth",
+    "lastName": "Curry",
+    "number": 31,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 115,
+    "firstName": "Stephen",
+    "lastName": "Curry",
+    "number": 30,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 116,
+    "firstName": "Troy",
+    "lastName": "Daniels",
+    "number": 30,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 117,
+    "firstName": "Anthony",
+    "lastName": "Davis",
+    "number": 23,
+    "position": "F-C",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 118,
+    "firstName": "Ed",
+    "lastName": "Davis",
+    "number": 21,
+    "position": "C",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 119,
+    "firstName": "Tyler",
+    "lastName": "Davis",
+    "number": 34,
+    "position": "C",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 120,
+    "firstName": "Dewayne",
+    "lastName": "Dedmon",
+    "number": 14,
+    "position": "C",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 121,
+    "firstName": "Sam",
+    "lastName": "Dekker",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 122,
+    "firstName": "Angel",
+    "lastName": "Delgado",
+    "number": 31,
+    "position": "C",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 123,
+    "firstName": "Matthew",
+    "lastName": "Dellavedova",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 124,
+    "firstName": "Luol",
+    "lastName": "Deng",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 125,
+    "firstName": "DeMar",
+    "lastName": "DeRozan",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 126,
+    "firstName": "Marcus",
+    "lastName": "Derrickson",
+    "number": 32,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 127,
+    "firstName": "Cheick",
+    "lastName": "Diallo",
+    "number": 14,
+    "position": "F",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 128,
+    "firstName": "Hamidou",
+    "lastName": "Diallo",
+    "number": 6,
+    "position": "G",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 129,
+    "firstName": "Gorgui",
+    "lastName": "Dieng",
+    "number": 41,
+    "position": "C",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 130,
+    "firstName": "Spencer",
+    "lastName": "Dinwiddie",
+    "number": 26,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 131,
+    "firstName": "Donte",
+    "lastName": "DiVincenzo",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 132,
+    "firstName": "Luka",
+    "lastName": "Doncic",
+    "number": 77,
+    "position": "F-G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 133,
+    "firstName": "Tyler",
+    "lastName": "Dorsey",
+    "number": 22,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 134,
+    "firstName": "Damyean",
+    "lastName": "Dotson",
+    "number": 21,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 135,
+    "firstName": "PJ",
+    "lastName": "Dozier",
+    "number": 35,
+    "position": "G-F",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 136,
+    "firstName": "Goran",
+    "lastName": "Dragic",
+    "number": 31,
+    "position": "G",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 137,
+    "firstName": "Andre",
+    "lastName": "Drummond",
+    "number": 1,
+    "position": "C",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 138,
+    "firstName": "Jared",
+    "lastName": "Dudley",
+    "number": 10,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 139,
+    "firstName": "Kris",
+    "lastName": "Dunn",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 140,
+    "firstName": "Kevin",
+    "lastName": "Durant",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 141,
+    "firstName": "Trevon",
+    "lastName": "Duval",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 142,
+    "firstName": "Vincent",
+    "lastName": "Edwards",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 143,
+    "firstName": "Henry",
+    "lastName": "Ellenson",
+    "number": 13,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 144,
+    "firstName": "Wayne",
+    "lastName": "Ellington",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 145,
+    "firstName": "Joel",
+    "lastName": "Embiid",
+    "number": 21,
+    "position": "F-C",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 146,
+    "firstName": "James",
+    "lastName": "Ennis III",
+    "number": 11,
+    "position": "F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 147,
+    "firstName": "Drew",
+    "lastName": "Eubanks",
+    "number": 19,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 148,
+    "firstName": "Jacob",
+    "lastName": "Evans",
+    "number": 12,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 149,
+    "firstName": "Keenan",
+    "lastName": "Evans",
+    "number": null,
+    "position": "G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 150,
+    "firstName": "Tyreke",
+    "lastName": "Evans",
+    "number": 12,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 151,
+    "firstName": "Dante",
+    "lastName": "Exum",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 152,
+    "firstName": "Kenneth",
+    "lastName": "Faried",
+    "number": 35,
+    "position": "F-C",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 153,
+    "firstName": "Derrick",
+    "lastName": "Favors",
+    "number": 15,
+    "position": "F-C",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 154,
+    "firstName": "Cristiano",
+    "lastName": "Felicio",
+    "number": 6,
+    "position": "F-C",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 155,
+    "firstName": "Raymond",
+    "lastName": "Felton",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 156,
+    "firstName": "Terrance",
+    "lastName": "Ferguson",
+    "number": 23,
+    "position": "G",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 157,
+    "firstName": "Yogi",
+    "lastName": "Ferrell",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 158,
+    "firstName": "Dorian",
+    "lastName": "Finney-Smith",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 159,
+    "firstName": "Bryn",
+    "lastName": "Forbes",
+    "number": 6,
+    "position": "G",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 160,
+    "firstName": "Evan",
+    "lastName": "Fournier",
+    "number": 31,
+    "position": "G-F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 161,
+    "firstName": "De'Aaron",
+    "lastName": "Fox",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 162,
+    "firstName": "Melvin",
+    "lastName": "Frazier Jr.",
+    "number": 6,
+    "position": "G-F",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 163,
+    "firstName": "Tim",
+    "lastName": "Frazier",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 164,
+    "firstName": "Channing",
+    "lastName": "Frye",
+    "number": 9,
+    "position": "F-C",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 165,
+    "firstName": "Markelle",
+    "lastName": "Fultz",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 166,
+    "firstName": "Wenyen",
+    "lastName": "Gabriel",
+    "number": 35,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 167,
+    "firstName": "Danilo",
+    "lastName": "Gallinari",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 168,
+    "firstName": "Langston",
+    "lastName": "Galloway",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 169,
+    "firstName": "Marc",
+    "lastName": "Gasol",
+    "number": 14,
+    "position": "C",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 170,
+    "firstName": "Pau",
+    "lastName": "Gasol",
+    "number": 16,
+    "position": "C-F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 171,
+    "firstName": "Rudy",
+    "lastName": "Gay",
+    "number": 22,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 172,
+    "firstName": "Paul",
+    "lastName": "George",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 173,
+    "firstName": "Taj",
+    "lastName": "Gibson",
+    "number": 67,
+    "position": "F",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 174,
+    "firstName": "Harry",
+    "lastName": "Giles III",
+    "number": 20,
+    "position": "F-C",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 175,
+    "firstName": "Shai",
+    "lastName": "Gilgeous-Alexander",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 176,
+    "firstName": "Rudy",
+    "lastName": "Gobert",
+    "number": 27,
+    "position": "C",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 177,
+    "firstName": "Aaron",
+    "lastName": "Gordon",
+    "number": 32,
+    "position": "F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 178,
+    "firstName": "Eric",
+    "lastName": "Gordon",
+    "number": 23,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 179,
+    "firstName": "Marcin",
+    "lastName": "Gortat",
+    "number": 13,
+    "position": "C",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 180,
+    "firstName": "Devonte'",
+    "lastName": "Graham",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 181,
+    "firstName": "Treveon",
+    "lastName": "Graham",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 182,
+    "firstName": "Jerami",
+    "lastName": "Grant",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 183,
+    "firstName": "Jerian",
+    "lastName": "Grant",
+    "number": 22,
+    "position": "G",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 184,
+    "firstName": "Danny",
+    "lastName": "Green",
+    "number": 14,
+    "position": "G-F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 185,
+    "firstName": "Draymond",
+    "lastName": "Green",
+    "number": 23,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 186,
+    "firstName": "Gerald",
+    "lastName": "Green",
+    "number": 14,
+    "position": "G-F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 187,
+    "firstName": "JaMychal",
+    "lastName": "Green",
+    "number": 1,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 188,
+    "firstName": "Jeff",
+    "lastName": "Green",
+    "number": 32,
+    "position": "F",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 189,
+    "firstName": "Blake",
+    "lastName": "Griffin",
+    "number": 91,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 190,
+    "firstName": "Daniel",
+    "lastName": "Hamilton",
+    "number": 25,
+    "position": "G-F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 191,
+    "firstName": "Tim",
+    "lastName": "Hardaway Jr.",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 192,
+    "firstName": "James",
+    "lastName": "Harden",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 193,
+    "firstName": "Maurice",
+    "lastName": "Harkless",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 194,
+    "firstName": "Montrezl",
+    "lastName": "Harrell",
+    "number": 5,
+    "position": "F-C",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 195,
+    "firstName": "Devin",
+    "lastName": "Harris",
+    "number": 34,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 196,
+    "firstName": "Gary",
+    "lastName": "Harris",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 197,
+    "firstName": "Joe",
+    "lastName": "Harris",
+    "number": 12,
+    "position": "F-G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 198,
+    "firstName": "Andrew",
+    "lastName": "Harrison",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 199,
+    "firstName": "Shaquille",
+    "lastName": "Harrison",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 200,
+    "firstName": "Tobias",
+    "lastName": "Harris",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 201,
+    "firstName": "Isaiah",
+    "lastName": "Hartenstein",
+    "number": 55,
+    "position": "F-C",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 202,
+    "firstName": "Josh",
+    "lastName": "Hart",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 203,
+    "firstName": "Udonis",
+    "lastName": "Haslem",
+    "number": 40,
+    "position": "F",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 204,
+    "firstName": "Gordon",
+    "lastName": "Hayward",
+    "number": 33,
+    "position": "F",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 205,
+    "firstName": "John",
+    "lastName": "Henson",
+    "number": 31,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 206,
+    "firstName": "Juancho",
+    "lastName": "Hernangomez",
+    "number": 41,
+    "position": "F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 207,
+    "firstName": "Willy",
+    "lastName": "Hernangomez",
+    "number": 9,
+    "position": "C",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 208,
+    "firstName": "Mario",
+    "lastName": "Hezonja",
+    "number": 44,
+    "position": "F",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 209,
+    "firstName": "Isaiah",
+    "lastName": "Hicks",
+    "number": 4,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 210,
+    "firstName": "Buddy",
+    "lastName": "Hield",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 211,
+    "firstName": "George",
+    "lastName": "Hill",
+    "number": 7,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 212,
+    "firstName": "Solomon",
+    "lastName": "Hill",
+    "number": 18,
+    "position": "F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 213,
+    "firstName": "Aaron",
+    "lastName": "Holiday",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 214,
+    "firstName": "Jrue",
+    "lastName": "Holiday",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 215,
+    "firstName": "Justin",
+    "lastName": "Holiday",
+    "number": 9,
+    "position": "F-G",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 216,
+    "firstName": "Rondae",
+    "lastName": "Hollis-Jefferson",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 217,
+    "firstName": "Richaun",
+    "lastName": "Holmes",
+    "number": 22,
+    "position": "F-C",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 218,
+    "firstName": "Rodney",
+    "lastName": "Hood",
+    "number": 22,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 219,
+    "firstName": "Al",
+    "lastName": "Horford",
+    "number": 20,
+    "position": "C-F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 220,
+    "firstName": "Dwight",
+    "lastName": "Howard",
+    "number": 39,
+    "position": "C",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 221,
+    "firstName": "Kevin",
+    "lastName": "Huerter",
+    "number": 27,
+    "position": "G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 222,
+    "firstName": "Chandler",
+    "lastName": "Hutchison",
+    "number": 1,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 223,
+    "firstName": "Serge",
+    "lastName": "Ibaka",
+    "number": 25,
+    "position": "F-C",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 224,
+    "firstName": "Andre",
+    "lastName": "Iguodala",
+    "number": 9,
+    "position": "G-F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 225,
+    "firstName": "Ersan",
+    "lastName": "Ilyasova",
+    "number": 77,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 226,
+    "firstName": "Joe",
+    "lastName": "Ingles",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 227,
+    "firstName": "Brandon",
+    "lastName": "Ingram",
+    "number": 3,
+    "position": "F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 228,
+    "firstName": "Kyrie",
+    "lastName": "Irving",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 229,
+    "firstName": "Jonathan",
+    "lastName": "Isaac",
+    "number": 1,
+    "position": "F",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 230,
+    "firstName": "Wes",
+    "lastName": "Iwundu",
+    "number": 4,
+    "position": "F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 231,
+    "firstName": "Jaren",
+    "lastName": "Jackson Jr.",
+    "number": 20,
+    "position": "F-C",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 232,
+    "firstName": "Demetrius",
+    "lastName": "Jackson",
+    "number": 11,
+    "position": "G",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 233,
+    "firstName": "Frank",
+    "lastName": "Jackson",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 234,
+    "firstName": "Josh",
+    "lastName": "Jackson",
+    "number": 55,
+    "position": "F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 235,
+    "firstName": "Justin",
+    "lastName": "Jackson",
+    "number": 44,
+    "position": "F",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 236,
+    "firstName": "Reggie",
+    "lastName": "Jackson",
+    "number": 7,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 237,
+    "firstName": "LeBron",
+    "lastName": "James",
+    "number": 23,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 238,
+    "firstName": "Amile",
+    "lastName": "Jefferson",
+    "number": 11,
+    "position": "F",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 239,
+    "firstName": "Jonas",
+    "lastName": "Jerebko",
+    "number": 21,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 240,
+    "firstName": "Alize",
+    "lastName": "Johnson",
+    "number": 24,
+    "position": "F",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 241,
+    "firstName": "Amir",
+    "lastName": "Johnson",
+    "number": 5,
+    "position": "C-F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 242,
+    "firstName": "James",
+    "lastName": "Johnson",
+    "number": 16,
+    "position": "F",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 243,
+    "firstName": "Stanley",
+    "lastName": "Johnson",
+    "number": 14,
+    "position": "F",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 244,
+    "firstName": "Tyler",
+    "lastName": "Johnson",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 245,
+    "firstName": "Wesley",
+    "lastName": "Johnson",
+    "number": 4,
+    "position": "F-G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 246,
+    "firstName": "Nikola",
+    "lastName": "Jokic",
+    "number": 15,
+    "position": "C",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 247,
+    "firstName": "Derrick",
+    "lastName": "Jones Jr.",
+    "number": 5,
+    "position": "F-G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 248,
+    "firstName": "Damian",
+    "lastName": "Jones",
+    "number": 30,
+    "position": "C",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 249,
+    "firstName": "Tyus",
+    "lastName": "Jones",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 250,
+    "firstName": "DeAndre",
+    "lastName": "Jordan",
+    "number": 9,
+    "position": "C",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 251,
+    "firstName": "Cory",
+    "lastName": "Joseph",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 252,
+    "firstName": "Frank",
+    "lastName": "Kaminsky",
+    "number": 33,
+    "position": "F-C",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 253,
+    "firstName": "Enes",
+    "lastName": "Kanter",
+    "number": 11,
+    "position": "C",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 254,
+    "firstName": "Luke",
+    "lastName": "Kennard",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 255,
+    "firstName": "Michael",
+    "lastName": "Kidd-Gilchrist",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 256,
+    "firstName": "George",
+    "lastName": "King",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 257,
+    "firstName": "Maxi",
+    "lastName": "Kleber",
+    "number": 14,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 258,
+    "firstName": "Brandon",
+    "lastName": "Knight",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 259,
+    "firstName": "Kevin",
+    "lastName": "Knox",
+    "number": 31,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 260,
+    "firstName": "Furkan",
+    "lastName": "Korkmaz",
+    "number": 30,
+    "position": "G-F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 261,
+    "firstName": "Luke",
+    "lastName": "Kornet",
+    "number": 7,
+    "position": "F-C",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 262,
+    "firstName": "Kyle",
+    "lastName": "Korver",
+    "number": 26,
+    "position": "G-F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 263,
+    "firstName": "Kosta",
+    "lastName": "Koufos",
+    "number": 41,
+    "position": "C",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 264,
+    "firstName": "Rodions",
+    "lastName": "Kurucs",
+    "number": 0,
+    "position": "F",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 265,
+    "firstName": "Kyle",
+    "lastName": "Kuzma",
+    "number": 18,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 266,
+    "firstName": "Skal",
+    "lastName": "Labissiere",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 267,
+    "firstName": "Jeremy",
+    "lastName": "Lamb",
+    "number": 26,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 268,
+    "firstName": "Zach",
+    "lastName": "LaVine",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 269,
+    "firstName": "Jake",
+    "lastName": "Layman",
+    "number": 10,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 270,
+    "firstName": "TJ",
+    "lastName": "Leaf",
+    "number": 18,
+    "position": "F",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 271,
+    "firstName": "Courtney",
+    "lastName": "Lee",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 272,
+    "firstName": "Damion",
+    "lastName": "Lee",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 273,
+    "firstName": "Alex",
+    "lastName": "Len",
+    "number": 27,
+    "position": "C",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 274,
+    "firstName": "Kawhi",
+    "lastName": "Leonard",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 275,
+    "firstName": "Meyers",
+    "lastName": "Leonard",
+    "number": 3,
+    "position": "F-C",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 276,
+    "firstName": "Jon",
+    "lastName": "Leuer",
+    "number": 30,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 277,
+    "firstName": "Caris",
+    "lastName": "LeVert",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 278,
+    "firstName": "Damian",
+    "lastName": "Lillard",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 279,
+    "firstName": "Jeremy",
+    "lastName": "Lin",
+    "number": 17,
+    "position": "G",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 280,
+    "firstName": "Shaun",
+    "lastName": "Livingston",
+    "number": 34,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 281,
+    "firstName": "Zach",
+    "lastName": "Lofton",
+    "number": 18,
+    "position": "G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 282,
+    "firstName": "Kevon",
+    "lastName": "Looney",
+    "number": 55,
+    "position": "F",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 283,
+    "firstName": "Brook",
+    "lastName": "Lopez",
+    "number": 11,
+    "position": "C",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 284,
+    "firstName": "Robin",
+    "lastName": "Lopez",
+    "number": 33,
+    "position": "C",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 285,
+    "firstName": "Kevin",
+    "lastName": "Love",
+    "number": 42,
+    "position": "F-C",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 286,
+    "firstName": "Kyle",
+    "lastName": "Lowry",
+    "number": 7,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 287,
+    "firstName": "Jordan",
+    "lastName": "Loyd",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 288,
+    "firstName": "Timothe",
+    "lastName": "Luwawu-Cabarrot",
+    "number": 7,
+    "position": "G-F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 289,
+    "firstName": "Tyler",
+    "lastName": "Lydon",
+    "number": 20,
+    "position": "F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 290,
+    "firstName": "Trey",
+    "lastName": "Lyles",
+    "number": 41,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 291,
+    "firstName": "Shelvin",
+    "lastName": "Mack",
+    "number": 6,
+    "position": "G",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 292,
+    "firstName": "Daryl",
+    "lastName": "Macon",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 293,
+    "firstName": "J.P.",
+    "lastName": "Macura",
+    "number": 55,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 294,
+    "firstName": "Ian",
+    "lastName": "Mahinmi",
+    "number": 28,
+    "position": "C",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 295,
+    "firstName": "Thon",
+    "lastName": "Maker",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 296,
+    "firstName": "Boban",
+    "lastName": "Marjanovic",
+    "number": 51,
+    "position": "C",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 297,
+    "firstName": "Lauri",
+    "lastName": "Markkanen",
+    "number": 23,
+    "position": "F",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 298,
+    "firstName": "Jarell",
+    "lastName": "Martin",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 299,
+    "firstName": "Frank",
+    "lastName": "Mason",
+    "number": 15,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 300,
+    "firstName": "Yante",
+    "lastName": "Maten",
+    "number": 0,
+    "position": "F",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 401,
+    "firstName": "Derrick",
+    "lastName": "Rose",
+    "number": 23,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 402,
+    "firstName": "Terrence",
+    "lastName": "Ross",
+    "number": 8,
+    "position": "G-F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 403,
+    "firstName": "Terry",
+    "lastName": "Rozier",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 404,
+    "firstName": "Ricky",
+    "lastName": "Rubio",
+    "number": 13,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 405,
+    "firstName": "D'Angelo",
+    "lastName": "Russell",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 406,
+    "firstName": "Domantas",
+    "lastName": "Sabonis",
+    "number": 11,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 407,
+    "firstName": "Dario",
+    "lastName": "Saric",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 408,
+    "firstName": "Tomas",
+    "lastName": "Satoransky",
+    "number": 31,
+    "position": "G-F",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 409,
+    "firstName": "Dennis",
+    "lastName": "Schroder",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 410,
+    "firstName": "Mike",
+    "lastName": "Scott",
+    "number": 1,
+    "position": "F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 411,
+    "firstName": "Thabo",
+    "lastName": "Sefolosha",
+    "number": 18,
+    "position": "F",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 412,
+    "firstName": "Wayne",
+    "lastName": "Selden",
+    "number": 14,
+    "position": "G-F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 413,
+    "firstName": "Collin",
+    "lastName": "Sexton",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 414,
+    "firstName": "Landry",
+    "lastName": "Shamet",
+    "number": 44,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 415,
+    "firstName": "Iman",
+    "lastName": "Shumpert",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 416,
+    "firstName": "Pascal",
+    "lastName": "Siakam",
+    "number": 43,
+    "position": "F",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 417,
+    "firstName": "Ben",
+    "lastName": "Simmons",
+    "number": 25,
+    "position": "G-F",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 418,
+    "firstName": "Jonathon",
+    "lastName": "Simmons",
+    "number": 14,
+    "position": "F",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 419,
+    "firstName": "Anfernee",
+    "lastName": "Simons",
+    "number": 22,
+    "position": "G",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 420,
+    "firstName": "Marcus",
+    "lastName": "Smart",
+    "number": 36,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 421,
+    "firstName": "Dennis",
+    "lastName": "Smith Jr.",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 422,
+    "firstName": "Ish",
+    "lastName": "Smith",
+    "number": 14,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 423,
+    "firstName": "Jason",
+    "lastName": "Smith",
+    "number": 14,
+    "position": "F-C",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 424,
+    "firstName": "JR",
+    "lastName": "Smith",
+    "number": 21,
+    "position": "G-F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 425,
+    "firstName": "Zhaire",
+    "lastName": "Smith",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 426,
+    "firstName": "Tony",
+    "lastName": "Snell",
+    "number": 21,
+    "position": "G",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 427,
+    "firstName": "Ray",
+    "lastName": "Spalding",
+    "number": 26,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 428,
+    "firstName": "Omari",
+    "lastName": "Spellman",
+    "number": 14,
+    "position": "F",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 429,
+    "firstName": "Nik",
+    "lastName": "Stauskas",
+    "number": 13,
+    "position": "G",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 430,
+    "firstName": "DJ",
+    "lastName": "Stephens",
+    "number": 20,
+    "position": "G-F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 431,
+    "firstName": "Lance",
+    "lastName": "Stephenson",
+    "number": 6,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 432,
+    "firstName": "Edmond",
+    "lastName": "Sumner",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 433,
+    "firstName": "Caleb",
+    "lastName": "Swanigan",
+    "number": 50,
+    "position": "F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 434,
+    "firstName": "Jayson",
+    "lastName": "Tatum",
+    "number": 0,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 435,
+    "firstName": "Jeff",
+    "lastName": "Teague",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 436,
+    "firstName": "Garrett",
+    "lastName": "Temple",
+    "number": 17,
+    "position": "G-F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 437,
+    "firstName": "Milos",
+    "lastName": "Teodosic",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 438,
+    "firstName": "Jared",
+    "lastName": "Terrell",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 439,
+    "firstName": "Daniel",
+    "lastName": "Theis",
+    "number": 10,
+    "position": "F",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 440,
+    "firstName": "Isaiah",
+    "lastName": "Thomas",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 441,
+    "firstName": "Khyri",
+    "lastName": "Thomas",
+    "number": 13,
+    "position": "G",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 442,
+    "firstName": "Lance",
+    "lastName": "Thomas",
+    "number": 42,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 443,
+    "firstName": "Klay",
+    "lastName": "Thompson",
+    "number": 31,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 444,
+    "firstName": "Tristan",
+    "lastName": "Thompson",
+    "number": 13,
+    "position": "C-F",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 445,
+    "firstName": "Sindarius",
+    "lastName": "Thornwell",
+    "number": 15,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 446,
+    "firstName": "Anthony",
+    "lastName": "Tolliver",
+    "number": 43,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 447,
+    "firstName": "Karl-Anthony",
+    "lastName": "Towns",
+    "number": 32,
+    "position": "C",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 448,
+    "firstName": "Gary",
+    "lastName": "Trent Jr.",
+    "number": null,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 449,
+    "firstName": "Allonzo",
+    "lastName": "Trier",
+    "number": 14,
+    "position": "G",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 450,
+    "firstName": "PJ",
+    "lastName": "Tucker",
+    "number": null,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 451,
+    "firstName": "Evan",
+    "lastName": "Turner",
+    "number": 1,
+    "position": "G-F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 452,
+    "firstName": "Myles",
+    "lastName": "Turner",
+    "number": 3,
+    "position": "C-F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 453,
+    "firstName": "Ekpe",
+    "lastName": "Udoh",
+    "number": 33,
+    "position": "C-F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 454,
+    "firstName": "Tyler",
+    "lastName": "Ulis",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 455,
+    "firstName": "Jonas",
+    "lastName": "Valanciunas",
+    "number": 17,
+    "position": "C",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 456,
+    "firstName": "Denzel",
+    "lastName": "Valentine",
+    "number": 45,
+    "position": "G",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 457,
+    "firstName": "Jarred",
+    "lastName": "Vanderbilt",
+    "number": 2,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 458,
+    "firstName": "Fred",
+    "lastName": "VanVleet",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 459,
+    "firstName": "Noah",
+    "lastName": "Vonleh",
+    "number": 32,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 460,
+    "firstName": "Nikola",
+    "lastName": "Vucevic",
+    "number": 4,
+    "position": "C",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 461,
+    "firstName": "Dwyane",
+    "lastName": "Wade",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 462,
+    "firstName": "Moritz",
+    "lastName": "Wagner",
+    "number": 21,
+    "position": "C",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 463,
+    "firstName": "Dion",
+    "lastName": "Waiters",
+    "number": 18,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 464,
+    "firstName": "Lonnie",
+    "lastName": "Walker IV",
+    "number": 16,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 465,
+    "firstName": "Kemba",
+    "lastName": "Walker",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 466,
+    "firstName": "Tyrone",
+    "lastName": "Wallace",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 467,
+    "firstName": "John",
+    "lastName": "Wall",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 468,
+    "firstName": "Brad",
+    "lastName": "Wanamaker",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 469,
+    "firstName": "T.J.",
+    "lastName": "Warren",
+    "number": 24,
+    "position": "F",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 470,
+    "firstName": "Yuta",
+    "lastName": "Watanabe",
+    "number": 18,
+    "position": "G",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 471,
+    "firstName": "Thomas",
+    "lastName": "Welsh",
+    "number": 45,
+    "position": "C",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 472,
+    "firstName": "Russell",
+    "lastName": "Westbrook",
+    "number": 18,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 473,
+    "firstName": "Derrick",
+    "lastName": "White",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 474,
+    "firstName": "Hassan",
+    "lastName": "Whiteside",
+    "number": 21,
+    "position": "C",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 475,
+    "firstName": "Andrew",
+    "lastName": "Wiggins",
+    "number": 22,
+    "position": "F-G",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 476,
+    "firstName": "Robert",
+    "lastName": "Williams III",
+    "number": 35,
+    "position": "C-F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 477,
+    "firstName": "Alan",
+    "lastName": "Williams",
+    "number": 15,
+    "position": "F-C",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 478,
+    "firstName": "C.J.",
+    "lastName": "Williams",
+    "number": 12,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 479,
+    "firstName": "Johnathan",
+    "lastName": "Williams",
+    "number": 19,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 480,
+    "firstName": "Kenrich",
+    "lastName": "Williams",
+    "number": 34,
+    "position": "G-F",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 481,
+    "firstName": "Lou",
+    "lastName": "Williams",
+    "number": 6,
+    "position": "G",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 482,
+    "firstName": "Marvin",
+    "lastName": "Williams",
+    "number": 20,
+    "position": "F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 483,
+    "firstName": "Troy",
+    "lastName": "Williams",
+    "number": 19,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 484,
+    "firstName": "D.J.",
+    "lastName": "Wilson",
+    "number": 0,
+    "position": "F",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 485,
+    "firstName": "Justise",
+    "lastName": "Winslow",
+    "number": 26,
+    "position": "F",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 486,
+    "firstName": "Christian",
+    "lastName": "Wood",
+    "number": 35,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 487,
+    "firstName": "Delon",
+    "lastName": "Wright",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 488,
+    "firstName": "Guerschon",
+    "lastName": "Yabusele",
+    "number": 28,
+    "position": "F",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 489,
+    "firstName": "Thaddeus",
+    "lastName": "Young",
+    "number": 30,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 490,
+    "firstName": "Trae",
+    "lastName": "Young",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 491,
+    "firstName": "Cody",
+    "lastName": "Zeller",
+    "number": 40,
+    "position": "C",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 492,
+    "firstName": "Ante",
+    "lastName": "Zizic",
+    "number": 41,
+    "position": "C",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 493,
+    "firstName": "Ivica",
+    "lastName": "Zubac",
+    "number": 40,
+    "position": "C",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 494,
+    "firstName": "Michael",
+    "lastName": "Smith",
+    "number": null,
+    "position": "N/A",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 495,
+    "firstName": "John",
+    "lastName": "Morton",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 496,
+    "firstName": "Howard",
+    "lastName": "Wright",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 497,
+    "firstName": "Michael",
+    "lastName": "Ansley",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 498,
+    "firstName": "John",
+    "lastName": "Salley",
+    "number": 16,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 499,
+    "firstName": "Dan",
+    "lastName": "Schayes",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 500,
+    "firstName": "Mark",
+    "lastName": "Eaton",
+    "number": 53,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 501,
+    "firstName": "Kevin",
+    "lastName": "Johnson",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 502,
+    "firstName": "Danny",
+    "lastName": "Ainge",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 503,
+    "firstName": "Kenny",
+    "lastName": "Smith",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 504,
+    "firstName": "Randy",
+    "lastName": "Breuer",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 505,
+    "firstName": "Herb",
+    "lastName": "Williams",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 506,
+    "firstName": "Joe",
+    "lastName": "Wolf",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 507,
+    "firstName": "Steve",
+    "lastName": "Johnson",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 508,
+    "firstName": "Glen",
+    "lastName": "Rice",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 509,
+    "firstName": "Greg",
+    "lastName": "Foster",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 510,
+    "firstName": "Larry",
+    "lastName": "Nance",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 511,
+    "firstName": "Duane",
+    "lastName": "Ferrell",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 512,
+    "firstName": "Nick",
+    "lastName": "Anderson",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 513,
+    "firstName": "Joe",
+    "lastName": "Dumars",
+    "number": 4,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 514,
+    "firstName": "Jay",
+    "lastName": "Humphries",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 515,
+    "firstName": "Darrell",
+    "lastName": "Griffith",
+    "number": 35,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 516,
+    "firstName": "Dan",
+    "lastName": "Majerle",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 517,
+    "firstName": "Tom",
+    "lastName": "Chambers",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 518,
+    "firstName": "Alaa",
+    "lastName": "Abdelnaby",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 519,
+    "firstName": "Adrian",
+    "lastName": "Caldwell",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 520,
+    "firstName": "Vernon",
+    "lastName": "Maxwell",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 521,
+    "firstName": "Doug",
+    "lastName": "West",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 522,
+    "firstName": "Tony",
+    "lastName": "Campbell",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 523,
+    "firstName": "Roy",
+    "lastName": "Tarpley",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 524,
+    "firstName": "Anthony",
+    "lastName": "Cook",
+    "number": 38,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 525,
+    "firstName": "Todd",
+    "lastName": "Lichti",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 526,
+    "firstName": "Tom",
+    "lastName": "Tolbert",
+    "number": 39,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 527,
+    "firstName": "Billy",
+    "lastName": "Thompson",
+    "number": 55,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 528,
+    "firstName": "Byron",
+    "lastName": "Irvin",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 529,
+    "firstName": "Mark",
+    "lastName": "Price",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 530,
+    "firstName": "Dominique",
+    "lastName": "Wilkins",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 531,
+    "firstName": "Dennis",
+    "lastName": "Scott",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 532,
+    "firstName": "Terry",
+    "lastName": "Catledge",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 533,
+    "firstName": "Bill",
+    "lastName": "Laimbeer",
+    "number": 40,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 534,
+    "firstName": "William",
+    "lastName": "Bedford",
+    "number": 0,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 535,
+    "firstName": "Ricky",
+    "lastName": "Pierce",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 536,
+    "firstName": "Blue",
+    "lastName": "Edwards",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 537,
+    "firstName": "Walter",
+    "lastName": "Palmer",
+    "number": 31,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 538,
+    "firstName": "Mark",
+    "lastName": "West",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 539,
+    "firstName": "Clifford",
+    "lastName": "Robinson",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 540,
+    "firstName": "Hakeem",
+    "lastName": "Olajuwon",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 541,
+    "firstName": "Richard",
+    "lastName": "Coffey",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 542,
+    "firstName": "James",
+    "lastName": "Donaldson",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 543,
+    "firstName": "Jerome",
+    "lastName": "Lane",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 544,
+    "firstName": "Sarunas",
+    "lastName": "Marciulionis",
+    "number": 78,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 545,
+    "firstName": "Grant",
+    "lastName": "Long",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 546,
+    "firstName": "Willie",
+    "lastName": "Burton",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 547,
+    "firstName": "Mark",
+    "lastName": "Alarie",
+    "number": 31,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 548,
+    "firstName": "Winston",
+    "lastName": "Bennett",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 549,
+    "firstName": "Doc",
+    "lastName": "Rivers",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 550,
+    "firstName": "Tim",
+    "lastName": "McCormick",
+    "number": 44,
+    "position": "N/A",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 551,
+    "firstName": "Scott",
+    "lastName": "Skiles",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 552,
+    "firstName": "Dennis",
+    "lastName": "Rodman",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 553,
+    "firstName": "Greg",
+    "lastName": "Anderson",
+    "number": 0,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 554,
+    "firstName": "Jeff",
+    "lastName": "Malone",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 555,
+    "firstName": "Cedric",
+    "lastName": "Ceballos",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 556,
+    "firstName": "Tim",
+    "lastName": "Perry",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 557,
+    "firstName": "Buck",
+    "lastName": "Williams",
+    "number": 52,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 558,
+    "firstName": "Dave",
+    "lastName": "Jamerson",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 559,
+    "firstName": "Scott",
+    "lastName": "Brooks",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 560,
+    "firstName": "Rolando",
+    "lastName": "Blackman",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 561,
+    "firstName": "Avery",
+    "lastName": "Johnson",
+    "number": 6,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 562,
+    "firstName": "Rod",
+    "lastName": "Higgins",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 563,
+    "firstName": "Jon",
+    "lastName": "Sundvold",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 564,
+    "firstName": "A.J.",
+    "lastName": "English",
+    "number": 14,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 565,
+    "firstName": "John",
+    "lastName": "Battle",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 566,
+    "firstName": "Sam",
+    "lastName": "Vincent",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 567,
+    "firstName": "Isiah",
+    "lastName": "Thomas",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 568,
+    "firstName": "Brad",
+    "lastName": "Lohaus",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 569,
+    "firstName": "Mike",
+    "lastName": "Brown",
+    "number": 52,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 570,
+    "firstName": "Kenny",
+    "lastName": "Battle",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 571,
+    "firstName": "Danny",
+    "lastName": "Young",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 572,
+    "firstName": "Larry",
+    "lastName": "Smith",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 573,
+    "firstName": "Pooh",
+    "lastName": "Richardson",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 574,
+    "firstName": "Derek",
+    "lastName": "Harper",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 575,
+    "firstName": "Michael",
+    "lastName": "Adams",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 576,
+    "firstName": "Tim",
+    "lastName": "Hardaway",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 577,
+    "firstName": "Bimbo",
+    "lastName": "Coles",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 578,
+    "firstName": "Darrell",
+    "lastName": "Walker",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 579,
+    "firstName": "Kevin",
+    "lastName": "Willis",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 580,
+    "firstName": "Otis",
+    "lastName": "Smith",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 581,
+    "firstName": "James",
+    "lastName": "Edwards",
+    "number": 53,
+    "position": "N/A",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 582,
+    "firstName": "Frank",
+    "lastName": "Brickowski",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 583,
+    "firstName": "Karl",
+    "lastName": "Malone",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 584,
+    "firstName": "Ian",
+    "lastName": "Lockhart",
+    "number": 51,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 585,
+    "firstName": "Kevin",
+    "lastName": "Duckworth",
+    "number": 0,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 586,
+    "firstName": "Otis",
+    "lastName": "Thorpe",
+    "number": 52,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 587,
+    "firstName": "Gerald",
+    "lastName": "Glass",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 588,
+    "firstName": "Alex",
+    "lastName": "English",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 589,
+    "firstName": "T.R.",
+    "lastName": "Dunn",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 590,
+    "firstName": "Alton",
+    "lastName": "Lister",
+    "number": 53,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 591,
+    "firstName": "Sherman",
+    "lastName": "Douglas",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 592,
+    "firstName": "Charles",
+    "lastName": "Jones",
+    "number": 27,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 593,
+    "firstName": "Moses",
+    "lastName": "Malone",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 594,
+    "firstName": "Mark",
+    "lastName": "Acres",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 595,
+    "firstName": "Lance",
+    "lastName": "Blanks",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 596,
+    "firstName": "Jeff",
+    "lastName": "Grayer",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 597,
+    "firstName": "Chris",
+    "lastName": "Munk",
+    "number": 44,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 598,
+    "firstName": "Jeff",
+    "lastName": "Hornacek",
+    "number": 14,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 599,
+    "firstName": "Jerome",
+    "lastName": "Kersey",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 600,
+    "firstName": "Dave",
+    "lastName": "Feitl",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 601,
+    "firstName": "Tod",
+    "lastName": "Murphy",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 602,
+    "firstName": "Lafayette",
+    "lastName": "Lever",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 603,
+    "firstName": "Corey",
+    "lastName": "Gaines",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 604,
+    "firstName": "Mitch",
+    "lastName": "Richmond",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 605,
+    "firstName": "Kevin",
+    "lastName": "Edwards",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 606,
+    "firstName": "Haywoode",
+    "lastName": "Workman",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 607,
+    "firstName": "Tom",
+    "lastName": "Hammonds",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 608,
+    "firstName": "Rumeal",
+    "lastName": "Robinson",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 609,
+    "firstName": "Greg",
+    "lastName": "Kite",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 610,
+    "firstName": "Vinnie",
+    "lastName": "Johnson",
+    "number": 15,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 611,
+    "firstName": "Jack",
+    "lastName": "Sikma",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 612,
+    "firstName": "Delaney",
+    "lastName": "Rudd",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 613,
+    "firstName": "Ed",
+    "lastName": "Nealy",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 614,
+    "firstName": "Wayne",
+    "lastName": "Cooper",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 615,
+    "firstName": "Sleepy",
+    "lastName": "Floyd",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 616,
+    "firstName": "Felton",
+    "lastName": "Spencer",
+    "number": 50,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 617,
+    "firstName": "Tyrone",
+    "lastName": "Corbin",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 618,
+    "firstName": "Marcus",
+    "lastName": "Liberty",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 619,
+    "firstName": "Walter",
+    "lastName": "Davis",
+    "number": 6,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 620,
+    "firstName": "Tyrone",
+    "lastName": "Hill",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 621,
+    "firstName": "Alec",
+    "lastName": "Kessler",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 622,
+    "firstName": "Terry",
+    "lastName": "Davis",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 623,
+    "firstName": "Larry",
+    "lastName": "Robinson",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 624,
+    "firstName": "Sidney",
+    "lastName": "Moncrief",
+    "number": 4,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 625,
+    "firstName": "Jeff",
+    "lastName": "Turner",
+    "number": 31,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 626,
+    "firstName": "Scott",
+    "lastName": "Hastings",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 627,
+    "firstName": "Alvin",
+    "lastName": "Robertson",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 628,
+    "firstName": "Steve",
+    "lastName": "Henson",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 629,
+    "firstName": "Andy",
+    "lastName": "Toolson",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 630,
+    "firstName": "Thurl",
+    "lastName": "Bailey",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 631,
+    "firstName": "Kurt",
+    "lastName": "Rambis",
+    "number": 18,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 632,
+    "firstName": "Clyde",
+    "lastName": "Drexler",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 633,
+    "firstName": "David",
+    "lastName": "Wood",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 634,
+    "firstName": "Sam",
+    "lastName": "Mitchell",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 635,
+    "firstName": "Rodney",
+    "lastName": "McCray",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 636,
+    "firstName": "Blair",
+    "lastName": "Rasmussen",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 637,
+    "firstName": "Kevin",
+    "lastName": "Pritchard",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 638,
+    "firstName": "Milt",
+    "lastName": "Wagner",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 639,
+    "firstName": "Bernard",
+    "lastName": "King",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 640,
+    "firstName": "Roy",
+    "lastName": "Hinson",
+    "number": 6,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 641,
+    "firstName": "Matt",
+    "lastName": "Bullard",
+    "number": 50,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 642,
+    "firstName": "Alan",
+    "lastName": "Ogg",
+    "number": 50,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 643,
+    "firstName": "Kevin",
+    "lastName": "Lynch",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 644,
+    "firstName": "Larry",
+    "lastName": "Krystkowiak",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 645,
+    "firstName": "Pete",
+    "lastName": "Chilcutt",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 646,
+    "firstName": "Randy",
+    "lastName": "Brown",
+    "number": 0,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 647,
+    "firstName": "Elliot",
+    "lastName": "Perry",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 648,
+    "firstName": "Jimmy",
+    "lastName": "Oliver",
+    "number": 27,
+    "position": "N/A",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 649,
+    "firstName": "Terrell",
+    "lastName": "Brandon",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 650,
+    "firstName": "Greg",
+    "lastName": "Sutton",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 651,
+    "firstName": "Tom",
+    "lastName": "Copa",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 652,
+    "firstName": "Donald",
+    "lastName": "Hodge",
+    "number": 35,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 653,
+    "firstName": "Joao",
+    "lastName": "Vianna",
+    "number": 31,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 654,
+    "firstName": "Mike",
+    "lastName": "Iuzzolino",
+    "number": 13,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 655,
+    "firstName": "Greg",
+    "lastName": "Anthony",
+    "number": 50,
+    "position": "N/A",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 656,
+    "firstName": "Albert",
+    "lastName": "King",
+    "number": 15,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 657,
+    "firstName": "Tellis",
+    "lastName": "Frank",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 658,
+    "firstName": "David",
+    "lastName": "Benoit",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 659,
+    "firstName": "Demetrius",
+    "lastName": "Calip",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 660,
+    "firstName": "Dikembe",
+    "lastName": "Mutombo",
+    "number": 55,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 661,
+    "firstName": "Mark",
+    "lastName": "Macon",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 662,
+    "firstName": "Chris",
+    "lastName": "Gatling",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 663,
+    "firstName": "Victor",
+    "lastName": "Alexander",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 664,
+    "firstName": "Mark",
+    "lastName": "Randall",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 665,
+    "firstName": "Mitchell",
+    "lastName": "Wiggins",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 666,
+    "firstName": "Tharon",
+    "lastName": "Mayes",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 667,
+    "firstName": "Charles",
+    "lastName": "Thomas",
+    "number": 14,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 668,
+    "firstName": "Robert",
+    "lastName": "Pack",
+    "number": 14,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 669,
+    "firstName": "John",
+    "lastName": "Bagley",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 670,
+    "firstName": "Rick",
+    "lastName": "Fox",
+    "number": 17,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 671,
+    "firstName": "Larry",
+    "lastName": "Johnson",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 672,
+    "firstName": "Alexander",
+    "lastName": "Volkov",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 673,
+    "firstName": "Stacey",
+    "lastName": "Augmon",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 674,
+    "firstName": "Carl",
+    "lastName": "Thomas",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 675,
+    "firstName": "Steven",
+    "lastName": "Smith",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 676,
+    "firstName": "Stanley",
+    "lastName": "Roberts",
+    "number": 53,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 677,
+    "firstName": "Doug",
+    "lastName": "Lee",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 678,
+    "firstName": "Rafael",
+    "lastName": "Addison",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 679,
+    "firstName": "Sean",
+    "lastName": "Green",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 680,
+    "firstName": "Corey",
+    "lastName": "Crowder",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 681,
+    "firstName": "Eric",
+    "lastName": "Murdock",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 682,
+    "firstName": "Kevin",
+    "lastName": "Brooks",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 683,
+    "firstName": "Carlton",
+    "lastName": "McKinney",
+    "number": 4,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 684,
+    "firstName": "Billy",
+    "lastName": "Owens",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 685,
+    "firstName": "Doug",
+    "lastName": "Smith",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 686,
+    "firstName": "Marty",
+    "lastName": "Conlon",
+    "number": 40,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 687,
+    "firstName": "Rich",
+    "lastName": "King",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 688,
+    "firstName": "Brad",
+    "lastName": "Sellers",
+    "number": 4,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 689,
+    "firstName": "Rodney",
+    "lastName": "Monroe",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 690,
+    "firstName": "Lanard",
+    "lastName": "Copeland",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 691,
+    "firstName": "LeRon",
+    "lastName": "Ellis",
+    "number": 28,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 692,
+    "firstName": "Larry",
+    "lastName": "Stewart",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 693,
+    "firstName": "John",
+    "lastName": "Turner",
+    "number": 40,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 694,
+    "firstName": "Charles",
+    "lastName": "Shackleford",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 695,
+    "firstName": "Keith",
+    "lastName": "Owens",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 696,
+    "firstName": "Paul",
+    "lastName": "Graham",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 697,
+    "firstName": "Kenny",
+    "lastName": "Anderson",
+    "number": 13,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 698,
+    "firstName": "Carl",
+    "lastName": "Herrera",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 699,
+    "firstName": "Myron",
+    "lastName": "Brown",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 700,
+    "firstName": "Dale",
+    "lastName": "Davis",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 701,
+    "firstName": "Labradford",
+    "lastName": "Smith",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 702,
+    "firstName": "Bison",
+    "lastName": "Dele",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 703,
+    "firstName": "Chuck",
+    "lastName": "Nevitt",
+    "number": 52,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 704,
+    "firstName": "Patrick",
+    "lastName": "Eddie",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 705,
+    "firstName": "David",
+    "lastName": "Rivers",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 706,
+    "firstName": "Luc",
+    "lastName": "Longley",
+    "number": 13,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 707,
+    "firstName": "Bob",
+    "lastName": "McCann",
+    "number": 55,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 708,
+    "firstName": "Donald",
+    "lastName": "Royal",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 709,
+    "firstName": "Anthony",
+    "lastName": "Bowie",
+    "number": 13,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 710,
+    "firstName": "Chris",
+    "lastName": "Corchiani",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 711,
+    "firstName": "Stephen",
+    "lastName": "Thompson",
+    "number": 5,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 712,
+    "firstName": "Jeff",
+    "lastName": "Ruland",
+    "number": 50,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 713,
+    "firstName": "Ronnie",
+    "lastName": "Grandison",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 714,
+    "firstName": "Lamont",
+    "lastName": "Strothers",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 715,
+    "firstName": "Tracy",
+    "lastName": "Moore",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 716,
+    "firstName": "Jaren",
+    "lastName": "Jackson",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 717,
+    "firstName": "Ennis",
+    "lastName": "Whatley",
+    "number": 1,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 718,
+    "firstName": "Brian",
+    "lastName": "Howard",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 719,
+    "firstName": "Steve",
+    "lastName": "Burtt",
+    "number": 15,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 720,
+    "firstName": "Cedric",
+    "lastName": "Hunter",
+    "number": 15,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 721,
+    "firstName": "Stephen",
+    "lastName": "Bardo",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 722,
+    "firstName": "Cliff",
+    "lastName": "T. Robinson",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 723,
+    "firstName": "Derek",
+    "lastName": "Strong",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 724,
+    "firstName": "Bobby",
+    "lastName": "Phills",
+    "number": 13,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 725,
+    "firstName": "Anthony",
+    "lastName": "Avent",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 726,
+    "firstName": "Lee",
+    "lastName": "Mayberry",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 727,
+    "firstName": "Todd",
+    "lastName": "Day",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 728,
+    "firstName": "Tony",
+    "lastName": "Bennett",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 729,
+    "firstName": "Brent",
+    "lastName": "Price",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 730,
+    "firstName": "Don",
+    "lastName": "MacLean",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 731,
+    "firstName": "Tom",
+    "lastName": "Gugliotta",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 732,
+    "firstName": "Walt",
+    "lastName": "Williams",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 733,
+    "firstName": "Lloyd",
+    "lastName": "Daniels",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 734,
+    "firstName": "Vinny",
+    "lastName": "Del Negro",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 735,
+    "firstName": "Shaquille",
+    "lastName": "O'Neal",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 736,
+    "firstName": "Adam",
+    "lastName": "Keefe",
+    "number": 32,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 737,
+    "firstName": "Clar.",
+    "lastName": "Weatherspoon",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 738,
+    "firstName": "Robert",
+    "lastName": "Horry",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 739,
+    "firstName": "Chris",
+    "lastName": "Smith",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 740,
+    "firstName": "Christian",
+    "lastName": "Laettner",
+    "number": 44,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 741,
+    "firstName": "Gundars",
+    "lastName": "Vetra",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 742,
+    "firstName": "Corey",
+    "lastName": "Williams",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 743,
+    "firstName": "Elmore",
+    "lastName": "Spencer",
+    "number": 27,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 744,
+    "firstName": "Anthony",
+    "lastName": "Peeler",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 745,
+    "firstName": "Duane",
+    "lastName": "Cooper",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 746,
+    "firstName": "John",
+    "lastName": "Crotty",
+    "number": 22,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 747,
+    "firstName": "Stephen",
+    "lastName": "Howard",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 748,
+    "firstName": "Byron",
+    "lastName": "Houston",
+    "number": 35,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 749,
+    "firstName": "Keith",
+    "lastName": "Jennings",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 750,
+    "firstName": "Latrell",
+    "lastName": "Sprewell",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 751,
+    "firstName": "Bryant",
+    "lastName": "Stith",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 752,
+    "firstName": "LaPhonso",
+    "lastName": "Ellis",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 753,
+    "firstName": "Matt",
+    "lastName": "Othick",
+    "number": 12,
+    "position": "N/A",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 754,
+    "firstName": "Sam",
+    "lastName": "Mack",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 755,
+    "firstName": "Anthony",
+    "lastName": "Pullard",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 756,
+    "firstName": "Malik",
+    "lastName": "Sealy",
+    "number": 2,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 757,
+    "firstName": "Hubert",
+    "lastName": "Davis",
+    "number": 44,
+    "position": "N/A",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 758,
+    "firstName": "Sean",
+    "lastName": "Rooks",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 759,
+    "firstName": "Walter",
+    "lastName": "Bond",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 760,
+    "firstName": "Harold",
+    "lastName": "Miner",
+    "number": 4,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 761,
+    "firstName": "Oliver",
+    "lastName": "Miller",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 762,
+    "firstName": "Lorenzo",
+    "lastName": "Williams",
+    "number": 43,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 763,
+    "firstName": "Dave",
+    "lastName": "Johnson",
+    "number": 8,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 764,
+    "firstName": "Reggie",
+    "lastName": "Smith",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 765,
+    "firstName": "Tracy",
+    "lastName": "Murray",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 766,
+    "firstName": "Robert",
+    "lastName": "Werdann",
+    "number": null,
+    "position": "N/A",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 767,
+    "firstName": "Alex",
+    "lastName": "Stivrins",
+    "number": 11,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 768,
+    "firstName": "Frank",
+    "lastName": "Johnson",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 769,
+    "firstName": "Randy",
+    "lastName": "Woods",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 770,
+    "firstName": "Litterial",
+    "lastName": "Green",
+    "number": 9,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 771,
+    "firstName": "Alonzo",
+    "lastName": "Mourning",
+    "number": 33,
+    "position": "N/A",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 772,
+    "firstName": "Alex",
+    "lastName": "Blackwell",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 773,
+    "firstName": "Isaiah",
+    "lastName": "Morris",
+    "number": 35,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 774,
+    "firstName": "Doug",
+    "lastName": "Overton",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 775,
+    "firstName": "Eric",
+    "lastName": "Anderson",
+    "number": 42,
+    "position": "N/A",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 776,
+    "firstName": "Tim",
+    "lastName": "Kempton",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 777,
+    "firstName": "Stan",
+    "lastName": "Kimbrough",
+    "number": 21,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 778,
+    "firstName": "Jay",
+    "lastName": "Guidinger",
+    "number": 54,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 779,
+    "firstName": "Gary",
+    "lastName": "Plummer",
+    "number": 45,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 780,
+    "firstName": "Matt",
+    "lastName": "Geiger",
+    "number": 52,
+    "position": "N/A",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 781,
+    "firstName": "Marcus",
+    "lastName": "Webb",
+    "number": 41,
+    "position": "N/A",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 782,
+    "firstName": "Jojo",
+    "lastName": "English",
+    "number": 3,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 783,
+    "firstName": "Marlon",
+    "lastName": "Maxey",
+    "number": 25,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 784,
+    "firstName": "Jon",
+    "lastName": "Barry",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 785,
+    "firstName": "Richard",
+    "lastName": "Dumas",
+    "number": 7,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 786,
+    "firstName": "Radisav",
+    "lastName": "Curcic",
+    "number": 44,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 787,
+    "firstName": "Andre",
+    "lastName": "Spencer",
+    "number": 20,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 788,
+    "firstName": "Dexter",
+    "lastName": "Cambridge",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 789,
+    "firstName": "Joe",
+    "lastName": "Courtney",
+    "number": 40,
+    "position": "N/A",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 790,
+    "firstName": "Duane",
+    "lastName": "Washington",
+    "number": 10,
+    "position": "N/A",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 791,
+    "firstName": "Melvin",
+    "lastName": "Newbern",
+    "number": 23,
+    "position": "N/A",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 792,
+    "firstName": "Ricky",
+    "lastName": "Blanton",
+    "number": 17,
+    "position": "N/A",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 793,
+    "firstName": "Jim",
+    "lastName": "Jackson",
+    "number": 24,
+    "position": "N/A",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 794,
+    "firstName": "Barry",
+    "lastName": "Stevens",
+    "number": 34,
+    "position": "N/A",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 795,
+    "firstName": "Doug",
+    "lastName": "Christie",
+    "number": 13,
+    "position": "N/A",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 796,
+    "firstName": "Pat",
+    "lastName": "Durham",
+    "number": 30,
+    "position": "N/A",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 797,
+    "firstName": "Thomas",
+    "lastName": "Jordan",
+    "number": 55,
+    "position": "N/A",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 798,
+    "firstName": "Gary",
+    "lastName": "Alexander",
+    "number": 16,
+    "position": "N/A",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 799,
+    "firstName": "Anfernee",
+    "lastName": "Hardaway",
+    "number": 1,
+    "position": "N/A",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 800,
+    "firstName": "Keith",
+    "lastName": "Tower",
+    "number": 51,
+    "position": "N/A",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 301,
+    "firstName": "Wesley",
+    "lastName": "Matthews",
+    "number": 32,
+    "position": "G-F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 302,
+    "firstName": "Luc",
+    "lastName": "Mbah a Moute",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 303,
+    "firstName": "CJ",
+    "lastName": "McCollum",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 304,
+    "firstName": "T.J.",
+    "lastName": "McConnell",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 305,
+    "firstName": "Doug",
+    "lastName": "McDermott",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 306,
+    "firstName": "JaVale",
+    "lastName": "McGee",
+    "number": 0,
+    "position": "C",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 307,
+    "firstName": "Rodney",
+    "lastName": "McGruder",
+    "number": 17,
+    "position": "F-G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 308,
+    "firstName": "Alfonzo",
+    "lastName": "McKinnie",
+    "number": 28,
+    "position": "F",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 309,
+    "firstName": "Ben",
+    "lastName": "McLemore",
+    "number": 23,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 310,
+    "firstName": "Jordan",
+    "lastName": "McRae",
+    "number": 52,
+    "position": "G",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 311,
+    "firstName": "Jodie",
+    "lastName": "Meeks",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 312,
+    "firstName": "Salah",
+    "lastName": "Mejri",
+    "number": 50,
+    "position": "C",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 313,
+    "firstName": "De'Anthony",
+    "lastName": "Melton",
+    "number": 8,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 314,
+    "firstName": "Chimezie",
+    "lastName": "Metu",
+    "number": 4,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 315,
+    "firstName": "Khris",
+    "lastName": "Middleton",
+    "number": 20,
+    "position": "F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 316,
+    "firstName": "CJ",
+    "lastName": "Miles",
+    "number": 6,
+    "position": "F-G",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 317,
+    "firstName": "Darius",
+    "lastName": "Miller",
+    "number": 21,
+    "position": "F",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 318,
+    "firstName": "Paul",
+    "lastName": "Millsap",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 319,
+    "firstName": "Patty",
+    "lastName": "Mills",
+    "number": 88,
+    "position": "G",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 320,
+    "firstName": "Shake",
+    "lastName": "Milton",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 321,
+    "firstName": "Nikola",
+    "lastName": "Mirotic",
+    "number": 41,
+    "position": "F",
+    "teamShortName": "CHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 322,
+    "firstName": "Donovan",
+    "lastName": "Mitchell",
+    "number": 45,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 323,
+    "firstName": "Naz",
+    "lastName": "Mitrou-Long",
+    "number": 15,
+    "position": "G",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 324,
+    "firstName": "Malik",
+    "lastName": "Monk",
+    "number": 0,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 325,
+    "firstName": "Greg",
+    "lastName": "Monroe",
+    "number": 15,
+    "position": "C",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 326,
+    "firstName": "E'Twaun",
+    "lastName": "Moore",
+    "number": 55,
+    "position": "G",
+    "teamShortName": "ORL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 327,
+    "firstName": "Jaylen",
+    "lastName": "Morris",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 328,
+    "firstName": "Marcus",
+    "lastName": "Morris",
+    "number": 24,
+    "position": "F",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 329,
+    "firstName": "Markieff",
+    "lastName": "Morris",
+    "number": 88,
+    "position": "F",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 330,
+    "firstName": "Monte",
+    "lastName": "Morris",
+    "number": 23,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 331,
+    "firstName": "Johnathan",
+    "lastName": "Motley",
+    "number": 15,
+    "position": "F",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 332,
+    "firstName": "Timofey",
+    "lastName": "Mozgov",
+    "number": 21,
+    "position": "C",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 333,
+    "firstName": "Emmanuel",
+    "lastName": "Mudiay",
+    "number": 15,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 334,
+    "firstName": "Dejounte",
+    "lastName": "Murray",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 335,
+    "firstName": "Jamal",
+    "lastName": "Murray",
+    "number": 27,
+    "position": "G",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 336,
+    "firstName": "Dzanan",
+    "lastName": "Musa",
+    "number": 13,
+    "position": "G-F",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 337,
+    "firstName": "Mike",
+    "lastName": "Muscala",
+    "number": 50,
+    "position": "F-C",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 338,
+    "firstName": "Svi",
+    "lastName": "Mykhailiuk",
+    "number": 10,
+    "position": "G",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 339,
+    "firstName": "Abdel",
+    "lastName": "Nader",
+    "number": 11,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 340,
+    "firstName": "Larry",
+    "lastName": "Nance Jr.",
+    "number": 22,
+    "position": "F",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 341,
+    "firstName": "Shabazz",
+    "lastName": "Napier",
+    "number": 5,
+    "position": "G",
+    "teamShortName": "POR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 342,
+    "firstName": "Nene",
+    "lastName": "",
+    "number": 42,
+    "position": "C-F",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 343,
+    "firstName": "Raul",
+    "lastName": "Neto",
+    "number": 19,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 344,
+    "firstName": "Georges",
+    "lastName": "Niang",
+    "number": 20,
+    "position": "F",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 345,
+    "firstName": "Nerlens",
+    "lastName": "Noel",
+    "number": 3,
+    "position": "F-C",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 346,
+    "firstName": "Dirk",
+    "lastName": "Nowitzki",
+    "number": 41,
+    "position": "F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 347,
+    "firstName": "Frank",
+    "lastName": "Ntilikina",
+    "number": 21,
+    "position": "G",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 348,
+    "firstName": "James",
+    "lastName": "Nunnally",
+    "number": 21,
+    "position": "F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 349,
+    "firstName": "Jusuf",
+    "lastName": "Nurkic",
+    "number": 30,
+    "position": "C",
+    "teamShortName": "UTA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 350,
+    "firstName": "David",
+    "lastName": "Nwaba",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 351,
+    "firstName": "Royce",
+    "lastName": "O'Neale",
+    "number": 0,
+    "position": "F",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 352,
+    "firstName": "Kyle",
+    "lastName": "O'Quinn",
+    "number": 9,
+    "position": "C",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 353,
+    "firstName": "Semi",
+    "lastName": "Ojeleye",
+    "number": 37,
+    "position": "F",
+    "teamShortName": "LAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 354,
+    "firstName": "Jahlil",
+    "lastName": "Okafor",
+    "number": 13,
+    "position": "C",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 355,
+    "firstName": "Elie",
+    "lastName": "Okobo",
+    "number": 2,
+    "position": "G",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 356,
+    "firstName": "Josh",
+    "lastName": "Okogie",
+    "number": 20,
+    "position": "G",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 357,
+    "firstName": "Victor",
+    "lastName": "Oladipo",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 358,
+    "firstName": "Kelly",
+    "lastName": "Olynyk",
+    "number": 8,
+    "position": "F",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 359,
+    "firstName": "Cedi",
+    "lastName": "Osman",
+    "number": 16,
+    "position": "F",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 360,
+    "firstName": "Kelly",
+    "lastName": "Oubre Jr.",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 361,
+    "firstName": "Zaza",
+    "lastName": "Pachulia",
+    "number": 27,
+    "position": "C",
+    "teamShortName": "ATL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 362,
+    "firstName": "Jabari",
+    "lastName": "Parker",
+    "number": 20,
+    "position": "F",
+    "teamShortName": "BOS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 363,
+    "firstName": "Tony",
+    "lastName": "Parker",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "SAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 364,
+    "firstName": "Chandler",
+    "lastName": "Parsons",
+    "number": 25,
+    "position": "F",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 365,
+    "firstName": "Patrick",
+    "lastName": "Patterson",
+    "number": 54,
+    "position": "F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 366,
+    "firstName": "Justin",
+    "lastName": "Patton",
+    "number": 12,
+    "position": "C",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 367,
+    "firstName": "Chris",
+    "lastName": "Paul",
+    "number": 3,
+    "position": "G",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 368,
+    "firstName": "Cameron",
+    "lastName": "Payne",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 369,
+    "firstName": "Elfrid",
+    "lastName": "Payton",
+    "number": 4,
+    "position": "G",
+    "teamShortName": "NOP",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 370,
+    "firstName": "Theo",
+    "lastName": "Pinson",
+    "number": 1,
+    "position": "G-F",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 371,
+    "firstName": "Mason",
+    "lastName": "Plumlee",
+    "number": 22,
+    "position": "F-C",
+    "teamShortName": "CHA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 372,
+    "firstName": "Miles",
+    "lastName": "Plumlee",
+    "number": 18,
+    "position": "C",
+    "teamShortName": "PHX",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 373,
+    "firstName": "Jakob",
+    "lastName": "Poeltl",
+    "number": 19,
+    "position": "C",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 374,
+    "firstName": "Quincy",
+    "lastName": "Pondexter",
+    "number": 3,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 375,
+    "firstName": "Michael",
+    "lastName": "Porter Jr.",
+    "number": 17,
+    "position": "F",
+    "teamShortName": "BKN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 376,
+    "firstName": "Otto",
+    "lastName": "Porter Jr.",
+    "number": 32,
+    "position": "F",
+    "teamShortName": "TOR",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 377,
+    "firstName": "Bobby",
+    "lastName": "Portis",
+    "number": 9,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 378,
+    "firstName": "Kristaps",
+    "lastName": "Porzingis",
+    "number": 7,
+    "position": "F-C",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 379,
+    "firstName": "Dwight",
+    "lastName": "Powell",
+    "number": 7,
+    "position": "F-C",
+    "teamShortName": "DAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 380,
+    "firstName": "Norman",
+    "lastName": "Powell",
+    "number": 24,
+    "position": "F-G",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 381,
+    "firstName": "Alex",
+    "lastName": "Poythress",
+    "number": 22,
+    "position": "F",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 382,
+    "firstName": "Billy",
+    "lastName": "Preston",
+    "number": null,
+    "position": "F",
+    "teamShortName": "CLE",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 383,
+    "firstName": "Taurean",
+    "lastName": "Prince",
+    "number": 12,
+    "position": "F",
+    "teamShortName": "MIL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 384,
+    "firstName": "Zhou",
+    "lastName": "Qi",
+    "number": 9,
+    "position": "F-C",
+    "teamShortName": "HOU",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 385,
+    "firstName": "Ivan",
+    "lastName": "Rabb",
+    "number": 10,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 386,
+    "firstName": "Chasson",
+    "lastName": "Randle",
+    "number": 25,
+    "position": "G",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 387,
+    "firstName": "Julius",
+    "lastName": "Randle",
+    "number": 30,
+    "position": "F",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 388,
+    "firstName": "Zach",
+    "lastName": "Randolph",
+    "number": 50,
+    "position": "F",
+    "teamShortName": "MEM",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 389,
+    "firstName": "JJ",
+    "lastName": "Redick",
+    "number": 17,
+    "position": "G",
+    "teamShortName": "PHI",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 390,
+    "firstName": "Davon",
+    "lastName": "Reed",
+    "number": 9,
+    "position": "G",
+    "teamShortName": "DEN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 391,
+    "firstName": "Josh",
+    "lastName": "Richardson",
+    "number": 0,
+    "position": "G-F",
+    "teamShortName": "MIA",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 392,
+    "firstName": "Malachi",
+    "lastName": "Richardson",
+    "number": 22,
+    "position": "G",
+    "teamShortName": "SAC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 393,
+    "firstName": "Austin",
+    "lastName": "Rivers",
+    "number": 25,
+    "position": "G",
+    "teamShortName": "MIN",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 394,
+    "firstName": "Andre",
+    "lastName": "Roberson",
+    "number": 21,
+    "position": "G-F",
+    "teamShortName": "OKC",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 395,
+    "firstName": "Glenn",
+    "lastName": "Robinson III",
+    "number": 40,
+    "position": "G-F",
+    "teamShortName": "IND",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 396,
+    "firstName": "Devin",
+    "lastName": "Robinson",
+    "number": 7,
+    "position": "F",
+    "teamShortName": "WAS",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 397,
+    "firstName": "Duncan",
+    "lastName": "Robinson",
+    "number": 55,
+    "position": "F",
+    "teamShortName": "DET",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 398,
+    "firstName": "Jerome",
+    "lastName": "Robinson",
+    "number": 18,
+    "position": "G",
+    "teamShortName": "GSW",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 399,
+    "firstName": "Mitchell",
+    "lastName": "Robinson",
+    "number": 23,
+    "position": "C",
+    "teamShortName": "NYK",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 400,
+    "firstName": "Rajon",
+    "lastName": "Rondo",
+    "number": 1,
+    "position": "G",
+    "teamShortName": "CLE",
+    "isActive": true
+  }
+]

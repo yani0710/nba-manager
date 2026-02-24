@@ -1,0 +1,23 @@
+{
+  "name": "nba-manager",
+  "private": true,
+  "version": "1.0.0",
+  "description": "NBA Manager monorepo (web + api)",
+  "scripts": {
+    "install:all": "npm --prefix apps/api install && npm --prefix apps/web install",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f db",
+    "api:env": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"if (-not (Test-Path 'apps/api/.env')) { Copy-Item 'apps/api/.env.example' 'apps/api/.env' }\"",
+    "prisma:generate": "npm --prefix apps/api run prisma:generate",
+    "prisma:push": "npm --prefix apps/api exec prisma db push --accept-data-loss",
+    "seed": "npm --prefix apps/api run seed",
+    "setup": "npm run db:up && npm run api:env && npm run install:all && npm run prisma:generate && npm run prisma:push && npm run seed",
+    "dev:api": "npm --prefix apps/api run dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

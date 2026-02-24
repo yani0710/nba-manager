@@ -1,0 +1,36 @@
+/* Global theme variables */
+
+:root {
+  --color-primary: #4ade80;
+  --color-primary-dark: #22c55e;
+  --color-background: #1a1a1a;
+  --color-background-dark: #0d0d0d;
+  --color-text: #e0e0e0;
+  --color-text-secondary: #a0a0a0;
+  --color-border: #333;
+  --color-border-dark: #222;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+}
+
+/* Apply theme */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}

@@ -1,0 +1,18 @@
+
+> api@1.0.0 dev
+> nodemon --exec ts-node src/main.ts
+
+[33m[nodemon] 3.1.11[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `ts-node src/main.ts`[39m
+[dotenv@17.2.4] injecting env (16) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+API server running on http://localhost:4000
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+[32m[nodemon] restarting child process[39m
+[32m[nodemon] starting `ts-node src/main.ts`[39m
+[dotenv@17.2.4] injecting env (16) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+API server running on http://localhost:4000
+[32m[nodemon] clean exit - waiting for changes before restart[39m
+^C^C

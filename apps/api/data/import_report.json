@@ -1,0 +1,250 @@
+{
+  "generatedAt": "2026-02-21T18:38:57.425Z",
+  "latestSeason": 2026,
+  "totalActivePlayers": 518,
+  "perTeamRosterCounts": [
+    {
+      "teamId": 72,
+      "shortName": "IND",
+      "name": "Indiana Pacers",
+      "count": 22
+    },
+    {
+      "teamId": 61,
+      "shortName": "ATL",
+      "name": "Atlanta Hawks",
+      "count": 19
+    },
+    {
+      "teamId": 69,
+      "shortName": "DET",
+      "name": "Detroit Pistons",
+      "count": 19
+    },
+    {
+      "teamId": 65,
+      "shortName": "CHI",
+      "name": "Chicago Bulls",
+      "count": 19
+    },
+    {
+      "teamId": 64,
+      "shortName": "CHA",
+      "name": "Charlotte Hornets",
+      "count": 19
+    },
+    {
+      "teamId": 73,
+      "shortName": "LAC",
+      "name": "LA Clippers",
+      "count": 19
+    },
+    {
+      "teamId": 87,
+      "shortName": "SAS",
+      "name": "San Antonio Spurs",
+      "count": 18
+    },
+    {
+      "teamId": 74,
+      "shortName": "LAL",
+      "name": "Los Angeles Lakers",
+      "count": 18
+    },
+    {
+      "teamId": 88,
+      "shortName": "TOR",
+      "name": "Toronto Raptors",
+      "count": 18
+    },
+    {
+      "teamId": 80,
+      "shortName": "NYK",
+      "name": "New York Knicks",
+      "count": 18
+    },
+    {
+      "teamId": 70,
+      "shortName": "GSW",
+      "name": "Golden State Warriors",
+      "count": 18
+    },
+    {
+      "teamId": 86,
+      "shortName": "SAC",
+      "name": "Sacramento Kings",
+      "count": 18
+    },
+    {
+      "teamId": 75,
+      "shortName": "MEM",
+      "name": "Memphis Grizzlies",
+      "count": 18
+    },
+    {
+      "teamId": 83,
+      "shortName": "PHI",
+      "name": "Philadelphia 76ers",
+      "count": 17
+    },
+    {
+      "teamId": 67,
+      "shortName": "DAL",
+      "name": "Dallas Mavericks",
+      "count": 17
+    },
+    {
+      "teamId": 90,
+      "shortName": "WAS",
+      "name": "Washington Wizards",
+      "count": 17
+    },
+    {
+      "teamId": 79,
+      "shortName": "NOP",
+      "name": "New Orleans Pelicans",
+      "count": 17
+    },
+    {
+      "teamId": 84,
+      "shortName": "PHX",
+      "name": "Phoenix Suns",
+      "count": 17
+    },
+    {
+      "teamId": 77,
+      "shortName": "MIL",
+      "name": "Milwaukee Bucks",
+      "count": 17
+    },
+    {
+      "teamId": 68,
+      "shortName": "DEN",
+      "name": "Denver Nuggets",
+      "count": 16
+    },
+    {
+      "teamId": 82,
+      "shortName": "ORL",
+      "name": "Orlando Magic",
+      "count": 16
+    },
+    {
+      "teamId": 63,
+      "shortName": "BKN",
+      "name": "Brooklyn Nets",
+      "count": 16
+    },
+    {
+      "teamId": 85,
+      "shortName": "POR",
+      "name": "Portland Trail Blazers",
+      "count": 16
+    },
+    {
+      "teamId": 81,
+      "shortName": "OKC",
+      "name": "Oklahoma City Thunder",
+      "count": 16
+    },
+    {
+      "teamId": 89,
+      "shortName": "UTA",
+      "name": "Utah Jazz",
+      "count": 16
+    },
+    {
+      "teamId": 66,
+      "shortName": "CLE",
+      "name": "Cleveland Cavaliers",
+      "count": 16
+    },
+    {
+      "teamId": 76,
+      "shortName": "MIA",
+      "name": "Miami Heat",
+      "count": 16
+    },
+    {
+      "teamId": 71,
+      "shortName": "HOU",
+      "name": "Houston Rockets",
+      "count": 15
+    },
+    {
+      "teamId": 78,
+      "shortName": "MIN",
+      "name": "Minnesota Timberwolves",
+      "count": 15
+    },
+    {
+      "teamId": 62,
+      "shortName": "BOS",
+      "name": "Boston Celtics",
+      "count": 15
+    }
+  ],
+  "top10Overall": [
+    {
+      "id": 7690,
+      "name": "Isaiah Stevens",
+      "team": "SAC",
+      "overall": 95
+    },
+    {
+      "id": 7728,
+      "name": "TyTy Washington Jr.",
+      "team": "LAC",
+      "overall": 94
+    },
+    {
+      "id": 7532,
+      "name": "Nikola Jokić",
+      "team": "DEN",
+      "overall": 92
+    },
+    {
+      "id": 7524,
+      "name": "Ty Jerome",
+      "team": "MEM",
+      "overall": 92
+    },
+    {
+      "id": 7598,
+      "name": "Riley Minix",
+      "team": "SAS",
+      "overall": 92
+    },
+    {
+      "id": 6747,
+      "name": "Shai Gilgeous-Alexander",
+      "team": "OKC",
+      "overall": 92
+    },
+    {
+      "id": 7747,
+      "name": "Robert Williams",
+      "team": "POR",
+      "overall": 91
+    },
+    {
+      "id": 7702,
+      "name": "Matisse Thybulle",
+      "team": "POR",
+      "overall": 91
+    },
+    {
+      "id": 6587,
+      "name": "Giannis Antetokounmpo",
+      "team": "MIL",
+      "overall": 91
+    },
+    {
+      "id": 7686,
+      "name": "Tolu Smith",
+      "team": "DET",
+      "overall": 91
+    }
+  ],
+  "playersMissingBioFields": 73
+}

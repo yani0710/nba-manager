@@ -1,0 +1,59 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "NBA Manager API",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "dev": "nodemon --exec ts-node src/main.ts",
+    "build": "tsc",
+    "seed": "ts-node prisma/seed.ts",
+    "import:nba": "ts-node scripts/importBalldontlie.ts",
+    "sync:nba": "npm run import:nba && npm run seed",
+    "report:data": "ts-node scripts/reportData.ts",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "import:bio": "ts-node scripts/import/importBioPlayers.ts",
+    "import:advanced": "ts-node scripts/import/importAdvancedSeason.ts",
+    "import:gamelogs": "ts-node scripts/import/importGameLogs.ts",
+    "import:csv:unified": "ts-node scripts/import/importCsvUnified.ts",
+    "compute:ratings": "ts-node scripts/import/computeRatingsAndForm.ts",
+    "sync:csv": "npm run import:csv:unified && npm run compute:ratings",
+    "import:nbaplayers": "ts-node scripts/import/importNBAPLAYERS.ts",
+    "import:database2425": "ts-node scripts/import/importdatabase2425.ts",
+    "import:impact": "ts-node scripts/import/importImpactSeason.ts",
+    "import:salaries": "ts-node scripts/import/importSalaries.ts",
+    "recalc:ratings": "ts-node scripts/recalcRatings.ts",
+    "etl:import:players": "ts-node scripts/import/importBioPlayers.ts",
+    "etl:import:gamelogs": "ts-node scripts/import/importGameLogs.ts",
+    "etl:import:advanced": "ts-node scripts/import/importAdvancedSeason.ts",
+    "etl:import:salaries": "ts-node scripts/import/importSalaries.ts",
+    "etl:import:impact": "ts-node scripts/import/importImpactSeason.ts",
+    "etl:run": "npm run etl:import:players && npm run etl:import:advanced && npm run etl:import:impact && npm run etl:import:salaries && npm run etl:import:gamelogs",
+    "normalize:units": "ts-node scripts/normalizePlayerUnits.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.6",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "prisma": "^5.22.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/node": "^25.3.0",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+}

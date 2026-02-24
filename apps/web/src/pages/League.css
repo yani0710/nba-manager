@@ -1,0 +1,62 @@
+.league {
+  width: 100%;
+}
+
+.league h2 {
+  color: #4ade80;
+  margin-bottom: 20px;
+}
+
+.conference-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.conference-tabs button {
+  background: #0d0d0d;
+  color: #a0a0a0;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.conference-tabs button.active {
+  color: #e0e0e0;
+  border-color: #4ade80;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.standings-table th {
+  background: #0d0d0d;
+  color: #4ade80;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.standings-table td {
+  padding: 12px;
+  border-bottom: 1px solid #222;
+  color: #a0a0a0;
+}
+
+.standings-table tr:hover {
+  background: #0d0d0d;
+}
+
+.team-name {
+  color: #e0e0e0;
+  font-weight: bold;
+}

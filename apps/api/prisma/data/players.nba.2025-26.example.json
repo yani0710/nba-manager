@@ -1,0 +1,20 @@
+[
+  {
+    "nbaPlayerId": 2544,
+    "firstName": "LeBron",
+    "lastName": "James",
+    "number": 23,
+    "position": "SF",
+    "teamShortName": "LAL",
+    "isActive": true
+  },
+  {
+    "nbaPlayerId": 1629029,
+    "firstName": "Luka",
+    "lastName": "Doncic",
+    "number": 77,
+    "position": "PG",
+    "teamShortName": "LAL",
+    "isActive": true
+  }
+]

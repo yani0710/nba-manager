@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Team {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  shortName  String   @unique
+  city       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  conference String?
+  division   String?
+  primaryColor   String?
+  secondaryColor String?
+  logoKey        String?
+  logoPath   String?
+  form       Int      @default(50)
+  morale     Int      @default(50)
+  nbaTeamId  Int?     @unique
+  awayGames  Game[]   @relation("awayGames")
+  homeGames  Game[]   @relation("homeGames")
+  contracts  Contract[]
+  players    Player[]
+  saves      Save[]
+  managedSaves Save[] @relation("managedSaves")
+}
+
+model Player {
+  id          Int        @id @default(autoincrement())
+  name        String
+  externalRef String?    @unique
+  number      Int?
+  jerseyNumber Int?
+  position    String
+  salary      Int?
+  teamId      Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  firstName   String?
+  birthDate   DateTime?
+  age         Int?
+  debutYear   Int?
+  finalYear   Int?
+  school      String?
+  hallOfFame  Boolean?
+  heightCm    Int?
+  weightKg    Int?
+  nationality String?
+  bioSource   String?
+  gamesCareer Int?
+  ptsCareer   Float?
+  trbCareer   Float?
+  astCareer   Float?
+  fgPct       Float?
+  fg3Pct      Float?
+  ftPct       Float?
+  efgPct      Float?
+  per         Float?
+  ws          Float?
+  active      Boolean    @default(false)
+  offensiveRating Int    @default(60)
+  overallBase Int        @default(60)
+  overall     Int        @default(60)
+  overallCurrent Int     @default(60)
+  defensiveRating Int    @default(60)
+  physicalRating Int     @default(60)
+  iqRating    Int        @default(60)
+  form        Int        @default(60)
+  morale      Int        @default(65)
+  fatigue     Int        @default(10)
+  formTrendDays Int      @default(0)
+  lastFormSnapshot Int   @default(70)
+  potential   Int        @default(75)
+  handedness  String?
+  primaryPosition   String     @default("N/A")
+  secondaryPosition String?
+  attributes  Json?
+  isActive    Boolean    @default(true)
+  lastName    String?
+  nbaPlayerId Int?       @unique
+  contracts   Contract?
+  gameStats   GameStat[]
+  seasonAdvanced PlayerSeasonAdvanced[]
+  seasonImpact   PlayerSeasonImpact[]
+  trainingPlans  PlayerTrainingPlan[]
+  gameLogs    PlayerGameLog[]
+  team        Team       @relation(fields: [teamId], references: [id])
+
+  @@unique([teamId, number], map: "team_number_unique")
+}
+
+model PlayerSeasonImpact {
+  id          Int      @id @default(autoincrement())
+  playerId    Int
+  season      Int
+  teamCode    String
+  mpg         Float?
+  minTotal    Float?
+  onBallPct   Float?
+  dpm         Float?
+  odpm        Float?
+  ddpm        Float?
+  pts         Float?
+  ptsCreated  Float?
+  ast         Float?
+  rimAst      Float?
+  reb         Float?
+  ts          Float?
+  rts         Float?
+  tov         Float?
+  ctovPct     Float?
+  twoPpct     Float?
+  threePpct   Float?
+  threePA     Float?
+  ftPct       Float?
+  fta         Float?
+  oreb        Float?
+  dreb        Float?
+  stl         Float?
+  blk         Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, season])
+  @@index([season, teamCode])
+}
+
+model Contract {
+  id                 Int            @id @default(autoincrement())
+  playerId           Int            @unique
+  teamId             Int?
+  salary             Int?
+  startYear          Int?
+  endYear            Int?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  averageAnnualValue Int?
+  contractType       String?
+  type               String?
+  optionType         String?
+  isTwoWay           Boolean        @default(false)
+  currentYearSalary  Int?
+  guaranteedValue    BigInt?
+  totalValue         BigInt?
+  player             Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team               Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  contractYears      ContractYear[]
+}
+
+model ContractYear {
+  id         Int      @id @default(autoincrement())
+  contractId Int
+  season     String
+  salary     Int
+  guaranteed Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@unique([contractId, season])
+}
+
+model Game {
+  id         Int        @id @default(autoincrement())
+  saveId     Int?
+  homeTeamId Int
+  awayTeamId Int
+  homeScore  Int        @default(0)
+  awayScore  Int        @default(0)
+  gameDate   DateTime
+  status     String     @default("scheduled")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  awayTeam   Team       @relation("awayGames", fields: [awayTeamId], references: [id])
+  homeTeam   Team       @relation("homeGames", fields: [homeTeamId], references: [id])
+  save       Save?      @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  gameStats  GameStat[]
+}
+
+model GameStat {
+  id        Int      @id @default(autoincrement())
+  gameId    Int
+  playerId  Int
+  points    Int      @default(0)
+  rebounds  Int      @default(0)
+  assists   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model Save {
+  id             Int            @id @default(autoincrement())
+  name           String
+  description    String?
+  data           Json
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  coachProfileId Int?
+  currentDate    DateTime       @default(now())
+  season         String         @default("2025-26")
+  teamId         Int?
+  managedTeamId  Int?
+  coachName      String?
+  coachAvatarId  String?
+  userId         Int?
+  version        Int            @default(1)
+  games          Game[]
+  inboxMessages  InboxMessage[]
+  playerTrainingPlans PlayerTrainingPlan[]
+  coachProfile   CoachProfile?  @relation(fields: [coachProfileId], references: [id])
+  team           Team?          @relation(fields: [teamId], references: [id])
+  managedTeam    Team?          @relation("managedSaves", fields: [managedTeamId], references: [id])
+  user           User?          @relation(fields: [userId], references: [id])
+}
+
+model PlayerTrainingPlan {
+  id        String   @id @default(cuid())
+  saveId     Int
+  playerId   Int
+  focus      String
+  intensity  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  save       Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([saveId, playerId])
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  coachProfiles CoachProfile[]
+  saves         Save[]
+}
+
+model CoachProfile {
+  id             Int      @id @default(autoincrement())
+  userId         Int?
+  displayName    String
+  avatarId       String
+  reputation     Int      @default(50)
+  preferredStyle String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User?    @relation(fields: [userId], references: [id])
+  saves          Save[]
+}
+
+model InboxMessage {
+  id        Int      @id @default(autoincrement())
+  saveId    Int
+  date      DateTime
+  type      String
+  title     String
+  body      String
+  fromName  String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  save      Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+
+  @@index([saveId, date])
+}
+
+model PlayerGameLog {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  teamCode  String
+  oppCode   String
+  result    String?
+  mp        Float?
+
+  fg        Int?
+  fga       Int?
+  tp        Int?
+  tpa       Int?
+  ft        Int?
+  fta       Int?
+
+  orb       Int?
+  drb       Int?
+  trb       Int?
+  ast       Int?
+  stl       Int?
+  blk       Int?
+  tov       Int?
+  pf        Int?
+  pts       Int?
+
+  gmSc      Float?
+
+  playerId  Int
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, date, teamCode])
+  @@index([date, teamCode])
+}
+
+model PlayerSeasonAdvanced {
+  id          Int      @id @default(autoincrement())
+  playerId    Int
+  season      Int
+  teamCode    String
+  pos         String
+  per         Float?
+  tsPercent   Float?
+  x3pAr       Float?
+  fTr         Float?
+  orbPercent  Float?
+  drbPercent  Float?
+  trbPercent  Float?
+  astPercent  Float?
+  stlPercent  Float?
+  blkPercent  Float?
+  tovPercent  Float?
+  usgPercent  Float?
+  ows         Float?
+  dws         Float?
+  ws          Float?
+  ws48        Float?
+  obpm        Float?
+  dbpm        Float?
+  bpm         Float?
+  vorp        Float?
+  minutes     Float?
+  onBallPercent Float?
+  dpm         Float?
+  odpm        Float?
+  ddpm        Float?
+  pts         Float?
+  ptsCreated  Float?
+  ast         Float?
+  rimAst      Float?
+  reb         Float?
+  rtsPercent  Float?
+  tov         Float?
+  cTovPercent Float?
+  twoPointPercent Float?
+  threePointPercent Float?
+  threePointAttempts Float?
+  ftPercent   Float?
+  fta         Float?
+  oreb        Float?
+  dreb        Float?
+  stl         Float?
+  blk         Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, season])
+  @@index([season, teamCode])
+}

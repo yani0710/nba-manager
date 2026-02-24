@@ -1,0 +1,113 @@
+.court-board-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.court-board {
+  position: relative;
+  width: 100%;
+  max-width: 760px;
+  aspect-ratio: 3 / 2;
+  background: linear-gradient(180deg, #d49b5f, #c58645);
+  border: 2px solid #6d4a26;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.court-key {
+  position: absolute;
+  left: 35%;
+  top: 0;
+  width: 30%;
+  height: 55%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-top: 0;
+}
+
+.court-rim {
+  position: absolute;
+  left: 48.5%;
+  top: 6%;
+  width: 3%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid #ff4f4f;
+  border-radius: 50%;
+}
+
+.court-arc {
+  position: absolute;
+  left: 41%;
+  top: 11%;
+  width: 18%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+}
+
+.court-three {
+  position: absolute;
+  left: 11%;
+  top: 0;
+  width: 78%;
+  height: 77%;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  border-top: 0;
+  border-radius: 0 0 45% 45%;
+}
+
+.court-token {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 98px;
+  max-width: 120px;
+  background: rgba(7, 25, 48, 0.95);
+  color: #fff;
+  border: 1px solid rgba(74, 222, 128, 0.75);
+  border-radius: 999px;
+  padding: 6px 8px;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: center;
+  user-select: none;
+}
+
+.court-token:active {
+  cursor: grabbing;
+}
+
+.token-pos {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.token-name {
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.court-assignments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.court-assignments label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.court-assignments select {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 6px 8px;
+}

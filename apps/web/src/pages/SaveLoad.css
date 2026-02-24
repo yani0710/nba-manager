@@ -1,0 +1,82 @@
+.save-load {
+  width: 100%;
+  max-width: 600px;
+}
+
+.save-load h2 {
+  color: #4ade80;
+  margin-bottom: 20px;
+}
+
+.save-input {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.save-input input {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.save-input input:focus {
+  outline: none;
+  border-color: #4ade80;
+}
+
+.saves-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.save-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  padding: 15px;
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.save-item:hover {
+  border-color: #4ade80;
+}
+
+.save-item h4 {
+  margin: 0;
+  color: #e0e0e0;
+}
+
+.save-item p {
+  margin: 5px 0 0 0;
+  color: #a0a0a0;
+  font-size: 12px;
+}
+
+.btn-load {
+  background: #1a1a1a;
+  color: #4ade80;
+  border: 1px solid #4ade80;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-load:hover {
+  background: #4ade80;
+  color: #000;
+}
+
+.btn-load.active {
+  background: #4ade80;
+  color: #000;
+}
