@@ -12,11 +12,23 @@ interface PlayerPerformance {
     playerId: number;
     minutes: number;
     points: number;
+    twoPtMade: number;
+    twoPtAtt: number;
+    threePtMade: number;
+    threePtAtt: number;
+    ftMade: number;
+    ftAtt: number;
+    dunks: number;
+    oreb: number;
+    dreb: number;
     rebounds: number;
     assists: number;
     turnovers: number;
     stl: number;
     blk: number;
+    fouls: number;
+    plusMinus: number;
+    performanceRating: number;
     fgm: number;
     fga: number;
 }

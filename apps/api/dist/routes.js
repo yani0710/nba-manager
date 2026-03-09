@@ -11,6 +11,7 @@ const teams_routes_1 = __importDefault(require("./modules/teams/teams.routes"));
 const players_routes_1 = __importDefault(require("./modules/players/players.routes"));
 const games_routes_1 = __importDefault(require("./modules/games/games.routes"));
 const coaches_routes_1 = __importDefault(require("./modules/coaches/coaches.routes"));
+const trades_routes_1 = __importDefault(require("./modules/trades/trades.routes"));
 const prisma_1 = __importDefault(require("./config/prisma"));
 const enrichPlayers_1 = require("./data/enrichPlayers");
 function readImportHealthLocal() {
@@ -125,5 +126,6 @@ function setupRoutes(app) {
     app.use("/api/teams", teams_routes_1.default);
     app.use("/api/players", players_routes_1.default);
     app.use("/api/games", games_routes_1.default);
+    app.use("/api/transfers", trades_routes_1.default);
 }
 //# sourceMappingURL=routes.js.map

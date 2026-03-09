@@ -5,6 +5,7 @@ import teamsRoutes from "./modules/teams/teams.routes";
 import playersRoutes from "./modules/players/players.routes";
 import gamesRoutes from "./modules/games/games.routes";
 import coachesRoutes from "./modules/coaches/coaches.routes";
+import tradesRoutes from "./modules/trades/trades.routes";
 import prisma from "./config/prisma";
 import { enrichPlayersFromSalariesRoster } from "./data/enrichPlayers";
 
@@ -133,4 +134,5 @@ export function setupRoutes(app: any): void {
   app.use("/api/teams", teamsRoutes);
   app.use("/api/players", playersRoutes);
   app.use("/api/games", gamesRoutes);
+  app.use("/api/transfers", tradesRoutes);
 }

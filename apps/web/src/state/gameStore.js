@@ -77,6 +77,7 @@ export const useGameStore = create((set, get) => ({
       const { data } = await api.saves.advance(id);
       set({ currentSave: data });
       await get().fetchPlayers();
+      await get().fetchTeams();
       await get().fetchDashboard();
       await get().fetchInbox();
       await get().fetchSchedule();
@@ -101,6 +102,7 @@ export const useGameStore = create((set, get) => ({
       }
       set({ currentSave: latestSave });
       await get().fetchPlayers();
+      await get().fetchTeams();
       await get().fetchDashboard();
       await get().fetchInbox();
       await get().fetchSchedule();
@@ -111,6 +113,31 @@ export const useGameStore = create((set, get) => ({
       return latestSave;
     } catch (error) {
       set({ error: error.message });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  advanceToDate: async (targetDate) => {
+    const save = get().currentSave;
+    if (!save || !targetDate) return;
+    set({ loading: true });
+    try {
+      const { data } = await api.saves.advance(save.id, { targetDate });
+      set({ currentSave: data });
+      await get().fetchPlayers();
+      await get().fetchTeams();
+      await get().fetchDashboard();
+      await get().fetchInbox();
+      await get().fetchSchedule();
+      await get().fetchStandings();
+      await get().fetchNextMatchScouting();
+      await get().fetchResults();
+      await get().fetchPlayerTrainingPlans();
+      return data;
+    } catch (error) {
+      set({ error: error.message });
+      throw error;
     } finally {
       set({ loading: false });
     }

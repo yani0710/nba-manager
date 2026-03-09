@@ -1,130 +1,126 @@
 # NBA Manager
 
-React + Express + Prisma + PostgreSQL NBA manager project.
+NBA Manager е monorepo проект с:
+- Web: React + Vite
+- API: Express + TypeScript
+- База: PostgreSQL + Prisma
 
-## Project Structure
+## Структура
 
 ```text
 nba-manager/
   apps/
-    api/   # Express + Prisma
-    web/   # React + Vite
+    api/
+      data/           # CSV файлове (вече са в ZIP архива)
+    web/
   docker-compose.yml
-  package.json  # root helper scripts
+  package.json
 ```
 
-## Prerequisites
+## Инсталация на нов компютър (от ZIP, от нулата)
 
-- Node.js 18+ (recommended: latest LTS)
-- npm
-- Docker Desktop (for PostgreSQL via `docker compose`)
+### 1) Инсталирай нужните технологии
 
-## Fresh Clone Setup (GitHub)
+Свали и инсталирай:
+1. Node.js LTS (18+): https://nodejs.org/
+2. Docker Desktop: https://www.docker.com/products/docker-desktop/
 
-After cloning the repo, run these commands from the project root:
+След инсталация:
+- стартирай Docker Desktop
+- изчакай да е готов (Docker Engine running)
 
-```bash
+### 2) Разархивирай проекта
+
+Разархивирай ZIP архива, например в:
+- `D:\nba-manager`
+
+Отвори терминал в папката на проекта:
+
+```powershell
+cd D:\nba-manager
+```
+
+### 3) Провери инсталациите
+
+```powershell
+node -v
+npm -v
+docker -v
+docker compose version
+```
+
+Ако някоя команда липсва, рестартирай терминала и провери пак.
+
+### 4) Първоначален setup
+
+```powershell
 npm install
 npm run setup
 ```
 
-What `npm run setup` does:
+`npm run setup` прави:
+- пуска PostgreSQL контейнера
+- създава `apps/api/.env` (ако липсва)
+- инсталира зависимости за `apps/api` и `apps/web`
+- генерира Prisma client
+- синхронизира схемата към базата
+- seed на начални данни (вкл. отбори)
 
-- starts PostgreSQL with Docker
-- creates `apps/api/.env` from `apps/api/.env.example` (if missing)
-- installs API and web dependencies
-- generates Prisma client
-- pushes the Prisma schema to Postgres
-- seeds the database
+## Зареждане на данните от CSV (без външно API)
 
-## Start the App (Development)
+Важно:
+- CSV файловете вече са в архива и трябва да стоят в `apps/api/data`
+- за този flow не се ползва `BALLDONTLIE_API_KEY`
 
-Run both API and web together from the root:
+Изпълни:
 
-```bash
+```powershell
+npm --prefix apps/api run etl:run
+npm --prefix apps/api run compute:ratings
+```
+
+Алтернативно (по-кратко):
+
+```powershell
+npm --prefix apps/api run sync:csv
+```
+
+## Стартиране на приложението
+
+```powershell
 npm run dev
 ```
 
-Or run them separately:
-
-```bash
-npm run dev:api
-npm run dev:web
-```
-
-Typical local URLs:
-
+Локални адреси:
 - Web: `http://localhost:5173`
 - API: `http://localhost:4000`
 
-## Daily Workflow (after first setup)
+## Ежедневно пускане след първата инсталация
 
-```bash
+```powershell
 npm run db:up
 npm run dev
 ```
 
-Stop Postgres when needed:
+Спиране на базата:
 
-```bash
+```powershell
 npm run db:down
 ```
 
-## Real NBA Data (Players and Contracts)
+## Проверка, че CSV импортът е успешен
 
-The seed always loads real NBA teams (all 30).
+След ETL провери файловете в `apps/api/data`:
+- `import_health.json`
+- `import_report.json`
+- `missed_players.json`
 
-To auto-import real players/contracts:
+Ако липсва CSV, ще получиш грешка:
+- `CSV not found: ...`
 
-1. Put your key in `apps/api/.env`:
+## Важно за API импорта
 
-```env
-BALLDONTLIE_API_KEY="your_key_here"
-```
+Ако искаш данните да са само от CSV, не пускай:
+- `npm --prefix apps/api run import:nba`
+- `npm --prefix apps/api run sync:nba`
 
-2. Run:
-
-```bash
-npm --prefix apps/api run import:nba
-npm --prefix apps/api run seed
-```
-
-If you hit API rate limits, import in chunks with cursor windows (PowerShell examples):
-
-```powershell
-$env:NBA_IMPORT_START_CURSOR="0"; npm --prefix apps/api run import:nba
-$env:NBA_IMPORT_START_CURSOR="400"; npm --prefix apps/api run import:nba
-$env:NBA_IMPORT_START_CURSOR="800"; npm --prefix apps/api run import:nba
-npm --prefix apps/api run seed
-```
-
-Or add files manually:
-
-- `apps/api/prisma/data/players.nba.2025-26.json`
-- `apps/api/prisma/data/contracts.nba.2025-26.json`
-
-Use the format from:
-
-- `apps/api/prisma/data/players.nba.2025-26.example.json`
-- `apps/api/prisma/data/contracts.nba.2025-26.example.json`
-
-Then run:
-
-```bash
-npm --prefix apps/api run seed
-```
-
-You can run import + seed in one step:
-
-```bash
-npm --prefix apps/api run sync:nba
-```
-
-## Team Logos Folder
-
-Save all team logos here:
-
-- `apps/web/public/images/teams`
-
-Use lowercase 3-letter filenames (for example `lal.png`, `bos.png`, `gsw.png`).
-The UI loads logos from `/images/teams/<shortname>.png`.

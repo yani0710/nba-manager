@@ -11,7 +11,11 @@ const AppError_1 = require("../../common/errors/AppError");
 const scheduleGenerator_1 = require("../../engine/calendar/scheduleGenerator");
 const advanceDay_1 = require("../../engine/calendar/advanceDay");
 const simulateGame_1 = require("../../engine/simulation/simulateGame");
+const trades_service_1 = require("../trades/trades.service");
 class SavesService {
+    constructor() {
+        this.tradesService = new trades_service_1.TradesService();
+    }
     async createSave(dto) {
         if (!dto.name) {
             throw new AppError_1.BadRequestError("Save name is required");
@@ -81,6 +85,10 @@ class SavesService {
             playerState: await this.buildInitialPlayerState(),
             teamState: await this.buildInitialTeamState(),
             rotation: await this.buildInitialRotation(managedTeam?.id ?? null),
+            transferState: {
+                playerTeamOverrides: {},
+                transactions: [],
+            },
         };
         const save = await prisma_1.default.save.create({
             data: {
@@ -230,12 +238,33 @@ class SavesService {
         });
         const playerPlanByPlayerId = new Map(playerPlans.map((p) => [p.playerId, p]));
         const playedToday = new Set();
+        const playerTeamOverrides = currentData.transferState?.playerTeamOverrides ?? {};
+        const movedPlayerIds = Object.keys(playerTeamOverrides).map(Number).filter(Number.isFinite);
+        const movedPlayers = movedPlayerIds.length > 0
+            ? await prisma_1.default.player.findMany({
+                where: { id: { in: movedPlayerIds } },
+                select: { id: true, position: true, overall: true, overallCurrent: true, teamId: true },
+            })
+            : [];
+        const movedPlayerById = new Map(movedPlayers.map((p) => [p.id, p]));
         for (const game of todaysGames) {
-            const homePlayers = game.homeTeam.players
+            const effectiveHomePlayersRaw = this.getEffectiveGameRosterForTeam({
+                teamId: game.homeTeamId,
+                basePlayers: game.homeTeam.players,
+                playerTeamOverrides,
+                movedPlayerById,
+            });
+            const effectiveAwayPlayersRaw = this.getEffectiveGameRosterForTeam({
+                teamId: game.awayTeamId,
+                basePlayers: game.awayTeam.players,
+                playerTeamOverrides,
+                movedPlayerById,
+            });
+            const homePlayers = effectiveHomePlayersRaw
                 .sort((a, b) => ((b.overallCurrent ?? b.overall) ?? 60) - ((a.overallCurrent ?? a.overall) ?? 60))
                 .slice(0, 10)
                 .map((player) => this.toSimPlayer(player, currentData.playerState ?? {}));
-            const awayPlayers = game.awayTeam.players
+            const awayPlayers = effectiveAwayPlayersRaw
                 .sort((a, b) => ((b.overallCurrent ?? b.overall) ?? 60) - ((a.overallCurrent ?? a.overall) ?? 60))
                 .slice(0, 10)
                 .map((player) => this.toSimPlayer(player, currentData.playerState ?? {}));
@@ -264,13 +293,56 @@ class SavesService {
                 },
             });
             await prisma_1.default.gameStat.createMany({
-                data: [...result.homeStats, ...result.awayStats].map((stat) => ({
-                    gameId: game.id,
-                    playerId: stat.playerId,
-                    points: stat.points,
-                    rebounds: stat.rebounds,
-                    assists: stat.assists,
-                })),
+                data: [
+                    ...result.homeStats.map((stat) => ({
+                        gameId: game.id,
+                        teamId: game.homeTeamId,
+                        playerId: stat.playerId,
+                        minutes: stat.minutes,
+                        points: stat.points,
+                        twoPtMade: stat.twoPtMade,
+                        twoPtAtt: stat.twoPtAtt,
+                        threePtMade: stat.threePtMade,
+                        threePtAtt: stat.threePtAtt,
+                        ftMade: stat.ftMade,
+                        ftAtt: stat.ftAtt,
+                        dunks: stat.dunks,
+                        oreb: stat.oreb,
+                        dreb: stat.dreb,
+                        rebounds: stat.rebounds,
+                        assists: stat.assists,
+                        steals: stat.stl,
+                        blocks: stat.blk,
+                        turnovers: stat.turnovers,
+                        fouls: stat.fouls,
+                        plusMinus: stat.plusMinus,
+                        performanceRating: stat.performanceRating,
+                    })),
+                    ...result.awayStats.map((stat) => ({
+                        gameId: game.id,
+                        teamId: game.awayTeamId,
+                        playerId: stat.playerId,
+                        minutes: stat.minutes,
+                        points: stat.points,
+                        twoPtMade: stat.twoPtMade,
+                        twoPtAtt: stat.twoPtAtt,
+                        threePtMade: stat.threePtMade,
+                        threePtAtt: stat.threePtAtt,
+                        ftMade: stat.ftMade,
+                        ftAtt: stat.ftAtt,
+                        dunks: stat.dunks,
+                        oreb: stat.oreb,
+                        dreb: stat.dreb,
+                        rebounds: stat.rebounds,
+                        assists: stat.assists,
+                        steals: stat.stl,
+                        blocks: stat.blk,
+                        turnovers: stat.turnovers,
+                        fouls: stat.fouls,
+                        plusMinus: stat.plusMinus,
+                        performanceRating: stat.performanceRating,
+                    })),
+                ],
             });
             for (const stat of [...result.homeStats, ...result.awayStats]) {
                 const key = String(stat.playerId);
@@ -281,24 +353,45 @@ class SavesService {
                     : game.awayTeamId === save.teamId
                         ? currentData.tactics?.pace
                         : "balanced";
-                const fatigueBump = teamPace === "fast" ? 5 : teamPace === "slow" ? 2 : 3;
-                const player = game.homeTeam.players.find((p) => p.id === stat.playerId)
-                    ?? game.awayTeam.players.find((p) => p.id === stat.playerId)
+                const personalPlan = playerPlanByPlayerId.get(stat.playerId);
+                const personalIntensity = this.fromStoredIntensity(personalPlan?.intensity) ?? null;
+                const personalFocus = this.fromStoredFocus(personalPlan?.focus) ?? null;
+                let fatigueBump = teamPace === "fast" ? 4 : teamPace === "slow" ? 1 : 2;
+                if (personalIntensity === "high")
+                    fatigueBump += 1;
+                if (personalIntensity === "low")
+                    fatigueBump -= 1;
+                if (personalFocus === "fitness")
+                    fatigueBump -= 1;
+                fatigueBump = this.clamp(fatigueBump, 0, 6);
+                const player = effectiveHomePlayersRaw.find((p) => p.id === stat.playerId)
+                    ?? effectiveAwayPlayersRaw.find((p) => p.id === stat.playerId)
                     ?? null;
+                const isHomePlayer = effectiveHomePlayersRaw.some((p) => p.id === stat.playerId);
+                const playerTeamState = isHomePlayer ? homeTeamState : awayTeamState;
+                const didWin = isHomePlayer ? result.homeScore > result.awayScore : result.awayScore > result.homeScore;
                 const perfScore = this.computePlayerPerformanceScore({
                     ...stat,
                     position: player?.position ?? "SF",
                 });
-                const nextForm = this.clamp(Math.round(prev.form * 0.85 + perfScore * 0.15), 0, 100);
+                const teamFormSupport = (playerTeamState.form - 50) * 0.08;
+                const streakSupport = this.clamp(playerTeamState.streak ?? 0, -5, 5) * 0.6;
+                const resultBonus = didWin ? 2.5 : -0.6;
+                const moraleSupport = ((prev.morale ?? 65) - 50) * 0.04;
+                const fatigueDrag = Math.max(0, (prev.fatigue ?? 10) - 60) * 0.05;
+                const trainingSupport = personalFocus === "fitness" ? 1.0 : personalFocus ? 0.5 : 0;
+                const targetForm = this.clamp(Math.round(perfScore + teamFormSupport + streakSupport + resultBonus + moraleSupport + trainingSupport - fatigueDrag), 35, 95);
+                // More inertia than before so form does not collapse to ~50 after a few average games.
+                const nextForm = this.clamp(Math.round(prev.form * 0.90 + targetForm * 0.10), 0, 100);
                 const formHistory = [...(prev.formHistory ?? []), nextForm].slice(-30);
                 currentData.playerState[key] = {
                     fatigue: Math.min(100, prev.fatigue + fatigueBump),
-                    morale: Math.max(0, Math.min(100, prev.morale + (perfScore >= 65 ? 1 : -1))),
+                    morale: Math.max(0, Math.min(100, prev.morale + (didWin ? 1 : 0) + (perfScore >= 65 ? 1 : perfScore <= 40 ? -1 : 0))),
                     form: nextForm,
                     formHistory,
                     gamesSinceDrift: (prev.gamesSinceDrift ?? 0) + 1,
                     gamesPlayed: (prev.gamesPlayed ?? 0) + 1,
-                    effectiveOverall: prev.effectiveOverall ?? player?.overallCurrent ?? player?.overallBase ?? player?.overall ?? 60,
+                    effectiveOverall: prev.effectiveOverall ?? player?.overallCurrent ?? player?.overall ?? 60,
                 };
             }
             this.updateTeamStateAfterGame(currentData, game.homeTeamId, game.awayTeamId, result.homeScore, result.awayScore);
@@ -322,6 +415,21 @@ class SavesService {
             playerMetaById,
             playedToday,
         });
+        const nextSeasonDay = this.getSeasonDay(save.season, nextDate);
+        await this.tradesService.resolvePendingOffersForDay(save.id, nextSeasonDay, nextDate);
+        await this.tradesService.resolvePendingPlayerProposalResponsesForDay(save.id, nextSeasonDay, nextDate);
+        // Transfer execution may update Save.data.transferState inside TradesService.
+        // Refresh and merge it here so the final save update below does not overwrite it with stale currentData.
+        {
+            const refreshed = await prisma_1.default.save.findUnique({
+                where: { id: save.id },
+                select: { data: true },
+            });
+            const refreshedPayload = (refreshed?.data ?? {});
+            if (refreshedPayload.transferState) {
+                currentData.transferState = refreshedPayload.transferState;
+            }
+        }
         await this.generateDailyInbox(save.id, nextDate, todaysGames.length);
         const unread = await prisma_1.default.inboxMessage.count({
             where: { saveId: save.id, isRead: false },
@@ -339,6 +447,11 @@ class SavesService {
                 team: true,
             },
         });
+    }
+    getSeasonDay(season, date) {
+        const startYear = Number(String(season ?? "2025-26").slice(0, 4)) || date.getUTCFullYear();
+        const seasonStart = new Date(Date.UTC(startYear, 9, 1));
+        return Math.max(0, Math.floor((date.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24)));
     }
     async advanceSaveToDate(id, targetDate) {
         const parsed = new Date(`${targetDate}T00:00:00.000Z`);
@@ -469,11 +582,17 @@ class SavesService {
         if (!game) {
             throw new AppError_1.NotFoundError("Game");
         }
-        const playerOfTheMatch = game.gameStats[0] ?? null;
+        // Backward-compatibility: older simulated games may have player points that do not sum
+        // exactly to the final team score. Normalize on read so boxscore points match the result.
+        const homeBoxRows = game.gameStats.filter((s) => (s.teamId ?? s.player.teamId) === game.homeTeamId);
+        const awayBoxRows = game.gameStats.filter((s) => (s.teamId ?? s.player.teamId) === game.awayTeamId);
+        this.normalizeGameStatPointsForDisplay(homeBoxRows, game.homeScore);
+        this.normalizeGameStatPointsForDisplay(awayBoxRows, game.awayScore);
+        const playerOfTheMatch = [...game.gameStats].sort((a, b) => (b.performanceRating ?? 0) - (a.performanceRating ?? 0))[0] ?? null;
         const topScorer = [...game.gameStats].sort((a, b) => b.points - a.points)[0] ?? null;
         const teamStats = {
-            home: this.aggregateTeamStats(game.gameStats.filter((s) => s.player.teamId === game.homeTeamId)),
-            away: this.aggregateTeamStats(game.gameStats.filter((s) => s.player.teamId === game.awayTeamId)),
+            home: this.aggregateTeamStats(game.gameStats.filter((s) => (s.teamId ?? s.player.teamId) === game.homeTeamId)),
+            away: this.aggregateTeamStats(game.gameStats.filter((s) => (s.teamId ?? s.player.teamId) === game.awayTeamId)),
         };
         return {
             id: game.id,
@@ -486,17 +605,18 @@ class SavesService {
                 ? {
                     playerId: playerOfTheMatch.playerId,
                     name: playerOfTheMatch.player.name,
-                    teamShortName: playerOfTheMatch.player.team?.shortName ?? "-",
+                    teamShortName: (playerOfTheMatch.teamId === game.homeTeamId ? game.homeTeam.shortName : playerOfTheMatch.teamId === game.awayTeamId ? game.awayTeam.shortName : (playerOfTheMatch.player.team?.shortName ?? "-")),
                     points: playerOfTheMatch.points,
                     rebounds: playerOfTheMatch.rebounds,
                     assists: playerOfTheMatch.assists,
+                    performanceRating: playerOfTheMatch.performanceRating,
                 }
                 : null,
             topScorer: topScorer
                 ? {
                     playerId: topScorer.playerId,
                     name: topScorer.player.name,
-                    teamShortName: topScorer.player.team?.shortName ?? "-",
+                    teamShortName: (topScorer.teamId === game.homeTeamId ? game.homeTeam.shortName : topScorer.teamId === game.awayTeamId ? game.awayTeam.shortName : (topScorer.player.team?.shortName ?? "-")),
                     points: topScorer.points,
                 }
                 : null,
@@ -504,12 +624,55 @@ class SavesService {
             players: game.gameStats.map((stat) => ({
                 playerId: stat.playerId,
                 name: stat.player.name,
-                teamShortName: stat.player.team?.shortName ?? "-",
+                teamShortName: stat.teamId === game.homeTeamId ? game.homeTeam.shortName : stat.teamId === game.awayTeamId ? game.awayTeam.shortName : (stat.player.team?.shortName ?? "-"),
+                minutes: stat.minutes,
                 points: stat.points,
+                twoPtMade: stat.twoPtMade,
+                twoPtAtt: stat.twoPtAtt,
+                threePtMade: stat.threePtMade,
+                threePtAtt: stat.threePtAtt,
+                ftMade: stat.ftMade,
+                ftAtt: stat.ftAtt,
+                dunks: stat.dunks,
+                oreb: stat.oreb,
+                dreb: stat.dreb,
                 rebounds: stat.rebounds,
                 assists: stat.assists,
+                steals: stat.steals,
+                blocks: stat.blocks,
+                turnovers: stat.turnovers,
+                fouls: stat.fouls,
+                plusMinus: stat.plusMinus,
+                performanceRating: stat.performanceRating,
             })),
         };
+    }
+    normalizeGameStatPointsForDisplay(stats, targetPoints) {
+        if (!stats.length)
+            return;
+        let delta = targetPoints - stats.reduce((sum, s) => sum + (s.points ?? 0), 0);
+        if (delta === 0)
+            return;
+        const ordered = [...stats].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
+        let guard = 0;
+        while (delta !== 0 && guard < 2000) {
+            guard += 1;
+            for (const row of ordered) {
+                if (delta === 0)
+                    break;
+                if (delta > 0) {
+                    row.points = (row.points ?? 0) + 1;
+                    delta -= 1;
+                    continue;
+                }
+                if ((row.points ?? 0) <= 0)
+                    continue;
+                row.points = (row.points ?? 0) - 1;
+                delta += 1;
+            }
+            if (delta < 0 && ordered.every((r) => (r.points ?? 0) <= 0))
+                break;
+        }
     }
     async getStandings(id) {
         const save = await this.getSaveById(id);
@@ -1072,23 +1235,25 @@ class SavesService {
             if (persisted)
                 appliedPlanCount += 1;
             const injuryPenalty = this.isPlayerInjured(data, key) ? 0.4 : 1;
-            const fatigueDelta = intensity === "high" ? 2 : intensity === "low" ? -2 : 0;
-            const recoveryBonus = rolledWeek ? (intensity === "low" ? 4 : 2) : 0;
-            const intensityFormBonus = intensity === "high" ? 0.25 : intensity === "low" ? -0.1 : 0;
+            const fatigueDelta = intensity === "high" ? 1 : intensity === "low" ? -3 : -1;
+            const recoveryBonus = rolledWeek ? (intensity === "low" ? 5 : 3) : (intensity === "low" ? 1 : 0);
+            const intensityFormBonus = intensity === "high" ? 0.45 : intensity === "low" ? 0.2 : 0.3;
             const focusBonus = focus === "fitness"
-                ? 0.8
+                ? 1.2
                 : focus === "balanced"
-                    ? 0.4
+                    ? 0.7
                     : focus === "playmaking"
-                        ? 0.65
-                        : 0.6;
+                        ? 0.95
+                        : 0.9;
+            const moraleContextBonus = (prev.morale >= 65 ? 0.25 : prev.morale <= 40 ? -0.2 : 0);
+            const fatigueContextPenalty = prev.fatigue >= 75 ? 0.35 : 0;
             const formDeltaBase = focusBonus + intensityFormBonus;
-            const formDelta = formDeltaBase * injuryPenalty;
+            const formDelta = (formDeltaBase + moraleContextBonus - fatigueContextPenalty) * injuryPenalty;
             data.playerState[key] = {
                 ...prev,
                 fatigue: this.clamp(Math.round(prev.fatigue + fatigueDelta - recoveryBonus), 0, 100),
                 form: this.clamp(Math.round(prev.form + formDelta), 0, 100),
-                morale: this.clamp(Math.round(prev.morale + (formDelta > 0.5 ? 0.4 : 0.1)), 0, 100),
+                morale: this.clamp(Math.round(prev.morale + (formDelta > 0.7 ? 0.7 : formDelta > 0 ? 0.3 : -0.2)), 0, 100),
             };
         }
         console.log(`[training] applied daily plans: ${appliedPlanCount}`);
@@ -1211,11 +1376,34 @@ class SavesService {
         }
     }
     aggregateTeamStats(stats) {
+        const initial = {
+            points: 0,
+            rebounds: 0,
+            assists: 0,
+            steals: 0,
+            blocks: 0,
+            turnovers: 0,
+            twoPtMade: 0,
+            twoPtAtt: 0,
+            threePtMade: 0,
+            threePtAtt: 0,
+            ftMade: 0,
+            ftAtt: 0,
+        };
         return stats.reduce((acc, stat) => ({
             points: acc.points + stat.points,
             rebounds: acc.rebounds + stat.rebounds,
             assists: acc.assists + stat.assists,
-        }), { points: 0, rebounds: 0, assists: 0 });
+            steals: acc.steals + (stat.steals ?? 0),
+            blocks: acc.blocks + (stat.blocks ?? 0),
+            turnovers: acc.turnovers + (stat.turnovers ?? 0),
+            twoPtMade: acc.twoPtMade + (stat.twoPtMade ?? 0),
+            twoPtAtt: acc.twoPtAtt + (stat.twoPtAtt ?? 0),
+            threePtMade: acc.threePtMade + (stat.threePtMade ?? 0),
+            threePtAtt: acc.threePtAtt + (stat.threePtAtt ?? 0),
+            ftMade: acc.ftMade + (stat.ftMade ?? 0),
+            ftAtt: acc.ftAtt + (stat.ftAtt ?? 0),
+        }), initial);
     }
     async createInitialInboxMessages(saveId, startDate) {
         const baseDate = new Date(`${startDate}T00:00:00.000Z`);
@@ -1425,6 +1613,24 @@ class SavesService {
             form,
             matchOverall,
         };
+    }
+    getEffectiveGameRosterForTeam(params) {
+        const base = params.basePlayers.filter((p) => {
+            const overrideTeamId = params.playerTeamOverrides[String(p.id)];
+            return overrideTeamId == null || overrideTeamId === params.teamId;
+        });
+        const extras = [];
+        for (const [playerIdKey, overrideTeamId] of Object.entries(params.playerTeamOverrides)) {
+            if (overrideTeamId !== params.teamId)
+                continue;
+            const playerId = Number(playerIdKey);
+            if (base.some((p) => p.id === playerId))
+                continue;
+            const moved = params.movedPlayerById.get(playerId);
+            if (moved)
+                extras.push(moved);
+        }
+        return [...base, ...extras];
     }
     getOrCreateTeamState(data, teamId) {
         data.teamState = data.teamState ?? {};

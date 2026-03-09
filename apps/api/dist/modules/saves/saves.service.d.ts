@@ -77,6 +77,19 @@ type SavePayload = {
         PF?: number | null;
         C?: number | null;
     };
+    transferState?: {
+        playerTeamOverrides?: Record<string, number>;
+        transactions?: Array<{
+            offerId: number;
+            day: number;
+            date: string;
+            fromTeamId: number;
+            toTeamId: number;
+            outgoingPlayerIds: number[];
+            incomingPlayerIds: number[];
+            status: "COMPLETED";
+        }>;
+    };
 };
 type StandingsRow = {
     teamId: number;
@@ -91,32 +104,32 @@ type StandingsRow = {
     streak: string;
 };
 export declare class SavesService {
+    private tradesService;
     createSave(dto: CreateSaveDto): Promise<{
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        userId: number | null;
-        teamId: number | null;
-        description: string | null;
+        coachProfileId: number | null;
         currentDate: Date;
         season: string;
+        teamId: number | null;
+        managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
+        userId: number | null;
         version: number;
-        coachProfileId: number | null;
-        managedTeamId: number | null;
     }>;
     getSaveById(id: number): Promise<{
         team: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -125,33 +138,34 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            userId: number | null;
             displayName: string;
             avatarId: string;
             reputation: number;
             preferredStyle: string | null;
-            userId: number | null;
         } | null;
     } & {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        userId: number | null;
-        teamId: number | null;
-        description: string | null;
+        coachProfileId: number | null;
         currentDate: Date;
         season: string;
+        teamId: number | null;
+        managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
+        userId: number | null;
         version: number;
-        coachProfileId: number | null;
-        managedTeamId: number | null;
     }>;
     getAllSaves(): Promise<({
         team: {
@@ -166,18 +180,18 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        userId: number | null;
-        teamId: number | null;
-        description: string | null;
+        coachProfileId: number | null;
         currentDate: Date;
         season: string;
+        teamId: number | null;
+        managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
+        userId: number | null;
         version: number;
-        coachProfileId: number | null;
-        managedTeamId: number | null;
     })[]>;
     getSaveCoreState(id: number): Promise<{
         id: number;
@@ -193,11 +207,10 @@ export declare class SavesService {
         team: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -206,27 +219,27 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            userId: number | null;
             displayName: string;
             avatarId: string;
             reputation: number;
             preferredStyle: string | null;
-            userId: number | null;
         } | null;
         inboxCount: number;
         nextMatch: ({
             awayTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -235,15 +248,15 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
             homeTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -252,13 +265,14 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -269,11 +283,10 @@ export declare class SavesService {
             awayTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -282,15 +295,15 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
             homeTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -299,13 +312,14 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -390,6 +404,19 @@ export declare class SavesService {
                 PF?: number | null;
                 C?: number | null;
             };
+            transferState?: {
+                playerTeamOverrides?: Record<string, number>;
+                transactions?: Array<{
+                    offerId: number;
+                    day: number;
+                    date: string;
+                    fromTeamId: number;
+                    toTeamId: number;
+                    outgoingPlayerIds: number[];
+                    incomingPlayerIds: number[];
+                    status: "COMPLETED";
+                }>;
+            };
         };
         createdAt: Date;
         updatedAt: Date;
@@ -398,11 +425,10 @@ export declare class SavesService {
         team: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -411,43 +437,44 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            userId: number | null;
             displayName: string;
             avatarId: string;
             reputation: number;
             preferredStyle: string | null;
-            userId: number | null;
         } | null;
     } & {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        userId: number | null;
-        teamId: number | null;
-        description: string | null;
+        coachProfileId: number | null;
         currentDate: Date;
         season: string;
+        teamId: number | null;
+        managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
+        userId: number | null;
         version: number;
-        coachProfileId: number | null;
-        managedTeamId: number | null;
     }>;
+    private getSeasonDay;
     advanceSaveToDate(id: number, targetDate: string): Promise<{
         team: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -456,50 +483,51 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            userId: number | null;
             displayName: string;
             avatarId: string;
             reputation: number;
             preferredStyle: string | null;
-            userId: number | null;
         } | null;
     } & {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        userId: number | null;
-        teamId: number | null;
-        description: string | null;
+        coachProfileId: number | null;
         currentDate: Date;
         season: string;
+        teamId: number | null;
+        managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
+        userId: number | null;
         version: number;
-        coachProfileId: number | null;
-        managedTeamId: number | null;
     }>;
     deleteSave(id: number): Promise<{
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
+        description: string | null;
         createdAt: Date;
         updatedAt: Date;
-        userId: number | null;
-        teamId: number | null;
-        description: string | null;
+        coachProfileId: number | null;
         currentDate: Date;
         season: string;
+        teamId: number | null;
+        managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
+        userId: number | null;
         version: number;
-        coachProfileId: number | null;
-        managedTeamId: number | null;
     }>;
     getInbox(id: number, take?: number, skip?: number): Promise<{
         total: number;
@@ -520,11 +548,10 @@ export declare class SavesService {
         awayTeam: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -533,15 +560,15 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
         homeTeam: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -550,13 +577,14 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
     } & {
         id: number;
         createdAt: Date;
         updatedAt: Date;
-        status: string;
         saveId: number | null;
+        status: string;
         homeTeamId: number;
         awayTeamId: number;
         homeScore: number;
@@ -569,11 +597,10 @@ export declare class SavesService {
         homeTeam: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -582,15 +609,15 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
         awayTeam: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -599,6 +626,7 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
         homeScore: number;
         awayScore: number;
@@ -610,11 +638,10 @@ export declare class SavesService {
         homeTeam: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -623,15 +650,15 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
         awayTeam: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -640,6 +667,7 @@ export declare class SavesService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
         homeScore: number;
         awayScore: number;
@@ -650,6 +678,7 @@ export declare class SavesService {
             points: number;
             rebounds: number;
             assists: number;
+            performanceRating: number;
         } | null;
         topScorer: {
             playerId: number;
@@ -662,22 +691,57 @@ export declare class SavesService {
                 points: number;
                 rebounds: number;
                 assists: number;
+                steals: number;
+                blocks: number;
+                turnovers: number;
+                twoPtMade: number;
+                twoPtAtt: number;
+                threePtMade: number;
+                threePtAtt: number;
+                ftMade: number;
+                ftAtt: number;
             };
             away: {
                 points: number;
                 rebounds: number;
                 assists: number;
+                steals: number;
+                blocks: number;
+                turnovers: number;
+                twoPtMade: number;
+                twoPtAtt: number;
+                threePtMade: number;
+                threePtAtt: number;
+                ftMade: number;
+                ftAtt: number;
             };
         };
         players: {
             playerId: number;
             name: string;
             teamShortName: string;
+            minutes: number;
             points: number;
+            twoPtMade: number;
+            twoPtAtt: number;
+            threePtMade: number;
+            threePtAtt: number;
+            ftMade: number;
+            ftAtt: number;
+            dunks: number;
+            oreb: number;
+            dreb: number;
             rebounds: number;
             assists: number;
+            steals: number;
+            blocks: number;
+            turnovers: number;
+            fouls: number;
+            plusMinus: number;
+            performanceRating: number;
         }[];
     }>;
+    private normalizeGameStatPointsForDisplay;
     getStandings(id: number): Promise<{
         east: StandingsRow[];
         west: StandingsRow[];
@@ -833,10 +897,10 @@ export declare class SavesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
+            saveId: number;
+            playerId: number;
             intensity: string;
             focus: string;
-            playerId: number;
-            saveId: number;
         };
     }>;
     deletePlayerTrainingPlan(saveId: number, playerId: number): Promise<{
@@ -878,11 +942,10 @@ export declare class SavesService {
             awayTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -891,15 +954,15 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
             homeTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -908,13 +971,14 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -925,11 +989,10 @@ export declare class SavesService {
             awayTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -938,15 +1001,15 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
             homeTeam: {
                 id: number;
                 name: string;
-                shortName: string;
-                nbaTeamId: number | null;
-                city: string;
                 createdAt: Date;
                 updatedAt: Date;
+                shortName: string;
+                city: string;
                 conference: string | null;
                 division: string | null;
                 primaryColor: string | null;
@@ -955,13 +1018,14 @@ export declare class SavesService {
                 logoPath: string | null;
                 form: number;
                 morale: number;
+                nbaTeamId: number | null;
             };
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -1044,6 +1108,7 @@ export declare class SavesService {
     private buildInitialPlayerState;
     private buildInitialTeamState;
     private toSimPlayer;
+    private getEffectiveGameRosterForTeam;
     private getOrCreateTeamState;
     private updateTeamStateAfterGame;
     private estimateTeamStrength;

@@ -1,38 +1,5 @@
 export declare class PlayersService {
-    getPlayersByTeamId(teamId: number, includeInactive?: boolean, saveId?: number): Promise<{
-        rosterSource: "nba_salaries_clean.csv";
-        rosterName: string;
-        rosterTeamCode: string;
-        salary: number | null;
-        contractEndYear: number | null;
-        guaranteed: number | null;
-        enrichmentMatched: boolean;
-        enrichmentWarning?: string;
-        id: number | null;
-        name: string;
-        teamId: number | null;
-        team?: {
-            id: number;
-            name: string;
-            shortName: string;
-        } | null;
-        position: string | null;
-        number: number | null;
-        jerseyNumber: number | null;
-        overall: number | null;
-        overallBase: number | null;
-        overallCurrent: number | null;
-        form: number | null;
-        fatigue: number | null;
-        morale: number | null;
-        heightCm: number | null;
-        weightKg: number | null;
-        nationality: string | null;
-        birthDate: Date | null;
-        age: number | null;
-        externalRef: string | null;
-        attributes?: unknown;
-    }[]>;
+    getPlayersByTeamId(teamId: number, includeInactive?: boolean, saveId?: number): Promise<any[]>;
     getPlayerById(id: number, saveId?: number): Promise<{
         scouting: {
             strengths: string[];
@@ -41,11 +8,10 @@ export declare class PlayersService {
         team: {
             id: number;
             name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
             createdAt: Date;
             updatedAt: Date;
+            shortName: string;
+            city: string;
             conference: string | null;
             division: string | null;
             primaryColor: string | null;
@@ -54,45 +20,65 @@ export declare class PlayersService {
             logoPath: string | null;
             form: number;
             morale: number;
+            nbaTeamId: number | null;
         };
         contracts: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            playerId: number;
             salary: number | null;
+            playerId: number;
+            contractYears: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                season: string;
+                salary: number;
+                contractId: number;
+                guaranteed: boolean;
+            }[];
             startYear: number | null;
             endYear: number | null;
             averageAnnualValue: number | null;
             contractType: string | null;
             currentYearSalary: number | null;
-            contractYears: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                salary: number;
-                season: string;
-                contractId: number;
-                guaranteed: boolean;
-            }[];
         } | null;
         gameStats: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            teamId: number | null;
             playerId: number;
             points: number;
             gameId: number;
+            minutes: number;
+            twoPtMade: number;
+            twoPtAtt: number;
+            threePtMade: number;
+            threePtAtt: number;
+            ftMade: number;
+            ftAtt: number;
+            dunks: number;
+            oreb: number;
+            dreb: number;
             rebounds: number;
             assists: number;
+            steals: number;
+            blocks: number;
+            turnovers: number;
+            fouls: number;
+            plusMinus: number;
+            performanceRating: number;
         }[];
         seasonImpact: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            playerId: number;
-            ftPct: number | null;
             season: number;
+            ftPct: number | null;
+            playerId: number;
+            oreb: number | null;
+            dreb: number | null;
             teamCode: string;
             dpm: number | null;
             odpm: number | null;
@@ -104,8 +90,6 @@ export declare class PlayersService {
             reb: number | null;
             tov: number | null;
             fta: number | null;
-            oreb: number | null;
-            dreb: number | null;
             stl: number | null;
             blk: number | null;
             mpg: number | null;
@@ -123,14 +107,13 @@ export declare class PlayersService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        teamId: number;
         form: number;
         morale: number;
-        active: boolean;
         externalRef: string | null;
         jerseyNumber: number | null;
         position: string;
         salary: number | null;
-        teamId: number;
         firstName: string | null;
         birthDate: Date | null;
         age: number | null;
@@ -152,6 +135,7 @@ export declare class PlayersService {
         efgPct: number | null;
         per: number | null;
         ws: number | null;
+        active: boolean;
         offensiveRating: number;
         overallBase: number;
         overall: number;
@@ -171,99 +155,7 @@ export declare class PlayersService {
         lastName: string | null;
         nbaPlayerId: number | null;
     } | null>;
-    getAllPlayers(take?: number, includeInactive?: boolean, saveId?: number): Promise<({
-        team: {
-            id: number;
-            name: string;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
-            createdAt: Date;
-            updatedAt: Date;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-            form: number;
-            morale: number;
-        };
-        contracts: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            playerId: number;
-            salary: number | null;
-            startYear: number | null;
-            endYear: number | null;
-            averageAnnualValue: number | null;
-            contractType: string | null;
-            currentYearSalary: number | null;
-            contractYears: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                salary: number;
-                season: string;
-                contractId: number;
-                guaranteed: boolean;
-            }[];
-        } | null;
-    } & {
-        number: number | null;
-        id: number;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        form: number;
-        morale: number;
-        active: boolean;
-        externalRef: string | null;
-        jerseyNumber: number | null;
-        position: string;
-        salary: number | null;
-        teamId: number;
-        firstName: string | null;
-        birthDate: Date | null;
-        age: number | null;
-        debutYear: number | null;
-        finalYear: number | null;
-        school: string | null;
-        hallOfFame: boolean | null;
-        heightCm: number | null;
-        weightKg: number | null;
-        nationality: string | null;
-        bioSource: string | null;
-        gamesCareer: number | null;
-        ptsCareer: number | null;
-        trbCareer: number | null;
-        astCareer: number | null;
-        fgPct: number | null;
-        fg3Pct: number | null;
-        ftPct: number | null;
-        efgPct: number | null;
-        per: number | null;
-        ws: number | null;
-        offensiveRating: number;
-        overallBase: number;
-        overall: number;
-        overallCurrent: number;
-        defensiveRating: number;
-        physicalRating: number;
-        iqRating: number;
-        fatigue: number;
-        formTrendDays: number;
-        lastFormSnapshot: number;
-        potential: number;
-        handedness: string | null;
-        primaryPosition: string;
-        secondaryPosition: string | null;
-        attributes: import("@prisma/client/runtime/library").JsonValue | null;
-        isActive: boolean;
-        lastName: string | null;
-        nbaPlayerId: number | null;
-    })[]>;
+    getAllPlayers(take?: number, includeInactive?: boolean, saveId?: number): Promise<any[]>;
     getPlayerStats(playerId: number, saveId?: number): Promise<{
         gamesPlayed: number;
         totals: {
@@ -287,5 +179,7 @@ export declare class PlayersService {
     private attachSaveState;
     private attachSaveStateToRoster;
     private buildStrengthsWeaknesses;
+    private attachTransferOverridesToPlayers;
+    private buildRosterOverridesByTeam;
 }
 //# sourceMappingURL=players.service.d.ts.map

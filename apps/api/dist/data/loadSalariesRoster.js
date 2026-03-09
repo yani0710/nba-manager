@@ -50,11 +50,42 @@ function normalizePlayerName(input) {
         .replace(/\b(jr|sr|ii|iii|iv)\b/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-    return PLAYER_ALIASES[base] ? normalizePlayerName(PLAYER_ALIASES[base]) : base;
+    const alias = PLAYER_ALIASES[base];
+    if (!alias)
+        return base;
+    // Normalize alias target once and stop. This avoids alias loops caused by mojibake variants
+    // collapsing back to the same normalized key (e.g. "schrГ¶der" -> "schroder").
+    const normalizedAlias = String(alias)
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w\s]/g, " ")
+        .replace(/\b(jr|sr|ii|iii|iv)\b/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    return normalizedAlias || base;
 }
 function toInt(value) {
-    const n = Number(String(value ?? "").replace(/[^\d.-]/g, ""));
+    const cleaned = String(value ?? "").replace(/[^\d.-]/g, "").trim();
+    if (!cleaned)
+        return null;
+    const n = Number(cleaned);
     return Number.isFinite(n) ? Math.trunc(n) : null;
+}
+function getSeasonColumns(row) {
+    const cols = [];
+    for (const [key, raw] of Object.entries(row)) {
+        const m = key.trim().match(/^(\d{4})[-/](\d{2})$/);
+        if (!m)
+            continue;
+        const startYear = Number(m[1]);
+        const endYear = 2000 + Number(m[2]);
+        const value = toInt(raw) ?? 0;
+        if (value > 0)
+            cols.push({ key, startYear, endYear, value });
+    }
+    cols.sort((a, b) => a.startYear - b.startYear);
+    return cols;
 }
 function mapTeamCode(input) {
     const v = String(input ?? "").trim().toUpperCase();
@@ -77,10 +108,15 @@ function loadSalariesRosterRows() {
         .map((row) => {
         const rawName = pickField(row, ["player", "name"]).trim();
         const teamCode = mapTeamCode(pickField(row, ["team", "teamabbr", "teamcode"]).trim());
-        const salary = toInt(pickField(row, ["salary", "yearlysalary", "amount"]));
-        const contractEndYear = toInt(pickField(row, ["contractend", "expiry", "endyear", "expyear"]));
+        const seasonCols = getSeasonColumns(row);
+        const salary = toInt(pickField(row, ["salary", "yearlysalary", "amount"])) ??
+            seasonCols[0]?.value ??
+            null;
+        const contractEndYear = toInt(pickField(row, ["contractend", "expiry", "endyear", "expyear"])) ??
+            seasonCols[seasonCols.length - 1]?.endYear ??
+            null;
         const guaranteed = toInt(pickField(row, ["guaranteed", "guaranteedmoney"]));
-        const season = pickField(row, ["season", "year"]);
+        const season = pickField(row, ["season", "year"]) || (seasonCols[0] ? `${seasonCols[0].startYear}-${String(seasonCols[0].endYear).slice(-2)}` : "");
         return {
             rawName,
             normalizedName: normalizePlayerName(rawName),

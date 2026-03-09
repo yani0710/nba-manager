@@ -67,5 +67,13 @@ export const api = {
     getById: (id) => client.get(`/games/${id}`),
     getUpcoming: (limit = 10) => client.get('/games/upcoming', { params: { limit } }),
   },
+
+  // Transfers
+  transfers: {
+    getAll: (params = {}) => client.get('/transfers', { params }),
+    create: (data) => client.post('/transfers', data),
+    send: (id, data) => client.post(`/transfers/${id}/send`, data),
+    respondToProposal: (proposalId, data) => client.post(`/transfers/proposals/${proposalId}/respond`, data),
+  },
 };
 

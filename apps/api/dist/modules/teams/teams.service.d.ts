@@ -1,46 +1,13 @@
 export declare class TeamsService {
     getAllTeams(saveId?: number): Promise<{
-        players: {
-            rosterSource: "nba_salaries_clean.csv";
-            rosterName: string;
-            rosterTeamCode: string;
-            salary: number | null;
-            contractEndYear: number | null;
-            guaranteed: number | null;
-            enrichmentMatched: boolean;
-            enrichmentWarning?: string;
-            id: number | null;
-            name: string;
-            teamId: number | null;
-            team?: {
-                id: number;
-                name: string;
-                shortName: string;
-            } | null;
-            position: string | null;
-            number: number | null;
-            jerseyNumber: number | null;
-            overall: number | null;
-            overallBase: number | null;
-            overallCurrent: number | null;
-            form: number | null;
-            fatigue: number | null;
-            morale: number | null;
-            heightCm: number | null;
-            weightKg: number | null;
-            nationality: string | null;
-            birthDate: Date | null;
-            age: number | null;
-            externalRef: string | null;
-            attributes?: unknown;
-        }[];
+        players: any[];
         rosterMissingEnrichmentCount: number;
         awayGames: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -51,8 +18,8 @@ export declare class TeamsService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -61,11 +28,10 @@ export declare class TeamsService {
         }[];
         id: number;
         name: string;
-        shortName: string;
-        nbaTeamId: number | null;
-        city: string;
         createdAt: Date;
         updatedAt: Date;
+        shortName: string;
+        city: string;
         conference: string | null;
         division: string | null;
         primaryColor: string | null;
@@ -74,49 +40,17 @@ export declare class TeamsService {
         logoPath: string | null;
         form: number;
         morale: number;
+        nbaTeamId: number | null;
     }[]>;
     getTeamById(id: number, saveId?: number): Promise<{
-        players: {
-            rosterSource: "nba_salaries_clean.csv";
-            rosterName: string;
-            rosterTeamCode: string;
-            salary: number | null;
-            contractEndYear: number | null;
-            guaranteed: number | null;
-            enrichmentMatched: boolean;
-            enrichmentWarning?: string;
-            id: number | null;
-            name: string;
-            teamId: number | null;
-            team?: {
-                id: number;
-                name: string;
-                shortName: string;
-            } | null;
-            position: string | null;
-            number: number | null;
-            jerseyNumber: number | null;
-            overall: number | null;
-            overallBase: number | null;
-            overallCurrent: number | null;
-            form: number | null;
-            fatigue: number | null;
-            morale: number | null;
-            heightCm: number | null;
-            weightKg: number | null;
-            nationality: string | null;
-            birthDate: Date | null;
-            age: number | null;
-            externalRef: string | null;
-            attributes?: unknown;
-        }[];
+        players: any[];
         rosterMissingEnrichmentCount: number;
         awayGames: {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -127,8 +61,8 @@ export declare class TeamsService {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            status: string;
             saveId: number | null;
+            status: string;
             homeTeamId: number;
             awayTeamId: number;
             homeScore: number;
@@ -137,11 +71,10 @@ export declare class TeamsService {
         }[];
         id: number;
         name: string;
-        shortName: string;
-        nbaTeamId: number | null;
-        city: string;
         createdAt: Date;
         updatedAt: Date;
+        shortName: string;
+        city: string;
         conference: string | null;
         division: string | null;
         primaryColor: string | null;
@@ -150,50 +83,17 @@ export declare class TeamsService {
         logoPath: string | null;
         form: number;
         morale: number;
+        nbaTeamId: number | null;
     } | null>;
     getTeamByName(name: string, saveId?: number): Promise<{
-        players: {
-            rosterSource: "nba_salaries_clean.csv";
-            rosterName: string;
-            rosterTeamCode: string;
-            salary: number | null;
-            contractEndYear: number | null;
-            guaranteed: number | null;
-            enrichmentMatched: boolean;
-            enrichmentWarning?: string;
-            id: number | null;
-            name: string;
-            teamId: number | null;
-            team?: {
-                id: number;
-                name: string;
-                shortName: string;
-            } | null;
-            position: string | null;
-            number: number | null;
-            jerseyNumber: number | null;
-            overall: number | null;
-            overallBase: number | null;
-            overallCurrent: number | null;
-            form: number | null;
-            fatigue: number | null;
-            morale: number | null;
-            heightCm: number | null;
-            weightKg: number | null;
-            nationality: string | null;
-            birthDate: Date | null;
-            age: number | null;
-            externalRef: string | null;
-            attributes?: unknown;
-        }[];
+        players: any[];
         rosterMissingEnrichmentCount: number;
         id: number;
         name: string;
-        shortName: string;
-        nbaTeamId: number | null;
-        city: string;
         createdAt: Date;
         updatedAt: Date;
+        shortName: string;
+        city: string;
         conference: string | null;
         division: string | null;
         primaryColor: string | null;
@@ -202,6 +102,7 @@ export declare class TeamsService {
         logoPath: string | null;
         form: number;
         morale: number;
+        nbaTeamId: number | null;
     } | null>;
     getRosterByTeamId(id: number, saveId?: number): Promise<{
         id: number;
@@ -211,40 +112,7 @@ export declare class TeamsService {
         conference: string | null;
         division: string | null;
         logoPath: string | null;
-        roster: {
-            rosterSource: "nba_salaries_clean.csv";
-            rosterName: string;
-            rosterTeamCode: string;
-            salary: number | null;
-            contractEndYear: number | null;
-            guaranteed: number | null;
-            enrichmentMatched: boolean;
-            enrichmentWarning?: string;
-            id: number | null;
-            name: string;
-            teamId: number | null;
-            team?: {
-                id: number;
-                name: string;
-                shortName: string;
-            } | null;
-            position: string | null;
-            number: number | null;
-            jerseyNumber: number | null;
-            overall: number | null;
-            overallBase: number | null;
-            overallCurrent: number | null;
-            form: number | null;
-            fatigue: number | null;
-            morale: number | null;
-            heightCm: number | null;
-            weightKg: number | null;
-            nationality: string | null;
-            birthDate: Date | null;
-            age: number | null;
-            externalRef: string | null;
-            attributes?: unknown;
-        }[];
+        roster: any[];
         rosterSource: string;
         rosterEnrichment: {
             total: number;
@@ -258,6 +126,7 @@ export declare class TeamsService {
             defenseRating: number;
         };
     } | null>;
+    private buildRosterOverridesByTeam;
     private attachTeamState;
     private readSingleTeamState;
 }

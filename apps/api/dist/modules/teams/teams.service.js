@@ -9,6 +9,10 @@ const enrichPlayers_1 = require("../../data/enrichPlayers");
 class TeamsService {
     async getAllTeams(saveId) {
         const salariesRoster = await (0, enrichPlayers_1.enrichPlayersFromSalariesRoster)();
+        const teamsBase = await prisma_1.default.team.findMany({
+            select: { id: true, shortName: true },
+        });
+        const overrideByTeam = await this.buildRosterOverridesByTeam(saveId, teamsBase, salariesRoster.byTeam);
         const teams = await prisma_1.default.team.findMany({
             include: {
                 homeGames: true,
@@ -18,13 +22,15 @@ class TeamsService {
         });
         const withRoster = teams.map((team) => ({
             ...team,
-            players: salariesRoster.byTeam.get(team.shortName) ?? [],
-            rosterMissingEnrichmentCount: (salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
+            players: overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? [],
+            rosterMissingEnrichmentCount: (overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
         }));
         return this.attachTeamState(withRoster, saveId);
     }
     async getTeamById(id, saveId) {
         const salariesRoster = await (0, enrichPlayers_1.enrichPlayersFromSalariesRoster)();
+        const teamsBase = await prisma_1.default.team.findMany({ select: { id: true, shortName: true } });
+        const overrideByTeam = await this.buildRosterOverridesByTeam(saveId, teamsBase, salariesRoster.byTeam);
         const team = await prisma_1.default.team.findUnique({
             where: { id },
             include: {
@@ -36,13 +42,15 @@ class TeamsService {
             return null;
         const [withState] = await this.attachTeamState([{
                 ...team,
-                players: salariesRoster.byTeam.get(team.shortName) ?? [],
-                rosterMissingEnrichmentCount: (salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
+                players: overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? [],
+                rosterMissingEnrichmentCount: (overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
             }], saveId);
         return withState ?? null;
     }
     async getTeamByName(name, saveId) {
         const salariesRoster = await (0, enrichPlayers_1.enrichPlayersFromSalariesRoster)();
+        const teamsBase = await prisma_1.default.team.findMany({ select: { id: true, shortName: true } });
+        const overrideByTeam = await this.buildRosterOverridesByTeam(saveId, teamsBase, salariesRoster.byTeam);
         const team = await prisma_1.default.team.findUnique({
             where: { name },
         });
@@ -50,8 +58,8 @@ class TeamsService {
             return null;
         const [withState] = await this.attachTeamState([{
                 ...team,
-                players: salariesRoster.byTeam.get(team.shortName) ?? [],
-                rosterMissingEnrichmentCount: (salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
+                players: overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? [],
+                rosterMissingEnrichmentCount: (overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? []).filter((p) => !p.enrichmentMatched).length,
             }], saveId);
         return withState ?? null;
     }
@@ -63,7 +71,9 @@ class TeamsService {
         if (!team) {
             return null;
         }
-        const roster = salariesRoster.byTeam.get(team.shortName) ?? [];
+        const teamsBase = await prisma_1.default.team.findMany({ select: { id: true, shortName: true } });
+        const overrideByTeam = await this.buildRosterOverridesByTeam(saveId, teamsBase, salariesRoster.byTeam);
+        const roster = overrideByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? [];
         return {
             id: team.id,
             name: team.name,
@@ -80,6 +90,41 @@ class TeamsService {
             },
             teamState: await this.readSingleTeamState(saveId, team.id),
         };
+    }
+    async buildRosterOverridesByTeam(saveId, teams, baseByTeam) {
+        if (!saveId)
+            return new Map();
+        const save = await prisma_1.default.save.findUnique({ where: { id: saveId }, select: { data: true } });
+        const payload = (save?.data ?? {});
+        const overrides = payload.transferState?.playerTeamOverrides ?? {};
+        if (Object.keys(overrides).length === 0)
+            return new Map();
+        const teamCodeById = new Map(teams.map((t) => [t.id, t.shortName]));
+        const all = [...baseByTeam.entries()].flatMap(([code, roster]) => roster.map((p) => ({ ...p, rosterTeamCode: p.rosterTeamCode ?? code })));
+        const byPlayerId = new Map(all.filter((p) => p.id != null).map((p) => [p.id, p]));
+        const out = new Map();
+        for (const [code, roster] of baseByTeam.entries()) {
+            out.set(code, [...roster]);
+        }
+        for (const [playerIdKey, newTeamId] of Object.entries(overrides)) {
+            const playerId = Number(playerIdKey);
+            const targetCode = teamCodeById.get(Number(newTeamId));
+            const player = byPlayerId.get(playerId);
+            if (!player || !targetCode)
+                continue;
+            for (const [code, roster] of out.entries()) {
+                out.set(code, roster.filter((p) => p.id !== playerId));
+            }
+            const targetRoster = out.get(targetCode) ?? [];
+            targetRoster.push({
+                ...player,
+                teamId: Number(newTeamId),
+                team: teams.find((t) => t.id === Number(newTeamId)) ? { ...(player.team ?? {}), id: Number(newTeamId), shortName: targetCode } : player.team,
+                rosterTeamCode: targetCode,
+            });
+            out.set(targetCode, targetRoster);
+        }
+        return out;
     }
     async attachTeamState(teams, saveId) {
         if (!saveId || teams.length === 0)

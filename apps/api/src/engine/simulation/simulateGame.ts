@@ -14,11 +14,23 @@ interface PlayerPerformance {
   playerId: number;
   minutes: number;
   points: number;
+  twoPtMade: number;
+  twoPtAtt: number;
+  threePtMade: number;
+  threePtAtt: number;
+  ftMade: number;
+  ftAtt: number;
+  dunks: number;
+  oreb: number;
+  dreb: number;
   rebounds: number;
   assists: number;
   turnovers: number;
   stl: number;
   blk: number;
+  fouls: number;
+  plusMinus: number;
+  performanceRating: number;
   fgm: number;
   fga: number;
 }
@@ -127,7 +139,7 @@ function buildStats(players: SimPlayerInput[], teamScore: number, paceFactor: nu
   });
 
   const weightSum = rawWeights.reduce((a, b) => a + b, 0);
-  return players.map((player, idx) => {
+  const stats = players.map((player, idx) => {
     const share = Math.max(0.02, rawWeights[idx] / weightSum);
     const minutes = Math.max(6, Math.min(40, Math.round((share * 230) * paceMinutes)));
     const efficiency = Math.max(0.36, Math.min(0.68, 0.46 + (player.matchOverall - 70) * 0.003));
@@ -140,19 +152,67 @@ function buildStats(players: SimPlayerInput[], teamScore: number, paceFactor: nu
     const turnovers = Math.max(0, Math.round(0.8 + share * 6 + randomInRange(-1, 1)));
     const stl = Math.max(0, Math.round(share * 2.6 + randomInRange(-1, 1)));
     const blk = Math.max(0, Math.round(share * 2.2 + getReboundBias(player.position) * 0.4 + randomInRange(-1, 1)));
+    const oreb = Math.max(0, Math.min(rebounds, Math.round(rebounds * (0.18 + Math.max(0, getReboundBias(player.position)) * 0.05) + randomInRange(-1, 1))));
+    const dreb = Math.max(0, rebounds - oreb);
+
+    // Derive shot profile and make splits roughly consistent with points and FGM/FGA.
+    const threePtAttRate = getThreePointAttemptRate(player.position);
+    const threePtAtt = Math.max(0, Math.min(fga, Math.round(fga * threePtAttRate + randomInRange(-1, 2))));
+    const twoPtAtt = Math.max(0, fga - threePtAtt);
+    const threePtPct = Math.max(0.22, Math.min(0.47, 0.31 + (player.matchOverall - 70) * 0.002 + randomInRange(-0.05, 0.05)));
+    let threePtMade = Math.max(0, Math.min(threePtAtt, Math.round(threePtAtt * threePtPct)));
+    let twoPtMade = Math.max(0, Math.min(twoPtAtt, fgm - threePtMade));
+    if ((twoPtMade + threePtMade) > fgm) {
+      const overflow = (twoPtMade + threePtMade) - fgm;
+      twoPtMade = Math.max(0, twoPtMade - overflow);
+    } else if ((twoPtMade + threePtMade) < fgm) {
+      twoPtMade = Math.min(twoPtAtt, twoPtMade + (fgm - (twoPtMade + threePtMade)));
+    }
+
+    const shootingPoints = (twoPtMade * 2) + (threePtMade * 3);
+    const remainingPoints = Math.max(0, points - shootingPoints);
+    const ftMade = Math.max(0, Math.round(Math.min(remainingPoints, 14)));
+    const ftAtt = Math.max(ftMade, Math.round(ftMade * (1.1 + randomInRange(0, 0.5))));
+    const dunks = Math.max(0, Math.min(twoPtMade, Math.round(twoPtMade * getDunkRate(player.position) + randomInRange(-1, 1))));
+    const fouls = Math.max(0, Math.round(1 + share * 5 + randomInRange(-1, 1)));
+    const plusMinus = Math.round((share - (1 / Math.max(players.length, 1))) * 40 + (player.matchOverall - 75) * 0.3 + randomInRange(-6, 6));
+    const missedShotsPenalty = Math.max(0, (twoPtAtt - twoPtMade) + (threePtAtt - threePtMade) + (ftAtt - ftMade));
+    const performanceRating = computePerformanceRating({
+      points,
+      rebounds,
+      assists,
+      steals: stl,
+      blocks: blk,
+      turnovers,
+      missedShots: missedShotsPenalty,
+    });
     return {
       playerId: player.playerId,
       minutes,
       points,
+      twoPtMade,
+      twoPtAtt,
+      threePtMade,
+      threePtAtt,
+      ftMade,
+      ftAtt,
+      dunks,
+      oreb,
+      dreb,
       rebounds,
       assists,
       turnovers,
       stl,
       blk,
+      fouls,
+      plusMinus,
+      performanceRating,
       fgm,
       fga,
     };
   });
+  normalizeTeamPoints(stats, teamScore);
+  return stats;
 }
 
 function getPositionUsageBoost(position: string): number {
@@ -174,4 +234,85 @@ function getAssistBias(position: string): number {
   if (p.includes("PG")) return 1.8;
   if (p.includes("C")) return -0.5;
   return 0.3;
+}
+
+function getThreePointAttemptRate(position: string): number {
+  const p = String(position ?? "").toUpperCase();
+  if (p.includes("PG") || p.includes("SG")) return 0.42;
+  if (p.includes("SF")) return 0.34;
+  if (p.includes("PF")) return 0.24;
+  if (p.includes("C")) return 0.12;
+  return 0.3;
+}
+
+function getDunkRate(position: string): number {
+  const p = String(position ?? "").toUpperCase();
+  if (p.includes("C")) return 0.35;
+  if (p.includes("PF")) return 0.28;
+  if (p.includes("SF")) return 0.18;
+  return 0.08;
+}
+
+function computePerformanceRating(input: {
+  points: number;
+  rebounds: number;
+  assists: number;
+  steals: number;
+  blocks: number;
+  turnovers: number;
+  missedShots: number;
+}): number {
+  // Documented formula reused across result screens:
+  // (PTS + 1.2*REB + 1.5*AST + 2*STL + 2*BLK) - (2*TOV + 0.7*missed shots)
+  const score =
+    input.points +
+    input.rebounds * 1.2 +
+    input.assists * 1.5 +
+    input.steals * 2 +
+    input.blocks * 2 -
+    input.turnovers * 2 -
+    input.missedShots * 0.7;
+  return Math.round(score * 10) / 10;
+}
+
+function normalizeTeamPoints(stats: PlayerPerformance[], targetPoints: number) {
+  if (!stats.length) return;
+  let sum = stats.reduce((acc, s) => acc + s.points, 0);
+  let delta = targetPoints - sum;
+  if (delta === 0) return;
+
+  const ordered = [...stats].sort((a, b) => b.points - a.points);
+  let guard = 0;
+  while (delta !== 0 && guard < 2000) {
+    guard += 1;
+    for (const s of ordered) {
+      if (delta === 0) break;
+      if (delta > 0) {
+        s.points += 1;
+        delta -= 1;
+        continue;
+      }
+      // For negative adjustment, do not drop below 0.
+      if (s.points <= 0) continue;
+      s.points -= 1;
+      delta += 1;
+    }
+    // If all players are at zero and delta still negative (should not happen), stop.
+    if (delta < 0 && ordered.every((s) => s.points <= 0)) break;
+  }
+
+  // Recompute performance rating with updated points (other fields unchanged).
+  for (const s of stats) {
+    const missedShotsPenalty =
+      Math.max(0, (s.twoPtAtt - s.twoPtMade) + (s.threePtAtt - s.threePtMade) + (s.ftAtt - s.ftMade));
+    s.performanceRating = computePerformanceRating({
+      points: s.points,
+      rebounds: s.rebounds,
+      assists: s.assists,
+      steals: s.stl,
+      blocks: s.blk,
+      turnovers: s.turnovers,
+      missedShots: missedShotsPenalty,
+    });
+  }
 }

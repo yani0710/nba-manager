@@ -30,6 +30,10 @@ model Team {
   players    Player[]
   saves      Save[]
   managedSaves Save[] @relation("managedSaves")
+  transferOffersSent     TransferOffer[] @relation("TransferOffersFromTeam")
+  transferOffersReceived TransferOffer[] @relation("TransferOffersToTeam")
+  transferTransactionsSent TransferTransactionLog[] @relation("TransferTxnFromTeam")
+  transferTransactionsReceived TransferTransactionLog[] @relation("TransferTxnToTeam")
 }
 
 model Player {
@@ -90,6 +94,8 @@ model Player {
   seasonAdvanced PlayerSeasonAdvanced[]
   seasonImpact   PlayerSeasonImpact[]
   trainingPlans  PlayerTrainingPlan[]
+  contractProposals PlayerContractProposal[]
+  transferOfferPieces TransferOfferPlayerPiece[]
   gameLogs    PlayerGameLog[]
   team        Team       @relation(fields: [teamId], references: [id])
 
@@ -189,9 +195,26 @@ model GameStat {
   id        Int      @id @default(autoincrement())
   gameId    Int
   playerId  Int
+  teamId    Int?
+  minutes   Int      @default(0)
   points    Int      @default(0)
+  twoPtMade Int      @default(0)
+  twoPtAtt  Int      @default(0)
+  threePtMade Int    @default(0)
+  threePtAtt  Int    @default(0)
+  ftMade    Int      @default(0)
+  ftAtt     Int      @default(0)
+  dunks     Int      @default(0)
+  oreb      Int      @default(0)
+  dreb      Int      @default(0)
   rebounds  Int      @default(0)
   assists   Int      @default(0)
+  steals    Int      @default(0)
+  blocks    Int      @default(0)
+  turnovers Int      @default(0)
+  fouls     Int      @default(0)
+  plusMinus Int      @default(0)
+  performanceRating Float @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
@@ -217,6 +240,8 @@ model Save {
   games          Game[]
   inboxMessages  InboxMessage[]
   playerTrainingPlans PlayerTrainingPlan[]
+  transferOffers TransferOffer[]
+  transferTransactionLogs TransferTransactionLog[]
   coachProfile   CoachProfile?  @relation(fields: [coachProfileId], references: [id])
   team           Team?          @relation(fields: [teamId], references: [id])
   managedTeam    Team?          @relation("managedSaves", fields: [managedTeamId], references: [id])
@@ -267,12 +292,102 @@ model InboxMessage {
   title     String
   body      String
   fromName  String
+  relatedOfferId Int?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   save      Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  transferOffer TransferOffer? @relation(fields: [relatedOfferId], references: [id], onDelete: SetNull)
 
   @@index([saveId, date])
+  @@index([relatedOfferId])
+}
+
+model TransferOffer {
+  id               Int      @id @default(autoincrement())
+  saveId           Int
+  fromTeamId       Int
+  toTeamId         Int
+  outgoingPlayerIds Int[]   @default([])
+  incomingPlayerIds Int[]   @default([])
+  cashOut          Int      @default(0)
+  cashIn           Int      @default(0)
+  sellOnPct        Int?
+  status           String   @default("DRAFT")
+  createdDay       Int
+  resolveDay       Int
+  aiReason         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  resolvedAt       DateTime?
+  save             Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  fromTeam         Team     @relation("TransferOffersFromTeam", fields: [fromTeamId], references: [id], onDelete: Cascade)
+  toTeam           Team     @relation("TransferOffersToTeam", fields: [toTeamId], references: [id], onDelete: Cascade)
+  inboxMessages    InboxMessage[]
+  contractProposals PlayerContractProposal[]
+  playerPieces      TransferOfferPlayerPiece[]
+  transactionLogs   TransferTransactionLog[]
+
+  @@index([saveId, status, resolveDay])
+  @@index([saveId, createdDay])
+}
+
+model PlayerContractProposal {
+  id                   Int      @id @default(autoincrement())
+  offerId              Int
+  playerId             Int
+  proposedSalary       Int
+  years                Int
+  role                 String
+  responseDeadlineDay  Int
+  status               String   @default("OFFERED")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  offer                TransferOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  player               Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, status])
+  @@index([playerId])
+}
+
+model TransferOfferPlayerPiece {
+  id        Int      @id @default(autoincrement())
+  offerId    Int
+  playerId   Int
+  // side = who owns the piece in the offer context: FROM team or TO team
+  side      String
+  // direction = whether this piece is outgoing from manager team or incoming to manager team
+  direction String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  offer     TransferOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, side])
+  @@index([offerId, direction])
+  @@unique([offerId, playerId, side, direction])
+}
+
+model TransferTransactionLog {
+  id              Int      @id @default(autoincrement())
+  saveId          Int
+  offerId         Int
+  fromTeamId      Int
+  toTeamId        Int
+  day             Int
+  eventType       String
+  status          String
+  message         String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  save            Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  offer           TransferOffer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  fromTeam        Team     @relation("TransferTxnFromTeam", fields: [fromTeamId], references: [id], onDelete: Cascade)
+  toTeam          Team     @relation("TransferTxnToTeam", fields: [toTeamId], references: [id], onDelete: Cascade)
+
+  @@index([saveId, day])
+  @@index([offerId, createdAt])
 }
 
 model PlayerGameLog {
