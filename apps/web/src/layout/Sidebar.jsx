@@ -25,6 +25,7 @@ const GROUPS = [
     label: 'Schedule',
     items: [
       ['schedule', 'Calendar', 'C'],
+      ['prepare', 'Prepare', 'PR'],
       ['matches', 'Matches', 'M'],
       ['match-center', 'Match Center', 'MC'],
       ['results', 'Results', 'R'],
@@ -74,4 +75,3 @@ export function Sidebar({ collapsed = false, onToggle = () => {} }) {
     </aside>
   );
 }
-

@@ -240,6 +240,7 @@ model Save {
   games          Game[]
   inboxMessages  InboxMessage[]
   playerTrainingPlans PlayerTrainingPlan[]
+  teamTrainingDayPlans TeamTrainingDayPlan[]
   transferOffers TransferOffer[]
   transferTransactionLogs TransferTransactionLog[]
   coachProfile   CoachProfile?  @relation(fields: [coachProfileId], references: [id])
@@ -254,12 +255,28 @@ model PlayerTrainingPlan {
   playerId   Int
   focus      String
   intensity  String
+  dayPlan    Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   save       Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
   player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([saveId, playerId])
+}
+
+model TeamTrainingDayPlan {
+  id              String   @id @default(cuid())
+  saveId          Int
+  dayOfWeek       String
+  intensity       String
+  focus           String
+  durationMinutes Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  save            Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+
+  @@unique([saveId, dayOfWeek])
+  @@index([saveId])
 }
 
 model User {

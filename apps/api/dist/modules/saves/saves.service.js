@@ -4,14 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SavesService = void 0;
-const node_fs_1 = __importDefault(require("node:fs"));
-const node_path_1 = __importDefault(require("node:path"));
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const AppError_1 = require("../../common/errors/AppError");
-const scheduleGenerator_1 = require("../../engine/calendar/scheduleGenerator");
 const advanceDay_1 = require("../../engine/calendar/advanceDay");
 const simulateGame_1 = require("../../engine/simulation/simulateGame");
 const trades_service_1 = require("../trades/trades.service");
+const fixtureCsvLoader_1 = require("../fixtures/fixtureCsvLoader");
+const gameweekCalendar_1 = require("../fixtures/gameweekCalendar");
+const fixtureStatus_1 = require("../fixtures/fixtureStatus");
+const fixtureModel_1 = require("../fixtures/fixtureModel");
 class SavesService {
     constructor() {
         this.tradesService = new trades_service_1.TradesService();
@@ -46,7 +47,7 @@ class SavesService {
         });
         const payload = {
             season,
-            week: 1,
+            week: (0, gameweekCalendar_1.getGameweekForDate)(season, startDate),
             status: "active",
             currentDate: startDate,
             inboxUnread: 3,
@@ -74,6 +75,37 @@ class SavesService {
                 pace: "balanced",
                 threePtFocus: 50,
                 defenseScheme: "switch",
+                offenseStyle: "balanced",
+                defenseMode: "man",
+                instructions: {
+                    fastBreak: true,
+                    pressAfterMade: false,
+                    isoStars: false,
+                    crashBoards: true,
+                },
+                boards: {
+                    attack: {
+                        PG: { playerId: null, x: 0.25, y: 0.7 },
+                        SG: { playerId: null, x: 0.4, y: 0.75 },
+                        SF: { playerId: null, x: 0.6, y: 0.72 },
+                        PF: { playerId: null, x: 0.55, y: 0.55 },
+                        C: { playerId: null, x: 0.5, y: 0.35 },
+                    },
+                    transition: {
+                        PG: { playerId: null, x: 0.5, y: 0.76 },
+                        SG: { playerId: null, x: 0.3, y: 0.62 },
+                        SF: { playerId: null, x: 0.7, y: 0.62 },
+                        PF: { playerId: null, x: 0.42, y: 0.48 },
+                        C: { playerId: null, x: 0.58, y: 0.48 },
+                    },
+                    defense: {
+                        PG: { playerId: null, x: 0.45, y: 0.68 },
+                        SG: { playerId: null, x: 0.62, y: 0.68 },
+                        SF: { playerId: null, x: 0.5, y: 0.55 },
+                        PF: { playerId: null, x: 0.36, y: 0.4 },
+                        C: { playerId: null, x: 0.64, y: 0.4 },
+                    },
+                },
                 board: {
                     PG: { playerId: null, x: 0.25, y: 0.7 },
                     SG: { playerId: null, x: 0.4, y: 0.75 },
@@ -107,7 +139,7 @@ class SavesService {
             },
         });
         await this.createInitialInboxMessages(save.id, startDate);
-        await this.generateScheduleForSave(save.id, season, seasonStartYear);
+        await this.generateScheduleForSave(save.id, season);
         return save;
     }
     async getSaveById(id) {
@@ -154,7 +186,7 @@ class SavesService {
             nextMatch = await prisma_1.default.game.findFirst({
                 where: {
                     saveId: save.id,
-                    status: "scheduled",
+                    status: { in: fixtureStatus_1.UPCOMING_GAME_STATUSES },
                     OR: [{ homeTeamId: save.teamId }, { awayTeamId: save.teamId }],
                 },
                 include: { homeTeam: true, awayTeam: true },
@@ -163,7 +195,7 @@ class SavesService {
             lastResult = await prisma_1.default.game.findFirst({
                 where: {
                     saveId: save.id,
-                    status: "final",
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
                     OR: [{ homeTeamId: save.teamId }, { awayTeamId: save.teamId }],
                 },
                 include: { homeTeam: true, awayTeam: true },
@@ -184,8 +216,8 @@ class SavesService {
             team: save.team,
             coachProfile: save.coachProfile,
             inboxCount: unread,
-            nextMatch,
-            lastResult,
+            nextMatch: nextMatch ? (0, fixtureModel_1.toFixtureModel)(nextMatch) : null,
+            lastResult: lastResult ? (0, fixtureModel_1.toFixtureModel)(lastResult) : null,
             data: {
                 ...payload,
                 inboxUnread: unread,
@@ -203,7 +235,7 @@ class SavesService {
         const todaysGames = await prisma_1.default.game.findMany({
             where: {
                 saveId: save.id,
-                status: "scheduled",
+                status: { in: fixtureStatus_1.SIMULATABLE_GAME_STATUSES },
                 gameDate: { gte: dateStart, lte: dateEnd },
             },
             include: {
@@ -221,6 +253,11 @@ class SavesService {
                 overall: true,
                 overallBase: true,
                 overallCurrent: true,
+                offensiveRating: true,
+                defensiveRating: true,
+                physicalRating: true,
+                iqRating: true,
+                attributes: true,
                 potential: true,
                 age: true,
                 birthDate: true,
@@ -287,7 +324,7 @@ class SavesService {
             await prisma_1.default.game.update({
                 where: { id: game.id },
                 data: {
-                    status: "final",
+                    status: "simulated",
                     homeScore: result.homeScore,
                     awayScore: result.awayScore,
                 },
@@ -374,19 +411,19 @@ class SavesService {
                     ...stat,
                     position: player?.position ?? "SF",
                 });
-                const teamFormSupport = (playerTeamState.form - 50) * 0.08;
-                const streakSupport = this.clamp(playerTeamState.streak ?? 0, -5, 5) * 0.6;
-                const resultBonus = didWin ? 2.5 : -0.6;
+                const teamFormSupport = (playerTeamState.form - 50) * 0.04;
+                const streakSupport = this.clamp(playerTeamState.streak ?? 0, -5, 5) * 0.25;
+                const resultBonus = didWin ? 1.0 : -0.2;
                 const moraleSupport = ((prev.morale ?? 65) - 50) * 0.04;
                 const fatigueDrag = Math.max(0, (prev.fatigue ?? 10) - 60) * 0.05;
                 const trainingSupport = personalFocus === "fitness" ? 1.0 : personalFocus ? 0.5 : 0;
                 const targetForm = this.clamp(Math.round(perfScore + teamFormSupport + streakSupport + resultBonus + moraleSupport + trainingSupport - fatigueDrag), 35, 95);
                 // More inertia than before so form does not collapse to ~50 after a few average games.
-                const nextForm = this.clamp(Math.round(prev.form * 0.90 + targetForm * 0.10), 0, 100);
+                const nextForm = this.clamp(Math.round(prev.form * 0.94 + targetForm * 0.06), 0, 100);
                 const formHistory = [...(prev.formHistory ?? []), nextForm].slice(-30);
                 currentData.playerState[key] = {
                     fatigue: Math.min(100, prev.fatigue + fatigueBump),
-                    morale: Math.max(0, Math.min(100, prev.morale + (didWin ? 1 : 0) + (perfScore >= 65 ? 1 : perfScore <= 40 ? -1 : 0))),
+                    morale: Math.max(0, Math.min(100, prev.morale + (didWin ? 0.5 : -0.2) + (perfScore >= 65 ? 0.5 : perfScore <= 40 ? -0.5 : 0))),
                     form: nextForm,
                     formHistory,
                     gamesSinceDrift: (prev.gamesSinceDrift ?? 0) + 1,
@@ -400,12 +437,11 @@ class SavesService {
         const previousWeek = currentData.week ?? 1;
         const nextDate = (0, advanceDay_1.advanceDateByOneDay)(currentDate);
         currentData.currentDate = nextDate.toISOString().slice(0, 10);
-        currentData.week = Math.floor((nextDate.getTime() - new Date(`${save.season.slice(0, 4)}-10-01`).getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1;
-        if ((currentData.week ?? 1) < 1)
-            currentData.week = 1;
+        currentData.week = (0, gameweekCalendar_1.getGameweekForDate)(save.season, currentData.currentDate);
         const rolledWeek = (currentData.week ?? 1) > previousWeek;
         const trainingRating = Math.max(60, Math.min(95, (currentData.training?.rating ?? 74) + (Math.random() > 0.5 ? 1 : -1)));
         currentData.training = {
+            ...(currentData.training ?? {}),
             rating: trainingRating,
             trend: trainingRating >= 75 ? "up" : "steady",
         };
@@ -453,7 +489,7 @@ class SavesService {
         const seasonStart = new Date(Date.UTC(startYear, 9, 1));
         return Math.max(0, Math.floor((date.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24)));
     }
-    async advanceSaveToDate(id, targetDate) {
+    async advanceSaveToDate(id, targetDate, includeTargetDay = false) {
         const parsed = new Date(`${targetDate}T00:00:00.000Z`);
         if (Number.isNaN(parsed.getTime())) {
             throw new AppError_1.BadRequestError("Invalid targetDate");
@@ -464,7 +500,7 @@ class SavesService {
             const currentData = (current.data ?? {});
             const currentIso = String(currentData.currentDate ?? current.currentDate.toISOString().slice(0, 10));
             const currentDate = new Date(`${currentIso}T00:00:00.000Z`);
-            if (currentDate >= parsed)
+            if (includeTargetDay ? currentDate > parsed : currentDate >= parsed)
                 break;
             current = await this.advanceSave(id);
             iterations += 1;
@@ -478,9 +514,17 @@ class SavesService {
         });
     }
     async getInbox(id, take = 30, skip = 0) {
-        await this.getSaveById(id);
+        const save = await this.getSaveById(id);
+        const data = (save.data ?? {});
         const normalizedTake = Math.max(1, Math.min(200, Number.isFinite(take) ? Number(take) : 30));
         const normalizedSkip = Math.max(0, Number.isFinite(skip) ? Number(skip) : 0);
+        const managedPlayers = save.teamId
+            ? await prisma_1.default.player.findMany({
+                where: { teamId: save.teamId, active: true },
+                select: { id: true, name: true },
+            })
+            : [];
+        const playerIdByName = new Map(managedPlayers.map((p) => [String(p.name).toLowerCase().trim(), p.id]));
         const [messages, unread, total] = await Promise.all([
             prisma_1.default.inboxMessage.findMany({
                 where: { saveId: id },
@@ -500,15 +544,27 @@ class SavesService {
             unread,
             take: normalizedTake,
             skip: normalizedSkip,
-            messages: messages.map((m) => ({
-                id: String(m.id),
-                subject: m.title,
-                body: m.body,
-                from: m.fromName,
-                createdAt: m.date.toISOString().slice(0, 10),
-                type: m.type,
-                read: m.isRead,
-            })),
+            messages: messages.map((m) => {
+                const interaction = this.getInboxInteraction({
+                    message: m,
+                    saveData: data,
+                    playerIdByName,
+                });
+                return {
+                    id: String(m.id),
+                    subject: m.title,
+                    body: m.body,
+                    from: m.fromName,
+                    createdAt: m.date.toISOString().slice(0, 10),
+                    type: m.type,
+                    read: m.isRead,
+                    preview: String(m.body ?? "").slice(0, 120),
+                    needsResponse: interaction.needsResponse,
+                    responded: interaction.responded,
+                    responseId: interaction.responseId ?? null,
+                    choices: interaction.choices,
+                };
+            }),
         };
     }
     async getSchedule(id, from, to) {
@@ -520,7 +576,7 @@ class SavesService {
         if (to) {
             dateFilter.lte = new Date(`${to}T23:59:59.999Z`);
         }
-        return prisma_1.default.game.findMany({
+        const games = await prisma_1.default.game.findMany({
             where: {
                 saveId: save.id,
                 ...(save.teamId ? { OR: [{ homeTeamId: save.teamId }, { awayTeamId: save.teamId }] } : {}),
@@ -532,13 +588,14 @@ class SavesService {
             },
             orderBy: { gameDate: "asc" },
         });
+        return games.map(fixtureModel_1.toFixtureModel);
     }
     async getResults(id) {
         const save = await this.getSaveById(id);
         const games = await prisma_1.default.game.findMany({
             where: {
                 saveId: save.id,
-                status: "final",
+                status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
                 ...(save.teamId ? { OR: [{ homeTeamId: save.teamId }, { awayTeamId: save.teamId }] } : {}),
             },
             include: {
@@ -548,15 +605,7 @@ class SavesService {
             orderBy: { gameDate: "desc" },
             take: 100,
         });
-        return games.map((game) => ({
-            id: game.id,
-            gameDate: game.gameDate,
-            homeTeam: game.homeTeam,
-            awayTeam: game.awayTeam,
-            homeScore: game.homeScore,
-            awayScore: game.awayScore,
-            status: game.status,
-        }));
+        return games.map(fixtureModel_1.toFixtureModel);
     }
     async getResultDetails(id, gameId) {
         const save = await this.getSaveById(id);
@@ -564,7 +613,7 @@ class SavesService {
             where: {
                 id: gameId,
                 saveId: save.id,
-                status: "final",
+                status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
             },
             include: {
                 homeTeam: true,
@@ -682,6 +731,47 @@ class SavesService {
             west,
         };
     }
+    getInboxInteraction(params) {
+        const responses = params.saveData.inboxState?.responses ?? {};
+        const responseState = responses[String(params.message.id)];
+        const responded = Boolean(responseState?.responseId);
+        const normalizedType = String(params.message.type || "").toLowerCase();
+        const fromNameKey = String(params.message.fromName || "").toLowerCase().trim();
+        const playerId = params.playerIdByName.get(fromNameKey) ?? null;
+        let choices = [];
+        if (normalizedType === "player" || playerId) {
+            choices = [
+                { id: "supportive", label: "You are playing great, keep it up.", moraleDelta: 2 },
+                { id: "neutral", label: "Keep working hard and be patient.", moraleDelta: 0 },
+                { id: "critical", label: "You need to improve, no promises.", moraleDelta: -2 },
+            ];
+        }
+        else if (normalizedType === "staff") {
+            choices = [
+                { id: "approve", label: "Proceed with this plan." },
+                { id: "hold", label: "Hold for now, monitor the situation." },
+            ];
+        }
+        else if (normalizedType === "scouting") {
+            choices = [
+                { id: "shortlist", label: "Add this player to shortlist." },
+                { id: "ignore", label: "Ignore this report for now." },
+            ];
+        }
+        else if (normalizedType === "media") {
+            choices = [
+                { id: "accept", label: "Accept interview request." },
+                { id: "decline", label: "Decline and stay focused on basketball." },
+            ];
+        }
+        return {
+            needsResponse: choices.length > 0,
+            responded,
+            responseId: responseState?.responseId ?? null,
+            playerId,
+            choices,
+        };
+    }
     async markInboxMessageRead(saveId, msgId) {
         await this.getSaveById(saveId);
         const message = await prisma_1.default.inboxMessage.findFirst({
@@ -710,6 +800,85 @@ class SavesService {
             success: true,
             unread,
             messageId: msgId,
+        };
+    }
+    async respondInboxMessage(saveId, msgId, responseId) {
+        const save = await this.getSaveById(saveId);
+        const message = await prisma_1.default.inboxMessage.findFirst({
+            where: { id: msgId, saveId },
+        });
+        if (!message)
+            throw new AppError_1.NotFoundError("InboxMessage");
+        const data = (save.data ?? {});
+        const managedPlayers = save.teamId
+            ? await prisma_1.default.player.findMany({
+                where: { teamId: save.teamId, active: true },
+                select: { id: true, name: true, morale: true },
+            })
+            : [];
+        const playerIdByName = new Map(managedPlayers.map((p) => [String(p.name).toLowerCase().trim(), p.id]));
+        const interaction = this.getInboxInteraction({
+            message,
+            saveData: data,
+            playerIdByName,
+        });
+        if (!interaction.needsResponse) {
+            throw new AppError_1.BadRequestError("This message does not require a response");
+        }
+        if (interaction.responded) {
+            return { success: true, alreadyResponded: true };
+        }
+        const selected = interaction.choices.find((c) => c.id === responseId);
+        if (!selected) {
+            throw new AppError_1.BadRequestError("Invalid inbox response option");
+        }
+        data.inboxState = data.inboxState ?? {};
+        data.inboxState.responses = data.inboxState.responses ?? {};
+        data.inboxState.responses[String(msgId)] = {
+            responseId: selected.id,
+            respondedAt: new Date().toISOString(),
+            playerId: interaction.playerId ?? undefined,
+            moraleDelta: selected.moraleDelta ?? 0,
+        };
+        let moraleDeltaApplied = 0;
+        if (interaction.playerId && Number.isFinite(selected.moraleDelta)) {
+            const player = managedPlayers.find((p) => p.id === interaction.playerId)
+                ?? await prisma_1.default.player.findUnique({ where: { id: interaction.playerId }, select: { id: true, morale: true } });
+            if (player) {
+                const nextMorale = this.clamp(Math.round((player.morale ?? 65) + (selected.moraleDelta ?? 0)), 0, 100);
+                await prisma_1.default.player.update({
+                    where: { id: player.id },
+                    data: { morale: nextMorale },
+                });
+                data.playerState = data.playerState ?? {};
+                const key = String(player.id);
+                const prev = data.playerState[key] ?? { fatigue: 10, morale: 65, form: 60 };
+                data.playerState[key] = {
+                    ...prev,
+                    morale: this.clamp(Math.round((prev.morale ?? nextMorale) + (selected.moraleDelta ?? 0)), 0, 100),
+                };
+                moraleDeltaApplied = selected.moraleDelta ?? 0;
+            }
+        }
+        await prisma_1.default.inboxMessage.update({
+            where: { id: msgId },
+            data: { isRead: true },
+        });
+        const unread = await prisma_1.default.inboxMessage.count({
+            where: { saveId, isRead: false },
+        });
+        data.inboxUnread = unread;
+        await prisma_1.default.save.update({
+            where: { id: saveId },
+            data: { data },
+        });
+        return {
+            success: true,
+            unread,
+            messageId: msgId,
+            responseId: selected.id,
+            moraleDelta: moraleDeltaApplied,
+            playerId: interaction.playerId ?? null,
         };
     }
     async deleteInboxMessage(saveId, msgId) {
@@ -754,13 +923,21 @@ class SavesService {
             rotation: updated.data.rotation ?? {},
         };
     }
-    async saveTactics(saveId, tactics) {
+    async saveTactics(saveId, tactics, rotation) {
         const save = await this.getSaveById(saveId);
         const data = (save.data ?? {});
         const nextTactics = {
             pace: "balanced",
             threePtFocus: 50,
             defenseScheme: "switch",
+            offenseStyle: "balanced",
+            defenseMode: "man",
+            instructions: {
+                fastBreak: true,
+                pressAfterMade: false,
+                isoStars: false,
+                crashBoards: true,
+            },
             ...(data.tactics ?? {}),
             ...(tactics ?? {}),
         };
@@ -776,7 +953,43 @@ class SavesService {
             }));
             nextTactics.board = sanitizedBoard;
         }
+        if (nextTactics.boards) {
+            const existingBoards = (data.tactics?.boards ?? {});
+            const sanitizeNamedBoard = (board) => {
+                if (!board || typeof board !== "object")
+                    return undefined;
+                return Object.fromEntries(Object.entries(board).map(([slot, value]) => {
+                    const v = value ?? { playerId: null, x: 0.5, y: 0.5 };
+                    return [slot, {
+                            playerId: typeof v.playerId === "number" ? v.playerId : null,
+                            x: Math.max(0, Math.min(1, Number(v.x ?? 0.5))),
+                            y: Math.max(0, Math.min(1, Number(v.y ?? 0.5))),
+                        }];
+                }));
+            };
+            nextTactics.boards = {
+                attack: sanitizeNamedBoard(nextTactics.boards.attack) ?? existingBoards?.attack ?? nextTactics.board,
+                transition: sanitizeNamedBoard(nextTactics.boards.transition) ?? existingBoards?.transition ?? nextTactics.board,
+                defense: sanitizeNamedBoard(nextTactics.boards.defense) ?? existingBoards?.defense ?? nextTactics.board,
+            };
+        }
+        nextTactics.defenseMode = nextTactics.defenseMode === "zone" || nextTactics.defenseMode === "hybrid" ? nextTactics.defenseMode : "man";
+        nextTactics.offenseStyle = (nextTactics.offenseStyle === "pick_and_roll"
+            || nextTactics.offenseStyle === "post_up"
+            || nextTactics.offenseStyle === "transition"
+            || nextTactics.offenseStyle === "iso")
+            ? nextTactics.offenseStyle
+            : "balanced";
+        nextTactics.instructions = {
+            fastBreak: Boolean(nextTactics.instructions?.fastBreak),
+            pressAfterMade: Boolean(nextTactics.instructions?.pressAfterMade),
+            isoStars: Boolean(nextTactics.instructions?.isoStars),
+            crashBoards: Boolean(nextTactics.instructions?.crashBoards),
+        };
         data.tactics = nextTactics;
+        if (rotation) {
+            data.rotation = rotation;
+        }
         const updated = await prisma_1.default.save.update({
             where: { id: saveId },
             data: { data },
@@ -784,6 +997,7 @@ class SavesService {
         return {
             success: true,
             tactics: updated.data.tactics ?? nextTactics,
+            rotation: updated.data.rotation ?? data.rotation ?? {},
         };
     }
     async saveTrainingPlan(saveId, payload) {
@@ -811,10 +1025,32 @@ class SavesService {
             teamProfiles: payload.teamProfiles ?? data.training?.teamProfiles ?? [],
             activeTeamProfileId: payload.activeTeamProfileId ?? data.training?.activeTeamProfileId,
         };
+        const normalizedWeekPlan = data.training.weekPlan ?? this.buildDefaultWeekPlan();
         const updated = await prisma_1.default.save.update({
             where: { id: saveId },
             data: { data },
         });
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        await prisma_1.default.$transaction(days.map((day) => {
+            const row = normalizedWeekPlan[day] ?? this.buildDefaultWeekPlan()[day];
+            return prisma_1.default.teamTrainingDayPlan.upsert({
+                where: {
+                    saveId_dayOfWeek: { saveId, dayOfWeek: day },
+                },
+                create: {
+                    saveId,
+                    dayOfWeek: day,
+                    intensity: row.intensity,
+                    focus: row.focus,
+                    durationMinutes: Number.isFinite(row.durationMinutes) ? Number(row.durationMinutes) : null,
+                },
+                update: {
+                    intensity: row.intensity,
+                    focus: row.focus,
+                    durationMinutes: Number.isFinite(row.durationMinutes) ? Number(row.durationMinutes) : null,
+                },
+            });
+        }));
         return {
             success: true,
             trainingPlan: updated.data.trainingPlan ?? data.trainingPlan,
@@ -824,6 +1060,32 @@ class SavesService {
     async getTrainingConfig(saveId) {
         const save = await this.getSaveById(saveId);
         const data = (save.data ?? {});
+        const persistedDayPlans = await prisma_1.default.teamTrainingDayPlan.findMany({
+            where: { saveId },
+            orderBy: { dayOfWeek: "asc" },
+        });
+        const dbWeekPlan = Object.fromEntries(persistedDayPlans.map((row) => [
+            row.dayOfWeek,
+            {
+                intensity: row.intensity,
+                focus: row.focus,
+                durationMinutes: row.durationMinutes ?? undefined,
+            },
+        ]));
+        const mergedWeekPlan = { ...this.buildDefaultWeekPlan() };
+        for (const day of ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]) {
+            const mergedRow = {
+                ...(mergedWeekPlan[day] ?? {}),
+                ...(data.training?.weekPlan?.[day] ?? {}),
+                ...(dbWeekPlan?.[day] ?? {}),
+            };
+            mergedWeekPlan[day] = {
+                intensity: mergedRow.intensity ?? "balanced",
+                focus: mergedRow.focus ?? "balanced",
+                intensityPercent: Number.isFinite(mergedRow.intensityPercent) ? Number(mergedRow.intensityPercent) : undefined,
+                durationMinutes: Number.isFinite(mergedRow.durationMinutes) ? Number(mergedRow.durationMinutes) : undefined,
+            };
+        }
         return {
             success: true,
             trainingPlan: data.trainingPlan ?? { intensity: "balanced", focus: "balanced" },
@@ -832,10 +1094,8 @@ class SavesService {
                 trend: data.training?.trend ?? "steady",
                 teamProfiles: data.training?.teamProfiles ?? [],
                 activeTeamProfileId: data.training?.activeTeamProfileId ?? null,
-                weekPlan: {
-                    ...this.buildDefaultWeekPlan(),
-                    ...(data.training?.weekPlan ?? {}),
-                },
+                weekPlan: mergedWeekPlan,
+                playerPlans: data.training?.playerPlans ?? {},
             },
             currentDate: data.currentDate ?? save.currentDate.toISOString().slice(0, 10),
             saveId: save.id,
@@ -877,6 +1137,7 @@ class SavesService {
                 playerId: plan.playerId,
                 focus: plan.focus,
                 intensity: plan.intensity,
+                dayPlan: plan.dayPlan ?? null,
                 createdAt: plan.createdAt,
                 updatedAt: plan.updatedAt,
                 player: {
@@ -917,10 +1178,12 @@ class SavesService {
                 playerId: payload.playerId,
                 focus,
                 intensity,
+                dayPlan: payload.dayPlan != null ? payload.dayPlan : undefined,
             },
             update: {
                 focus,
                 intensity,
+                dayPlan: payload.dayPlan != null ? payload.dayPlan : undefined,
             },
         });
         return { success: true, plan };
@@ -940,7 +1203,7 @@ class SavesService {
         const nextMatch = await prisma_1.default.game.findFirst({
             where: {
                 saveId: save.id,
-                status: "scheduled",
+                status: { in: fixtureStatus_1.UPCOMING_GAME_STATUSES },
                 OR: [{ homeTeamId: save.teamId }, { awayTeamId: save.teamId }],
             },
             include: {
@@ -984,40 +1247,114 @@ class SavesService {
     async getDashboardSummary(id) {
         const save = await this.getSaveById(id);
         const payload = (save.data ?? {});
-        const team = save.team;
+        const managedTeamId = save.managedTeamId ?? save.teamId ?? null;
+        const team = managedTeamId
+            ? await prisma_1.default.team.findUnique({
+                where: { id: managedTeamId },
+                select: {
+                    id: true,
+                    name: true,
+                    shortName: true,
+                    conference: true,
+                },
+            })
+            : null;
         const nextMatch = team
             ? await prisma_1.default.game.findFirst({
                 where: {
                     saveId: save.id,
-                    status: "scheduled",
+                    status: { in: fixtureStatus_1.UPCOMING_GAME_STATUSES },
                     OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
                 },
                 include: { homeTeam: true, awayTeam: true },
                 orderBy: { gameDate: "asc" },
             })
             : null;
+        const upcomingFixtures = team
+            ? await prisma_1.default.game.findMany({
+                where: {
+                    saveId: save.id,
+                    status: { in: fixtureStatus_1.UPCOMING_GAME_STATUSES },
+                    OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+                },
+                include: { homeTeam: true, awayTeam: true },
+                orderBy: { gameDate: "asc" },
+                take: 3,
+            })
+            : [];
         const recentResults = team
             ? await prisma_1.default.game.findMany({
                 where: {
                     saveId: save.id,
-                    status: "final",
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
                     OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
                 },
                 include: { homeTeam: true, awayTeam: true },
                 orderBy: { gameDate: "desc" },
-                take: 5,
+                take: 3,
+            })
+            : [];
+        const recentPerformanceGames = team
+            ? await prisma_1.default.game.findMany({
+                where: {
+                    saveId: save.id,
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
+                    OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+                },
+                include: { homeTeam: true, awayTeam: true },
+                orderBy: { gameDate: "desc" },
+                take: 7,
             })
             : [];
         const conferenceStandings = await this.buildConferenceStandings(save.id);
         const standings = [...conferenceStandings.east, ...conferenceStandings.west]
             .sort((a, b) => b.pct - a.pct || b.wins - a.wins)
             .slice(0, 10);
-        const scoringLeadersRaw = await prisma_1.default.gameStat.groupBy({
-            by: ["playerId"],
-            _sum: { points: true },
-            orderBy: { _sum: { points: "desc" } },
-            take: 5,
-        });
+        const currentDateStr = payload.currentDate ?? save.currentDate.toISOString().slice(0, 10);
+        const currentDateUtc = new Date(`${currentDateStr}T23:59:59.999Z`);
+        const currentWeek = payload.week ?? (0, gameweekCalendar_1.getGameweekForDate)(save.season, currentDateStr);
+        const gameweekRanges = (0, gameweekCalendar_1.getGameweekRanges)(save.season);
+        const currentRange = gameweekRanges.find((gw) => gw.week === currentWeek) ?? gameweekRanges[0];
+        const weekStart = new Date(`${currentRange.start}T00:00:00.000Z`);
+        const weekEnd = new Date(`${currentRange.end}T23:59:59.999Z`);
+        const progressDate = currentDateUtc < weekEnd ? currentDateUtc : weekEnd;
+        const [simulatedWeekGames, weekGamesTotal] = await Promise.all([
+            prisma_1.default.game.count({
+                where: {
+                    saveId: save.id,
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
+                    gameDate: {
+                        gte: weekStart,
+                        lte: progressDate,
+                    },
+                },
+            }),
+            prisma_1.default.game.count({
+                where: {
+                    saveId: save.id,
+                    gameDate: {
+                        gte: weekStart,
+                        lte: progressDate,
+                    },
+                },
+            }),
+        ]);
+        const scoringLeadersRaw = team
+            ? await prisma_1.default.gameStat.groupBy({
+                by: ["playerId"],
+                where: {
+                    teamId: team.id,
+                    game: {
+                        saveId: save.id,
+                        status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
+                    },
+                },
+                _sum: { points: true },
+                _count: { gameId: true },
+                orderBy: { _sum: { points: "desc" } },
+                take: 12,
+            })
+            : [];
         let leaders = [];
         if (scoringLeadersRaw.length > 0) {
             const players = await prisma_1.default.player.findMany({
@@ -1025,24 +1362,65 @@ class SavesService {
                 select: { id: true, name: true },
             });
             const playerMap = new Map(players.map((p) => [p.id, p.name]));
-            leaders = scoringLeadersRaw.map((row) => ({
-                name: playerMap.get(row.playerId) ?? "Unknown",
-                value: row._sum.points ?? 0,
-                metric: "PTS",
-            }));
+            leaders = scoringLeadersRaw
+                .map((row) => {
+                const gamesPlayed = row._count.gameId || 0;
+                const totalPoints = row._sum.points ?? 0;
+                return {
+                    name: playerMap.get(row.playerId) ?? "Unknown",
+                    value: totalPoints,
+                    metric: "PTS",
+                    totalPoints,
+                    games: gamesPlayed,
+                };
+            })
+                .sort((a, b) => b.value - a.value)
+                .slice(0, 5);
         }
         else {
             const fallback = await prisma_1.default.player.findMany({
-                orderBy: { salary: "desc" },
+                where: team ? { teamId: team.id } : undefined,
+                orderBy: { overall: "desc" },
                 take: 5,
-                select: { name: true, salary: true },
+                select: { name: true, overall: true },
             });
             leaders = fallback.map((player) => ({
                 name: player.name,
-                value: Math.round((player.salary ?? 0) / 1000000),
-                metric: "Salary(M)",
+                value: 0,
+                metric: "PTS",
+                totalPoints: 0,
+                games: 0,
             }));
         }
+        const teamValueAgg = team
+            ? await prisma_1.default.player.aggregate({
+                where: { teamId: team.id, active: true },
+                _sum: { salary: true },
+            })
+            : null;
+        const teamValue = teamValueAgg?._sum.salary ?? 0;
+        const managedConferenceStandings = team
+            ? this.normalizeConference(team.conference) === "West"
+                ? conferenceStandings.west
+                : conferenceStandings.east
+            : [];
+        const managedStandingRow = team
+            ? managedConferenceStandings.find((row) => row.teamId === team.id)
+            : undefined;
+        const conferenceRank = managedStandingRow
+            ? (managedConferenceStandings.findIndex((row) => row.teamId === managedStandingRow.teamId) + 1)
+            : null;
+        const wins = managedStandingRow?.wins ?? 0;
+        const losses = managedStandingRow?.losses ?? 0;
+        const gamesPlayed = wins + losses;
+        const winRate = gamesPlayed > 0 ? wins / gamesPlayed : 0;
+        const recentPerformance = recentPerformanceGames
+            .slice()
+            .reverse()
+            .map((game, idx) => ({
+            label: `G${idx + 1}`,
+            points: game.homeTeamId === team?.id ? game.homeScore : game.awayScore,
+        }));
         const latestInbox = await prisma_1.default.inboxMessage.findMany({
             where: { saveId: id },
             orderBy: { date: "desc" },
@@ -1052,10 +1430,28 @@ class SavesService {
             where: { saveId: id, isRead: false },
         });
         return {
-            nextMatch,
-            recentResults,
+            nextMatch: nextMatch ? (0, fixtureModel_1.toFixtureModel)(nextMatch) : null,
+            recentResults: recentResults.map(fixtureModel_1.toFixtureModel),
+            upcomingFixtures: upcomingFixtures.map(fixtureModel_1.toFixtureModel),
             standings,
             leaders,
+            topScorers: leaders,
+            recentPerformance,
+            overview: {
+                leaguePosition: conferenceRank,
+                conference: managedStandingRow?.conference ?? (team ? this.normalizeConference(team.conference) : "West"),
+                winRate,
+                wins,
+                losses,
+                teamValue,
+                currentWeek,
+                weekRange: {
+                    start: currentRange.start,
+                    end: currentRange.end,
+                },
+                simulatedGamesInWeek: simulatedWeekGames,
+                totalGamesInWeek: weekGamesTotal,
+            },
             inbox: {
                 unread,
                 latest: latestInbox.map((m) => ({
@@ -1084,7 +1480,7 @@ class SavesService {
                 },
             }),
             prisma_1.default.game.findMany({
-                where: { saveId, status: "final" },
+                where: { saveId, status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES } },
                 select: {
                     id: true,
                     gameDate: true,
@@ -1197,7 +1593,7 @@ class SavesService {
         const recent = await prisma_1.default.game.findMany({
             where: {
                 saveId,
-                status: "final",
+                status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
                 OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }],
             },
             orderBy: { gameDate: "desc" },
@@ -1226,15 +1622,42 @@ class SavesService {
         const dayKey = this.getDayKey(date);
         const dayPlan = data.training.weekPlan[dayKey] ?? { intensity: "balanced", focus: "balanced" };
         let appliedPlanCount = 0;
+        const intensityToScore = (v) => (v === "high" ? 80 : v === "low" ? 35 : 60);
+        const percentToTier = (percent) => {
+            if (percent <= 45)
+                return "low";
+            if (percent >= 75)
+                return "high";
+            return "balanced";
+        };
+        const resolvePercent = (value, explicitPercent, fallbackPercent) => {
+            const p1 = Number(explicitPercent);
+            if (Number.isFinite(p1))
+                return this.clamp(Math.round(p1), 20, 100);
+            const p2 = Number(value);
+            if (Number.isFinite(p2))
+                return this.clamp(Math.round(p2), 20, 100);
+            const mapped = this.fromStoredIntensity(typeof value === "string" ? value : undefined);
+            return mapped ? intensityToScore(mapped) : this.clamp(Math.round(fallbackPercent), 20, 100);
+        };
+        const teamPercent = resolvePercent(dayPlan.intensity, dayPlan.intensityPercent, 60);
+        const teamTier = percentToTier(teamPercent);
         for (const key of Object.keys(data.playerState)) {
             const prev = data.playerState[key];
             const persisted = persistedPlans?.get(Number(key));
             const personal = data.training.playerPlans[key];
-            const intensity = this.fromStoredIntensity(persisted?.intensity) ?? personal?.intensity ?? dayPlan.intensity;
-            const focus = this.fromStoredFocus(persisted?.focus) ?? personal?.focus ?? dayPlan.focus;
+            const personalDay = personal?.dayPlan?.[dayKey];
+            const persistedTier = this.fromStoredIntensity(persisted?.intensity) ?? teamTier;
+            const intensityPercent = resolvePercent(personalDay?.intensity ?? personal?.intensity, personalDay?.intensityPercent ?? personal?.intensityPercent, intensityToScore(persistedTier));
+            const intensity = percentToTier(intensityPercent);
+            const focus = personalDay?.focus ?? personal?.focus ?? this.fromStoredFocus(persisted?.focus) ?? dayPlan.focus;
+            const durationMinutes = Math.max(30, Math.min(180, Number(personalDay?.durationMinutes ?? dayPlan.durationMinutes ?? 90) || 90));
             if (persisted)
                 appliedPlanCount += 1;
             const injuryPenalty = this.isPlayerInjured(data, key) ? 0.4 : 1;
+            const loadScore = intensityPercent;
+            const durationFactor = durationMinutes / 90;
+            const trainFactor = (loadScore / 100) * durationFactor * injuryPenalty;
             const fatigueDelta = intensity === "high" ? 1 : intensity === "low" ? -3 : -1;
             const recoveryBonus = rolledWeek ? (intensity === "low" ? 5 : 3) : (intensity === "low" ? 1 : 0);
             const intensityFormBonus = intensity === "high" ? 0.45 : intensity === "low" ? 0.2 : 0.3;
@@ -1249,11 +1672,42 @@ class SavesService {
             const fatigueContextPenalty = prev.fatigue >= 75 ? 0.35 : 0;
             const formDeltaBase = focusBonus + intensityFormBonus;
             const formDelta = (formDeltaBase + moraleContextBonus - fatigueContextPenalty) * injuryPenalty;
+            const carry = {
+                offense: prev.trainingCarry?.offense ?? 0,
+                defense: prev.trainingCarry?.defense ?? 0,
+                physical: prev.trainingCarry?.physical ?? 0,
+                iq: prev.trainingCarry?.iq ?? 0,
+                stamina: prev.trainingCarry?.stamina ?? 0,
+                health: prev.trainingCarry?.health ?? 0,
+                morale: prev.trainingCarry?.morale ?? 0,
+            };
+            if (focus === "shooting") {
+                carry.offense += 0.22 * trainFactor;
+            }
+            else if (focus === "defense") {
+                carry.defense += 0.22 * trainFactor;
+            }
+            else if (focus === "fitness") {
+                carry.physical += 0.26 * trainFactor;
+                carry.stamina += 0.20 * trainFactor;
+                carry.health += 0.10 * (intensity === "low" ? 1 : 0);
+            }
+            else if (focus === "playmaking") {
+                carry.iq += 0.20 * trainFactor;
+                carry.offense += 0.10 * trainFactor;
+            }
+            else {
+                carry.offense += 0.08 * trainFactor;
+                carry.defense += 0.08 * trainFactor;
+                carry.iq += 0.08 * trainFactor;
+            }
+            carry.morale += intensity === "high" ? -0.05 : intensity === "low" ? 0.08 : 0.03;
             data.playerState[key] = {
                 ...prev,
                 fatigue: this.clamp(Math.round(prev.fatigue + fatigueDelta - recoveryBonus), 0, 100),
                 form: this.clamp(Math.round(prev.form + formDelta), 0, 100),
                 morale: this.clamp(Math.round(prev.morale + (formDelta > 0.7 ? 0.7 : formDelta > 0 ? 0.3 : -0.2)), 0, 100),
+                trainingCarry: carry,
             };
         }
         console.log(`[training] applied daily plans: ${appliedPlanCount}`);
@@ -1327,10 +1781,36 @@ class SavesService {
             const baseOverall = player.overallBase ?? player.overall ?? 60;
             const prevOverallCurrent = state.effectiveOverall ?? player.overallCurrent ?? baseOverall;
             let overallCurrent = prevOverallCurrent;
+            let nextOff = this.clamp(Math.round(player.offensiveRating ?? baseOverall), 40, 99);
+            let nextDef = this.clamp(Math.round(player.defensiveRating ?? baseOverall), 40, 99);
+            let nextPhy = this.clamp(Math.round(player.physicalRating ?? baseOverall), 40, 99);
+            let nextIq = this.clamp(Math.round(player.iqRating ?? baseOverall), 40, 99);
+            const carry = {
+                offense: state.trainingCarry?.offense ?? 0,
+                defense: state.trainingCarry?.defense ?? 0,
+                physical: state.trainingCarry?.physical ?? 0,
+                iq: state.trainingCarry?.iq ?? 0,
+                stamina: state.trainingCarry?.stamina ?? 0,
+                health: state.trainingCarry?.health ?? 0,
+                morale: state.trainingCarry?.morale ?? 0,
+            };
+            const consumeCarry = (key) => {
+                let steps = 0;
+                while (Math.abs(carry[key]) >= 1) {
+                    steps += carry[key] > 0 ? 1 : -1;
+                    carry[key] += carry[key] > 0 ? -1 : 1;
+                }
+                return steps;
+            };
+            nextOff = this.clamp(nextOff + consumeCarry("offense"), 40, 99);
+            nextDef = this.clamp(nextDef + consumeCarry("defense"), 40, 99);
+            nextPhy = this.clamp(nextPhy + consumeCarry("physical"), 40, 99);
+            nextIq = this.clamp(nextIq + consumeCarry("iq"), 40, 99);
+            const nextBaseOverall = this.clamp(Math.round((nextOff + nextDef + nextPhy + nextIq) / 4), 40, 99);
             let formTrendDays = player.formTrendDays ?? 0;
             const form = this.clamp(Math.round(state.form ?? player.form ?? 70), 0, 100);
-            const morale = this.clamp(Math.round(state.morale ?? player.morale ?? 50), 0, 100);
-            const fatigue = this.clamp(Math.round(state.fatigue ?? player.fatigue ?? 10), 0, 100);
+            const morale = this.clamp(Math.round((state.morale ?? player.morale ?? 50) + carry.morale), 0, 100);
+            const fatigue = this.clamp(Math.round((state.fatigue ?? player.fatigue ?? 10) - carry.stamina - carry.health), 0, 100);
             const delta = form - 70;
             const step = params.playedToday.has(playerId) ? 2 : 1;
             if (delta >= 8) {
@@ -1345,9 +1825,9 @@ class SavesService {
             else if (formTrendDays < 0) {
                 formTrendDays += 1;
             }
-            const lower = Math.max(40, baseOverall - 8);
-            const upper = Math.min(99, baseOverall + 8);
-            overallCurrent = this.clamp(Math.round(baseOverall
+            const lower = Math.max(40, nextBaseOverall - 8);
+            const upper = Math.min(99, nextBaseOverall + 8);
+            overallCurrent = this.clamp(Math.round(nextBaseOverall
                 + (form - 70) * 0.25
                 - (fatigue - 50) * 0.15
                 + (morale - 50) * 0.10), lower, upper);
@@ -1358,14 +1838,38 @@ class SavesService {
             state.form = form;
             state.morale = morale;
             state.fatigue = fatigue;
+            state.trainingCarry = carry;
+            const prevAttrs = (player.attributes && typeof player.attributes === "object")
+                ? player.attributes
+                : {};
+            const nextAttrs = {
+                ...prevAttrs,
+                shooting3: this.clamp(Math.round(Number(prevAttrs.shooting3 ?? nextOff) + (nextOff - (player.offensiveRating ?? nextOff)) * 0.6), 40, 99),
+                shootingMid: this.clamp(Math.round(Number(prevAttrs.shootingMid ?? nextOff) + (nextOff - (player.offensiveRating ?? nextOff)) * 0.5), 40, 99),
+                shooting: this.clamp(Math.round(Number(prevAttrs.shooting ?? nextOff) + (nextOff - (player.offensiveRating ?? nextOff)) * 0.55), 40, 99),
+                playmaking: this.clamp(Math.round(Number(prevAttrs.playmaking ?? nextIq) + (nextIq - (player.iqRating ?? nextIq)) * 0.7), 40, 99),
+                play: this.clamp(Math.round(Number(prevAttrs.play ?? nextIq) + (nextIq - (player.iqRating ?? nextIq)) * 0.7), 40, 99),
+                defense: this.clamp(Math.round(Number(prevAttrs.defense ?? nextDef) + (nextDef - (player.defensiveRating ?? nextDef)) * 0.8), 40, 99),
+                def: this.clamp(Math.round(Number(prevAttrs.def ?? nextDef) + (nextDef - (player.defensiveRating ?? nextDef)) * 0.8), 40, 99),
+                athleticism: this.clamp(Math.round(Number(prevAttrs.athleticism ?? nextPhy) + (nextPhy - (player.physicalRating ?? nextPhy)) * 0.8), 40, 99),
+                phy: this.clamp(Math.round(Number(prevAttrs.phy ?? nextPhy) + (nextPhy - (player.physicalRating ?? nextPhy)) * 0.8), 40, 99),
+                iq: this.clamp(Math.round(Number(prevAttrs.iq ?? nextIq) + (nextIq - (player.iqRating ?? nextIq)) * 0.7), 40, 99),
+                att: this.clamp(Math.round(Number(prevAttrs.att ?? nextOff) + (nextOff - (player.offensiveRating ?? nextOff)) * 0.7), 40, 99),
+            };
             updates.push(prisma_1.default.player.update({
                 where: { id: playerId },
                 data: {
                     form,
                     morale,
                     fatigue,
+                    offensiveRating: nextOff,
+                    defensiveRating: nextDef,
+                    physicalRating: nextPhy,
+                    iqRating: nextIq,
+                    overallBase: nextBaseOverall,
                     overallCurrent,
                     overall: overallCurrent,
+                    attributes: nextAttrs,
                     formTrendDays,
                     lastFormSnapshot: form,
                 },
@@ -1407,6 +1911,16 @@ class SavesService {
     }
     async createInitialInboxMessages(saveId, startDate) {
         const baseDate = new Date(`${startDate}T00:00:00.000Z`);
+        const save = await prisma_1.default.save.findUnique({ where: { id: saveId }, select: { teamId: true } });
+        const starters = save?.teamId
+            ? await prisma_1.default.player.findMany({
+                where: { teamId: save.teamId, active: true },
+                select: { name: true },
+                orderBy: [{ overallCurrent: "desc" }, { overall: "desc" }],
+                take: 3,
+            })
+            : [];
+        const playerName = starters[0]?.name ?? "Team Captain";
         await prisma_1.default.inboxMessage.createMany({
             data: [
                 {
@@ -1436,6 +1950,15 @@ class SavesService {
                     fromName: "Coaching Staff",
                     isRead: false,
                 },
+                {
+                    saveId,
+                    date: new Date(baseDate.getTime() + 1000 * 60 * 30),
+                    type: "player",
+                    title: "Playing Time Conversation",
+                    body: "Coach, am I doing enough to keep my current role? I want to know where I stand.",
+                    fromName: playerName,
+                    isRead: false,
+                },
             ],
         });
     }
@@ -1453,6 +1976,30 @@ class SavesService {
         });
     }
     async generateDailyInbox(saveId, date, gamesSimulated) {
+        const save = await prisma_1.default.save.findUnique({
+            where: { id: saveId },
+            select: { teamId: true },
+        });
+        const roster = save?.teamId
+            ? await prisma_1.default.player.findMany({
+                where: { teamId: save.teamId, active: true },
+                select: { id: true, name: true, age: true, position: true, overallCurrent: true, overall: true },
+                orderBy: [{ overallCurrent: "desc" }, { overall: "desc" }],
+                take: 12,
+            })
+            : [];
+        const youngTargets = await prisma_1.default.player.findMany({
+            where: {
+                active: true,
+                ...(save?.teamId ? { teamId: { not: save.teamId } } : {}),
+                age: { lte: 24 },
+            },
+            select: { name: true, age: true, position: true, overallCurrent: true, overall: true },
+            orderBy: [{ potential: "desc" }, { overallCurrent: "desc" }],
+            take: 12,
+        });
+        const randomRosterPlayer = roster.length > 0 ? roster[Math.floor(Math.random() * roster.length)] : null;
+        const randomYoung = youngTargets.length > 0 ? youngTargets[Math.floor(Math.random() * youngTargets.length)] : null;
         const candidates = [
             {
                 type: "media",
@@ -1480,6 +2027,24 @@ class SavesService {
                 body: "Regional scouts flagged two perimeter shooters worth monitoring.",
                 fromName: "Head Scout",
             },
+            ...(randomYoung ? [{
+                    type: "scouting",
+                    title: "Young Talent Recommendation",
+                    body: `Scout recommendation: ${randomYoung.name} (${randomYoung.position}, ${randomYoung.age} y/o) could be a long-term fit. Consider shortlisting.`,
+                    fromName: "Head Scout",
+                }] : []),
+            ...(randomRosterPlayer ? [{
+                    type: "player",
+                    title: "Locker Room Message",
+                    body: "Coach, are you happy with my recent performance? I want your honest feedback.",
+                    fromName: randomRosterPlayer.name,
+                }] : []),
+            ...(randomRosterPlayer ? [{
+                    type: "staff",
+                    title: "Trade Opportunity",
+                    body: `General manager update: we have incoming interest around ${randomRosterPlayer.name}. Do you want us to explore it?`,
+                    fromName: "General Manager",
+                }] : []),
         ];
         const count = 1 + Math.floor(Math.random() * 3);
         const chosen = candidates.sort(() => Math.random() - 0.5).slice(0, count);
@@ -1491,7 +2056,7 @@ class SavesService {
             });
         }
     }
-    async generateScheduleForSave(saveId, season, seasonStartYear) {
+    async generateScheduleForSave(saveId, season) {
         const gamesCount = await prisma_1.default.game.count({
             where: { saveId },
         });
@@ -1499,19 +2064,22 @@ class SavesService {
             return;
         const teams = await prisma_1.default.team.findMany({
             orderBy: { id: "asc" },
-            select: { id: true, shortName: true },
+            select: { id: true, shortName: true, name: true },
         });
         if (teams.length < 2)
             return;
-        const teamByShortName = new Map(teams.map((t) => [t.shortName, t.id]));
-        const realSchedule = this.loadRealScheduleForSeason(season, teamByShortName);
-        const schedule = realSchedule.length > 0
-            ? realSchedule
-            : (0, scheduleGenerator_1.generateSeasonSchedule)(teams.map((t) => t.id), new Date(`${seasonStartYear}-10-01T12:00:00.000Z`));
-        if (schedule.length === 0)
-            return;
+        const { fixtures, report } = (0, fixtureCsvLoader_1.loadFixturesFromCsv)({ season, teams });
+        if (report.unmappedTeams.length > 0) {
+            throw new AppError_1.BadRequestError(`fixtures.csv contains unmapped team names: ${report.unmappedTeams.join(", ")}`);
+        }
+        if (fixtures.length === 0) {
+            throw new AppError_1.BadRequestError("fixtures.csv did not produce any schedule rows for this season.");
+        }
+        if (report.duplicateRows > 0) {
+            throw new AppError_1.BadRequestError(`fixtures.csv has ${report.duplicateRows} duplicate fixture rows.`);
+        }
         await prisma_1.default.game.createMany({
-            data: schedule.map((game) => ({
+            data: fixtures.map((game) => ({
                 saveId,
                 homeTeamId: game.homeTeamId,
                 awayTeamId: game.awayTeamId,
@@ -1521,36 +2089,9 @@ class SavesService {
                 awayScore: game.awayScore,
             })),
         });
-    }
-    loadRealScheduleForSeason(season, teamByShortName) {
-        const dataDir = node_path_1.default.resolve(__dirname, "..", "..", "..", "prisma", "data");
-        const scheduleFile = node_path_1.default.join(dataDir, `schedule.nba.${season}.json`);
-        if (!node_fs_1.default.existsSync(scheduleFile))
-            return [];
-        const raw = node_fs_1.default.readFileSync(scheduleFile, "utf8");
-        const rows = JSON.parse(raw);
-        const output = [];
-        for (const row of rows) {
-            const homeShort = (row.homeTeamShortName ?? row.homeShortName ?? "").toUpperCase();
-            const awayShort = (row.awayTeamShortName ?? row.awayShortName ?? "").toUpperCase();
-            const homeTeamId = teamByShortName.get(homeShort);
-            const awayTeamId = teamByShortName.get(awayShort);
-            const gameDateRaw = row.gameDate ?? row.date;
-            if (!homeTeamId || !awayTeamId || !gameDateRaw)
-                continue;
-            const gameDate = new Date(gameDateRaw);
-            if (Number.isNaN(gameDate.getTime()))
-                continue;
-            output.push({
-                homeTeamId,
-                awayTeamId,
-                gameDate,
-                status: row.status ?? "scheduled",
-                homeScore: row.homeScore ?? 0,
-                awayScore: row.awayScore ?? 0,
-            });
+        if (report.skippedRows > 0) {
+            console.warn(`[fixtures.csv] loaded with ${report.skippedRows} skipped rows`);
         }
-        return output;
     }
     async buildInitialPlayerState() {
         const players = await prisma_1.default.player.findMany({
@@ -1670,10 +2211,10 @@ class SavesService {
         away.last5 = this.pushLast5(away.last5, awayWin ? "W" : "L");
         home.streak = this.nextStreak(home.streak, homeWin);
         away.streak = this.nextStreak(away.streak, awayWin);
-        home.offenseRating = this.clamp(Math.round(home.offenseRating * 0.9 + homeScore * 0.1), 60, 130);
-        away.offenseRating = this.clamp(Math.round(away.offenseRating * 0.9 + awayScore * 0.1), 60, 130);
-        home.defenseRating = this.clamp(Math.round(home.defenseRating * 0.9 + awayScore * 0.1), 60, 130);
-        away.defenseRating = this.clamp(Math.round(away.defenseRating * 0.9 + homeScore * 0.1), 60, 130);
+        home.offenseRating = this.clamp(Math.round(home.offenseRating * 0.96 + homeScore * 0.04), 60, 130);
+        away.offenseRating = this.clamp(Math.round(away.offenseRating * 0.96 + awayScore * 0.04), 60, 130);
+        home.defenseRating = this.clamp(Math.round(home.defenseRating * 0.96 + awayScore * 0.04), 60, 130);
+        away.defenseRating = this.clamp(Math.round(away.defenseRating * 0.96 + homeScore * 0.04), 60, 130);
     }
     estimateTeamStrength(teamState) {
         const offense = teamState.offenseRating ?? 85;
@@ -1682,13 +2223,13 @@ class SavesService {
         return (offense * 0.55) + (defenseQuality * 0.45) + (teamState.form - 50) * 0.08;
     }
     computeTeamFormAfterGame(params) {
-        const K = 12;
+        const K = 14;
         const x = (params.teamStrength - params.oppStrength) / K;
         const expectedWinProb = 1 / (1 + Math.exp(-x));
-        const delta = (params.result - expectedWinProb) * 6;
-        const streakBonus = this.clamp(params.streak, -5, 5) * 0.5;
-        const marginAdj = this.clamp(params.pointDiff, -15, 15) * 0.08;
-        const meanRevert = (50 - params.teamForm) * 0.02;
+        const delta = (params.result - expectedWinProb) * 3.5;
+        const streakBonus = this.clamp(params.streak, -5, 5) * 0.2;
+        const marginAdj = this.clamp(params.pointDiff, -15, 15) * 0.04;
+        const meanRevert = (50 - params.teamForm) * 0.03;
         return this.clamp(Math.round(params.teamForm + delta + streakBonus + marginAdj + meanRevert), 0, 100);
     }
     applyDailyTeamFormDecay(data, todaysGames) {

@@ -1,10 +1,12 @@
 import { useEffect, useMemo } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { EmptyState, PageHeader, SkeletonCard } from '../../components/ui';
+import { formatFixtureDate, formatFixtureStatus, getFixtureDateKeyEt, isFixtureCompleted } from '../../domain/fixtures';
+import { getGameweekForDate } from '../../domain/gameweeks';
 import '../Matches.css';
 
 export function Matches() {
-  const { scheduleGames, fetchSchedule, loading } = useGameStore();
+  const { currentSave, scheduleGames, fetchSchedule, loading } = useGameStore();
   const getLogoPath = (team) => {
     const short = (team?.shortName || '').toLowerCase();
     return team?.logoPath || `/images/teams/${short}.png`;
@@ -16,16 +18,19 @@ export function Matches() {
 
   const groupedByWeek = useMemo(() => {
     const map = new Map();
+    const season = currentSave?.data?.season || currentSave?.season || '2025-26';
     for (const game of scheduleGames) {
-      const date = new Date(game.gameDate);
-      const weekKey = `${date.getFullYear()}-W${Math.ceil((date.getDate() + new Date(date.getFullYear(), date.getMonth(), 1).getDay()) / 7)}`;
+      const key = getFixtureDateKeyEt(game.gameDate);
+      if (!key) continue;
+      const gw = getGameweekForDate(season, key);
+      const weekKey = `GW ${gw}`;
       if (!map.has(weekKey)) {
         map.set(weekKey, []);
       }
       map.get(weekKey).push(game);
     }
-    return [...map.entries()];
-  }, [scheduleGames]);
+    return [...map.entries()].sort((a, b) => Number(a[0].replace('GW ', '')) - Number(b[0].replace('GW ', '')));
+  }, [scheduleGames, currentSave?.data?.season, currentSave?.season]);
 
   if (loading) return <SkeletonCard />;
 
@@ -44,7 +49,7 @@ export function Matches() {
                 <img src={getLogoPath(game.homeTeam)} alt={game.homeTeam.shortName} style={{ width: 20, height: 20 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               </strong>
               <span style={{ color: 'var(--ui-text-muted)' }}>
-                {new Date(game.gameDate).toLocaleDateString()} | {game.status === 'final' ? `${game.awayScore}-${game.homeScore}` : 'Scheduled'}
+                {formatFixtureDate(game.gameDate)} | {isFixtureCompleted(game) ? `${game.awayScore}-${game.homeScore}` : formatFixtureStatus(game.status)}
               </span>
             </div>
           ))}

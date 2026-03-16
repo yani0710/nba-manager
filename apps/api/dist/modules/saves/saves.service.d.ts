@@ -5,6 +5,14 @@ type SavePayload = {
     status?: string;
     currentDate?: string;
     inboxUnread?: number;
+    inboxState?: {
+        responses?: Record<string, {
+            responseId: string;
+            respondedAt: string;
+            playerId?: number;
+            moraleDelta?: number;
+        }>;
+    };
     manager?: {
         name?: string;
         username?: string;
@@ -32,22 +40,57 @@ type SavePayload = {
         activeTeamProfileId?: string;
         weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
             intensity: "low" | "balanced" | "high";
-            focus: "shooting" | "defense" | "fitness" | "balanced";
+            intensityPercent?: number;
+            focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+            durationMinutes?: number;
         }>>;
         playerPlans?: Record<string, {
-            intensity: "low" | "balanced" | "high";
-            focus: "shooting" | "defense" | "fitness" | "balanced";
+            intensity?: "low" | "balanced" | "high";
+            intensityPercent?: number;
+            focus?: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
             targetAttribute?: "shooting3" | "shootingMid" | "finishing" | "playmaking" | "rebounding" | "defense" | "athleticism" | "iq";
+            dayPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
+                intensity: "low" | "balanced" | "high" | number;
+                intensityPercent?: number;
+                focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                durationMinutes?: number;
+            }>>;
         }>;
     };
     trainingPlan?: {
         intensity: "low" | "balanced" | "high";
+        intensityPercent?: number;
         focus: "shooting" | "defense" | "fitness" | "balanced";
     };
     tactics?: {
         pace: "slow" | "balanced" | "fast";
         threePtFocus: number;
         defenseScheme: "drop" | "switch" | "press";
+        offenseStyle?: "balanced" | "pick_and_roll" | "post_up" | "transition" | "iso";
+        defenseMode?: "man" | "zone" | "hybrid";
+        instructions?: {
+            fastBreak?: boolean;
+            pressAfterMade?: boolean;
+            isoStars?: boolean;
+            crashBoards?: boolean;
+        };
+        boards?: {
+            attack?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                playerId: number | null;
+                x: number;
+                y: number;
+            }>>;
+            transition?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                playerId: number | null;
+                x: number;
+                y: number;
+            }>>;
+            defense?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                playerId: number | null;
+                x: number;
+                y: number;
+            }>>;
+        };
         board?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
             playerId: number | null;
             x: number;
@@ -62,6 +105,15 @@ type SavePayload = {
         formHistory?: number[];
         gamesSinceDrift?: number;
         gamesPlayed?: number;
+        trainingCarry?: {
+            offense?: number;
+            defense?: number;
+            physical?: number;
+            iq?: number;
+            stamina?: number;
+            health?: number;
+            morale?: number;
+        };
     }>;
     teamState?: Record<string, {
         form: number;
@@ -232,106 +284,22 @@ export declare class SavesService {
             preferredStyle: string | null;
         } | null;
         inboxCount: number;
-        nextMatch: ({
-            awayTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-            homeTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            saveId: number | null;
-            status: string;
-            homeTeamId: number;
-            awayTeamId: number;
-            homeScore: number;
-            awayScore: number;
-            gameDate: Date;
-        }) | null;
-        lastResult: ({
-            awayTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-            homeTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            saveId: number | null;
-            status: string;
-            homeTeamId: number;
-            awayTeamId: number;
-            homeScore: number;
-            awayScore: number;
-            gameDate: Date;
-        }) | null;
+        nextMatch: import("../fixtures/fixtureModel").FixtureModel | null;
+        lastResult: import("../fixtures/fixtureModel").FixtureModel | null;
         data: {
             inboxUnread: number;
             season?: string;
             week?: number;
             status?: string;
             currentDate?: string;
+            inboxState?: {
+                responses?: Record<string, {
+                    responseId: string;
+                    respondedAt: string;
+                    playerId?: number;
+                    moraleDelta?: number;
+                }>;
+            };
             manager?: {
                 name?: string;
                 username?: string;
@@ -359,22 +327,57 @@ export declare class SavesService {
                 activeTeamProfileId?: string;
                 weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
                     intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
+                    intensityPercent?: number;
+                    focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                    durationMinutes?: number;
                 }>>;
                 playerPlans?: Record<string, {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
+                    intensity?: "low" | "balanced" | "high";
+                    intensityPercent?: number;
+                    focus?: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
                     targetAttribute?: "shooting3" | "shootingMid" | "finishing" | "playmaking" | "rebounding" | "defense" | "athleticism" | "iq";
+                    dayPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
+                        intensity: "low" | "balanced" | "high" | number;
+                        intensityPercent?: number;
+                        focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                        durationMinutes?: number;
+                    }>>;
                 }>;
             };
             trainingPlan?: {
                 intensity: "low" | "balanced" | "high";
+                intensityPercent?: number;
                 focus: "shooting" | "defense" | "fitness" | "balanced";
             };
             tactics?: {
                 pace: "slow" | "balanced" | "fast";
                 threePtFocus: number;
                 defenseScheme: "drop" | "switch" | "press";
+                offenseStyle?: "balanced" | "pick_and_roll" | "post_up" | "transition" | "iso";
+                defenseMode?: "man" | "zone" | "hybrid";
+                instructions?: {
+                    fastBreak?: boolean;
+                    pressAfterMade?: boolean;
+                    isoStars?: boolean;
+                    crashBoards?: boolean;
+                };
+                boards?: {
+                    attack?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                        playerId: number | null;
+                        x: number;
+                        y: number;
+                    }>>;
+                    transition?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                        playerId: number | null;
+                        x: number;
+                        y: number;
+                    }>>;
+                    defense?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                        playerId: number | null;
+                        x: number;
+                        y: number;
+                    }>>;
+                };
                 board?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
                     playerId: number | null;
                     x: number;
@@ -389,6 +392,15 @@ export declare class SavesService {
                 formHistory?: number[];
                 gamesSinceDrift?: number;
                 gamesPlayed?: number;
+                trainingCarry?: {
+                    offense?: number;
+                    defense?: number;
+                    physical?: number;
+                    iq?: number;
+                    stamina?: number;
+                    health?: number;
+                    morale?: number;
+                };
             }>;
             teamState?: Record<string, {
                 form: number;
@@ -467,7 +479,7 @@ export declare class SavesService {
         version: number;
     }>;
     private getSeasonDay;
-    advanceSaveToDate(id: number, targetDate: string): Promise<{
+    advanceSaveToDate(id: number, targetDate: string, includeTargetDay?: boolean): Promise<{
         team: {
             id: number;
             name: string;
@@ -542,96 +554,19 @@ export declare class SavesService {
             createdAt: string;
             type: string;
             read: boolean;
+            preview: string;
+            needsResponse: boolean;
+            responded: boolean;
+            responseId: string | null;
+            choices: {
+                id: string;
+                label: string;
+                moraleDelta?: number;
+            }[];
         }[];
     }>;
-    getSchedule(id: number, from?: string, to?: string): Promise<({
-        awayTeam: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            shortName: string;
-            city: string;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
-        };
-        homeTeam: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            shortName: string;
-            city: string;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
-        };
-    } & {
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
-        saveId: number | null;
-        status: string;
-        homeTeamId: number;
-        awayTeamId: number;
-        homeScore: number;
-        awayScore: number;
-        gameDate: Date;
-    })[]>;
-    getResults(id: number): Promise<{
-        id: number;
-        gameDate: Date;
-        homeTeam: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            shortName: string;
-            city: string;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
-        };
-        awayTeam: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            shortName: string;
-            city: string;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
-        };
-        homeScore: number;
-        awayScore: number;
-        status: string;
-    }[]>;
+    getSchedule(id: number, from?: string, to?: string): Promise<import("../fixtures/fixtureModel").FixtureModel[]>;
+    getResults(id: number): Promise<import("../fixtures/fixtureModel").FixtureModel[]>;
     getResultDetails(id: number, gameId: number): Promise<{
         id: number;
         gameDate: Date;
@@ -746,10 +681,28 @@ export declare class SavesService {
         east: StandingsRow[];
         west: StandingsRow[];
     }>;
+    private getInboxInteraction;
     markInboxMessageRead(saveId: number, msgId: number): Promise<{
         success: boolean;
         unread: number;
         messageId: number;
+    }>;
+    respondInboxMessage(saveId: number, msgId: number, responseId: string): Promise<{
+        success: boolean;
+        alreadyResponded: boolean;
+        unread?: undefined;
+        messageId?: undefined;
+        responseId?: undefined;
+        moraleDelta?: undefined;
+        playerId?: undefined;
+    } | {
+        success: boolean;
+        unread: number;
+        messageId: number;
+        responseId: string;
+        moraleDelta: number;
+        playerId: number | null;
+        alreadyResponded?: undefined;
     }>;
     deleteInboxMessage(saveId: number, msgId: number): Promise<{
         success: boolean;
@@ -766,17 +719,49 @@ export declare class SavesService {
             C?: number | null;
         };
     }>;
-    saveTactics(saveId: number, tactics: Partial<NonNullable<SavePayload["tactics"]>>): Promise<{
+    saveTactics(saveId: number, tactics: Partial<NonNullable<SavePayload["tactics"]>>, rotation?: SavePayload["rotation"]): Promise<{
         success: boolean;
         tactics: {
             pace: "slow" | "balanced" | "fast";
             threePtFocus: number;
             defenseScheme: "drop" | "switch" | "press";
+            offenseStyle?: "balanced" | "pick_and_roll" | "post_up" | "transition" | "iso";
+            defenseMode?: "man" | "zone" | "hybrid";
+            instructions?: {
+                fastBreak?: boolean;
+                pressAfterMade?: boolean;
+                isoStars?: boolean;
+                crashBoards?: boolean;
+            };
+            boards?: {
+                attack?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                    playerId: number | null;
+                    x: number;
+                    y: number;
+                }>>;
+                transition?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                    playerId: number | null;
+                    x: number;
+                    y: number;
+                }>>;
+                defense?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
+                    playerId: number | null;
+                    x: number;
+                    y: number;
+                }>>;
+            };
             board?: Partial<Record<"PG" | "SG" | "SF" | "PF" | "C", {
                 playerId: number | null;
                 x: number;
                 y: number;
             }>>;
+        };
+        rotation: {
+            PG?: number | null;
+            SG?: number | null;
+            SF?: number | null;
+            PF?: number | null;
+            C?: number | null;
         };
     }>;
     saveTrainingPlan(saveId: number, payload: {
@@ -789,6 +774,7 @@ export declare class SavesService {
         success: boolean;
         trainingPlan: {
             intensity: "low" | "balanced" | "high";
+            intensityPercent?: number;
             focus: "shooting" | "defense" | "fitness" | "balanced";
         };
         training: {
@@ -804,12 +790,21 @@ export declare class SavesService {
             activeTeamProfileId?: string;
             weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
                 intensity: "low" | "balanced" | "high";
-                focus: "shooting" | "defense" | "fitness" | "balanced";
+                intensityPercent?: number;
+                focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                durationMinutes?: number;
             }>>;
             playerPlans?: Record<string, {
-                intensity: "low" | "balanced" | "high";
-                focus: "shooting" | "defense" | "fitness" | "balanced";
+                intensity?: "low" | "balanced" | "high";
+                intensityPercent?: number;
+                focus?: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
                 targetAttribute?: "shooting3" | "shootingMid" | "finishing" | "playmaking" | "rebounding" | "defense" | "athleticism" | "iq";
+                dayPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
+                    intensity: "low" | "balanced" | "high" | number;
+                    intensityPercent?: number;
+                    focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                    durationMinutes?: number;
+                }>>;
             }>;
         };
     }>;
@@ -817,6 +812,7 @@ export declare class SavesService {
         success: boolean;
         trainingPlan: {
             intensity: "low" | "balanced" | "high";
+            intensityPercent?: number;
             focus: "shooting" | "defense" | "fitness" | "balanced";
         };
         training: {
@@ -830,36 +826,24 @@ export declare class SavesService {
                 restDay?: "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
             }[];
             activeTeamProfileId: string | null;
-            weekPlan: {
-                Mon: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-                Tue: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-                Wed: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-                Thu: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-                Fri: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-                Sat: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-                Sun: {
-                    intensity: "low" | "balanced" | "high";
-                    focus: "shooting" | "defense" | "fitness" | "balanced";
-                };
-            };
+            weekPlan: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
+                intensity: "low" | "balanced" | "high";
+                intensityPercent?: number;
+                focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                durationMinutes?: number;
+            }>>;
+            playerPlans: Record<string, {
+                intensity?: "low" | "balanced" | "high";
+                intensityPercent?: number;
+                focus?: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                targetAttribute?: "shooting3" | "shootingMid" | "finishing" | "playmaking" | "rebounding" | "defense" | "athleticism" | "iq";
+                dayPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
+                    intensity: "low" | "balanced" | "high" | number;
+                    intensityPercent?: number;
+                    focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                    durationMinutes?: number;
+                }>>;
+            }>;
         };
         currentDate: string;
         saveId: number;
@@ -870,6 +854,7 @@ export declare class SavesService {
         playerId: number;
         focus: string;
         intensity: string;
+        dayPlan: string | number | boolean | import("@prisma/client/runtime/library").JsonObject | import("@prisma/client/runtime/library").JsonArray | null;
         createdAt: Date;
         updatedAt: Date;
         player: {
@@ -891,6 +876,7 @@ export declare class SavesService {
         playerId: number;
         focus: string;
         intensity: string;
+        dayPlan?: unknown;
     }): Promise<{
         success: boolean;
         plan: {
@@ -901,6 +887,7 @@ export declare class SavesService {
             playerId: number;
             intensity: string;
             focus: string;
+            dayPlan: import("@prisma/client/runtime/library").JsonValue | null;
         };
     }>;
     deletePlayerTrainingPlan(saveId: number, playerId: number): Promise<{
@@ -938,106 +925,43 @@ export declare class SavesService {
         };
     } | null>;
     getDashboardSummary(id: number): Promise<{
-        nextMatch: ({
-            awayTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-            homeTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            saveId: number | null;
-            status: string;
-            homeTeamId: number;
-            awayTeamId: number;
-            homeScore: number;
-            awayScore: number;
-            gameDate: Date;
-        }) | null;
-        recentResults: ({
-            awayTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-            homeTeam: {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                shortName: string;
-                city: string;
-                conference: string | null;
-                division: string | null;
-                primaryColor: string | null;
-                secondaryColor: string | null;
-                logoKey: string | null;
-                logoPath: string | null;
-                form: number;
-                morale: number;
-                nbaTeamId: number | null;
-            };
-        } & {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            saveId: number | null;
-            status: string;
-            homeTeamId: number;
-            awayTeamId: number;
-            homeScore: number;
-            awayScore: number;
-            gameDate: Date;
-        })[];
+        nextMatch: import("../fixtures/fixtureModel").FixtureModel | null;
+        recentResults: import("../fixtures/fixtureModel").FixtureModel[];
+        upcomingFixtures: import("../fixtures/fixtureModel").FixtureModel[];
         standings: StandingsRow[];
         leaders: {
             name: string;
             value: number;
             metric: string;
+            totalPoints: number;
+            games: number;
         }[];
+        topScorers: {
+            name: string;
+            value: number;
+            metric: string;
+            totalPoints: number;
+            games: number;
+        }[];
+        recentPerformance: {
+            label: string;
+            points: number;
+        }[];
+        overview: {
+            leaguePosition: number | null;
+            conference: string;
+            winRate: number;
+            wins: number;
+            losses: number;
+            teamValue: number;
+            currentWeek: number;
+            weekRange: {
+                start: string;
+                end: string;
+            };
+            simulatedGamesInWeek: number;
+            totalGamesInWeek: number;
+        };
         inbox: {
             unread: number;
             latest: {
@@ -1067,12 +991,21 @@ export declare class SavesService {
             activeTeamProfileId?: string;
             weekPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
                 intensity: "low" | "balanced" | "high";
-                focus: "shooting" | "defense" | "fitness" | "balanced";
+                intensityPercent?: number;
+                focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                durationMinutes?: number;
             }>>;
             playerPlans?: Record<string, {
-                intensity: "low" | "balanced" | "high";
-                focus: "shooting" | "defense" | "fitness" | "balanced";
+                intensity?: "low" | "balanced" | "high";
+                intensityPercent?: number;
+                focus?: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
                 targetAttribute?: "shooting3" | "shootingMid" | "finishing" | "playmaking" | "rebounding" | "defense" | "athleticism" | "iq";
+                dayPlan?: Partial<Record<"Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun", {
+                    intensity: "low" | "balanced" | "high" | number;
+                    intensityPercent?: number;
+                    focus: "shooting" | "defense" | "fitness" | "balanced" | "playmaking";
+                    durationMinutes?: number;
+                }>>;
             }>;
         };
         teamState: Record<string, {
@@ -1104,7 +1037,6 @@ export declare class SavesService {
     private createInboxMessage;
     private generateDailyInbox;
     private generateScheduleForSave;
-    private loadRealScheduleForSeason;
     private buildInitialPlayerState;
     private buildInitialTeamState;
     private toSimPlayer;

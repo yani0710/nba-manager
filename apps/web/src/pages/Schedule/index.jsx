@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { api } from '../../api/client';
 import { EmptyState, PageHeader, SkeletonCard } from '../../components/ui';
+import {
+  formatFixtureDate,
+  formatFixtureStatus,
+  getFixtureDateKeyEt,
+  isFixtureCompleted,
+} from '../../domain/fixtures';
 import './Schedule.css';
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -19,6 +25,18 @@ function monthLabel(year, month) {
   return new Date(year, month, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 }
 
+function buildSeasonMonthKeys(season) {
+  const startYear = Number(String(season || '2025-26').slice(0, 4)) || 2025;
+  const out = [];
+  for (let month = 10; month <= 12; month += 1) {
+    out.push(`${startYear}-${String(month).padStart(2, '0')}`);
+  }
+  for (let month = 1; month <= 6; month += 1) {
+    out.push(`${startYear + 1}-${String(month).padStart(2, '0')}`);
+  }
+  return out;
+}
+
 export function Schedule() {
   const { currentSave, scheduleGames, fetchSchedule, loading, advanceDays, loadSave } = useGameStore();
   const [monthCursor, setMonthCursor] = useState(null);
@@ -31,8 +49,8 @@ export function Schedule() {
   const byDay = useMemo(() => {
     const map = new Map();
     for (const game of scheduleGames) {
-      const d = new Date(game.gameDate);
-      const key = dateKey(d);
+      const key = getFixtureDateKeyEt(game.gameDate);
+      if (!key) continue;
       const arr = map.get(key) ?? [];
       arr.push(game);
       map.set(key, arr);
@@ -41,24 +59,24 @@ export function Schedule() {
   }, [scheduleGames]);
 
   const availableMonths = useMemo(() => {
-    const keys = new Set();
-    for (const game of scheduleGames) {
-      const d = new Date(game.gameDate);
-      keys.add(`${d.getFullYear()}-${String(d.getMonth()).padStart(2, '0')}`);
-    }
-    return [...keys].sort();
-  }, [scheduleGames]);
+    const months = buildSeasonMonthKeys(currentSave?.season || currentSave?.data?.season);
+    return months;
+  }, [currentSave?.season, currentSave?.data?.season]);
 
   useEffect(() => {
     if (availableMonths.length === 0) return;
-    const currentDate = currentSave?.data?.currentDate ? new Date(currentSave.data.currentDate) : null;
-    const preferred = currentDate ? `${currentDate.getFullYear()}-${String(currentDate.getMonth()).padStart(2, '0')}` : null;
-    if (preferred && availableMonths.includes(preferred)) {
-      setMonthCursor(preferred);
+    const currentDate = currentSave?.data?.currentDate ?? null;
+    const preferred = currentDate ? String(currentDate).slice(0, 7) : null;
+    if (monthCursor === null) {
+      if (preferred && availableMonths.includes(preferred)) {
+        setMonthCursor(preferred);
+      } else {
+        setMonthCursor(availableMonths[0]);
+      }
       return;
     }
-    if (monthCursor === null || !availableMonths.includes(monthCursor)) {
-      setMonthCursor(availableMonths[0]);
+    if (!availableMonths.includes(monthCursor)) {
+      setMonthCursor(preferred && availableMonths.includes(preferred) ? preferred : availableMonths[0]);
     }
   }, [availableMonths, monthCursor, currentSave?.data?.currentDate]);
 
@@ -76,7 +94,7 @@ export function Schedule() {
 
   const [yearStr, monthStr] = monthCursor.split('-');
   const year = Number(yearStr);
-  const month = Number(monthStr);
+  const month = Number(monthStr) - 1;
   const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const startOffset = firstDay.getDay();
@@ -90,26 +108,26 @@ export function Schedule() {
   const nextMonth = monthIndex >= 0 && monthIndex < availableMonths.length - 1 ? availableMonths[monthIndex + 1] : null;
   const prevMonth = monthIndex > 0 ? availableMonths[monthIndex - 1] : null;
 
-  const currentDate = currentSave?.data?.currentDate ? new Date(currentSave.data.currentDate) : null;
-  const currentDateKey = currentDate ? dateKey(currentDate) : null;
+  const currentDate = currentSave?.data?.currentDate ?? null;
+  const currentDateKey = currentDate || null;
 
   const highlightedDayGames = currentDateKey ? (byDay.get(currentDateKey) ?? []) : [];
-  const nextMatchDate = scheduleGames
-    .filter((g) => g.status !== 'final')
-    .map((g) => new Date(g.gameDate))
-    .filter((d) => !currentDate || d >= currentDate)
-    .sort((a, b) => a - b)[0];
+  const nextMatchDateKey = scheduleGames
+    .filter((g) => !isFixtureCompleted(g))
+    .map((g) => getFixtureDateKeyEt(g.gameDate))
+    .filter((key) => key && (!currentDateKey || key >= currentDateKey))
+    .sort()[0];
 
   const skipToNextMatchday = async () => {
     const saveId = currentSave?.id;
-    if (!saveId || !nextMatchDate) return;
-    const targetDate = nextMatchDate.toISOString().slice(0, 10);
+    if (!saveId || !nextMatchDateKey) return;
+    const targetDate = nextMatchDateKey;
     setSkipProgress({ label: 'Skipping to next matchday...', value: 15, targetDate });
     try {
       const { data } = await api.saves.advance(saveId, { targetDate });
       setSkipProgress({ label: `Reached ${targetDate}`, value: 100, targetDate });
       await loadSave(data.id);
-    } catch (e) {
+    } catch {
       setSkipProgress({ label: 'Failed to skip', value: 100, targetDate });
     } finally {
       setTimeout(() => setSkipProgress(null), 1200);
@@ -124,7 +142,7 @@ export function Schedule() {
           <button className="calendar-btn" onClick={() => advanceDays(1)}>Skip 1 Day</button>
           <button className="calendar-btn" onClick={() => advanceDays(3)}>Skip 3 Days</button>
           <button className="calendar-btn" onClick={() => advanceDays(7)}>Skip 7 Days</button>
-          <button className="calendar-btn" disabled={!nextMatchDate} onClick={skipToNextMatchday}>Skip to Next Matchday</button>
+          <button className="calendar-btn" disabled={!nextMatchDateKey} onClick={skipToNextMatchday}>Skip to Next Matchday</button>
         </div>
       </div>
       {skipProgress && (
@@ -151,8 +169,8 @@ export function Schedule() {
               const key = dateKey(date);
               const games = byDay.get(key) ?? [];
               const isToday = currentDateKey === key;
-              const hasFinal = games.some((g) => g.status === 'final');
-              const hasScheduled = games.some((g) => g.status !== 'final');
+              const hasFinal = games.some((g) => isFixtureCompleted(g));
+              const hasScheduled = games.some((g) => !isFixtureCompleted(g));
               return (
                 <div key={key} className={`calendar-cell ${isToday ? 'today' : ''} ${hasFinal ? 'final' : ''} ${hasScheduled ? 'scheduled' : ''}`}>
                   <div className="calendar-day-number">{date.getDate()}</div>
@@ -172,7 +190,7 @@ export function Schedule() {
         </div>
 
         <aside className="calendar-side">
-          <h3>{currentDate ? currentDate.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'Current Day'}</h3>
+          <h3>{currentDateKey ? formatFixtureDate(`${currentDateKey}T12:00:00Z`) : 'Current Day'}</h3>
           <p className="calendar-side-subtitle">Upcoming / Current Day Games</p>
           <div className="calendar-side-list">
             {highlightedDayGames.length === 0 && <p>No games for this day.</p>}
@@ -183,7 +201,7 @@ export function Schedule() {
                   <span>{game.awayTeam.shortName} @ {game.homeTeam.shortName}</span>
                   <img src={logoPath(game.homeTeam)} alt={game.homeTeam.shortName} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
-                <small>{game.status === 'final' ? `${game.awayScore}-${game.homeScore}` : 'Scheduled'}</small>
+                <small>{isFixtureCompleted(game) ? `${game.awayScore}-${game.homeScore}` : formatFixtureStatus(game.status)}</small>
               </div>
             ))}
           </div>

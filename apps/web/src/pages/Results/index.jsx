@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { EmptyState, PageHeader } from '../../components/ui';
+import { formatFixtureDateTime } from '../../domain/fixtures';
 import '../Matches.css';
 
 const logoPath = (team) => {
@@ -98,6 +99,7 @@ export function Results() {
           actions={<button className="ui-btn" onClick={() => setSelected(null)}>Back to Results</button>}
         />
         <div className="ui-card" style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 8, color: 'var(--ui-text-muted)' }}>{formatFixtureDateTime(selected.gameDate)}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <img src={logoPath(selected.homeTeam)} alt={selected.homeTeam.shortName} style={{ width: 28, height: 28 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <strong>{selected.homeTeam.shortName}</strong>
@@ -141,7 +143,7 @@ export function Results() {
             <img src={logoPath(game.awayTeam)} alt={game.awayTeam.shortName} style={{ width: 22, height: 22 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <strong>{game.awayTeam.shortName}</strong>
           </div>
-          <span>{game.awayScore} - {game.homeScore}</span>
+          <span>{game.awayScore} - {game.homeScore}<br /><small style={{ color: 'var(--ui-text-muted)' }}>{formatFixtureDateTime(game.gameDate)}</small></span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <strong>{game.homeTeam.shortName}</strong>
             <img src={logoPath(game.homeTeam)} alt={game.homeTeam.shortName} style={{ width: 22, height: 22 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />

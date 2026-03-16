@@ -156,6 +156,7 @@ export declare class PlayersService {
         nbaPlayerId: number | null;
     } | null>;
     getAllPlayers(take?: number, includeInactive?: boolean, saveId?: number): Promise<any[]>;
+    private applySalaryFallbackFromRoster;
     getPlayerStats(playerId: number, saveId?: number): Promise<{
         gamesPlayed: number;
         totals: {

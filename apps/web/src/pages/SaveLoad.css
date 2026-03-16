@@ -1,82 +1,189 @@
-.save-load {
-  width: 100%;
-  max-width: 600px;
+.career-saves-page {
+  display: grid;
+  gap: 16px;
 }
 
-.save-load h2 {
-  color: #4ade80;
-  margin-bottom: 20px;
-}
-
-.save-input {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.save-input input {
-  flex: 1;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  color: #e0e0e0;
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.save-input input:focus {
-  outline: none;
-  border-color: #4ade80;
-}
-
-.saves-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.save-item {
+.career-saves-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  padding: 15px;
-  border-radius: 4px;
-  transition: border-color 0.2s;
+  align-items: flex-start;
+  gap: 16px;
 }
 
-.save-item:hover {
-  border-color: #4ade80;
-}
-
-.save-item h4 {
+.career-saves-header h1 {
   margin: 0;
-  color: #e0e0e0;
+  color: #f4f9ff;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
 }
 
-.save-item p {
-  margin: 5px 0 0 0;
-  color: #a0a0a0;
-  font-size: 12px;
+.career-saves-header p {
+  margin: 10px 0 0;
+  color: #8dacdf;
+  font-size: 26px;
 }
 
-.btn-load {
-  background: #1a1a1a;
-  color: #4ade80;
-  border: 1px solid #4ade80;
-  padding: 8px 16px;
-  border-radius: 4px;
+.career-new-btn {
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(180deg, #ac3dff, #7f18e9);
+  font-weight: 800;
+  font-size: 30px;
+  padding: 14px 24px;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.btn-load:hover {
-  background: #4ade80;
-  color: #000;
+.career-new-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
 
-.btn-load.active {
-  background: #4ade80;
-  color: #000;
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.career-card {
+  border: 1px solid #24365c;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(44, 27, 85, 0.92), rgba(24, 40, 82, 0.95) 39%, rgba(9, 21, 47, 0.98) 40%);
+  padding: 18px;
+}
+
+.career-card-top {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.career-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 34px;
+  font-weight: 900;
+  background: radial-gradient(circle at 30% 20%, #cb4dff, #8d1ef5 75%);
+}
+
+.career-card h3 {
+  margin: 16px 0 0;
+  color: #f6fbff;
+  font-size: 39px;
+  font-weight: 800;
+}
+
+.career-sub {
+  margin-top: 6px;
+  color: #9db8e4;
+  font-size: 27px;
+}
+
+.career-meta {
+  margin-top: 18px;
+  padding-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  border-top: 1px solid rgba(90, 121, 177, 0.25);
+}
+
+.career-meta span {
+  color: #8ea9d8;
+  font-size: 22px;
+}
+
+.career-meta strong {
+  display: block;
+  margin-top: 5px;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.career-last-played {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(90, 121, 177, 0.25);
+  color: #7f9fd0;
+  font-size: 21px;
+}
+
+.career-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.career-load-btn {
+  border: none;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(180deg, #ad32ff, #7f10eb);
+  font-size: 29px;
+  font-weight: 800;
+  padding: 12px 16px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.career-load-btn.is-loaded {
+  background: linear-gradient(180deg, #2ac875, #109e56);
+}
+
+.career-delete-btn {
+  border: 1px solid #2f456f;
+  border-radius: 11px;
+  color: #d6e5ff;
+  background: rgba(33, 52, 86, 0.9);
+  min-width: 86px;
+  padding: 12px 16px;
+  font-size: 29px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.career-add-card {
+  min-height: 520px;
+  border-radius: 14px;
+  border: 1px dashed #2a3f68;
+  background: rgba(14, 29, 60, 0.55);
+  color: #6f8fc6;
+  font-size: 72px;
+  cursor: pointer;
+}
+
+@media (max-width: 1450px) {
+  .career-saves-header h1 { font-size: 34px; }
+  .career-saves-header p { font-size: 18px; }
+  .career-new-btn { font-size: 20px; }
+  .career-card h3 { font-size: 30px; }
+  .career-sub { font-size: 18px; }
+  .career-meta span { font-size: 14px; }
+  .career-meta strong { font-size: 20px; }
+  .career-last-played { font-size: 14px; }
+  .career-load-btn { font-size: 20px; }
+  .career-add-card { min-height: 360px; }
+}
+
+@media (max-width: 1120px) {
+  .career-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .career-saves-header {
+    flex-direction: column;
+  }
+  .career-grid {
+    grid-template-columns: 1fr;
+  }
 }

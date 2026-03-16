@@ -29,6 +29,7 @@ export const api = {
     getNextMatch: (id) => client.get(`/saves/${id}/next-match`),
     getInbox: (id, params = {}) => client.get(`/saves/${id}/inbox`, { params }),
     readInboxMessage: (id, msgId) => client.post(`/saves/${id}/inbox/${msgId}/read`),
+    respondInboxMessage: (id, msgId, data) => client.post(`/saves/${id}/inbox/${msgId}/respond`, data),
     deleteInboxMessage: (id, msgId) => client.delete(`/saves/${id}/inbox/${msgId}`),
     saveRotation: (id, data) => client.post(`/saves/${id}/rotation`, data),
     saveTactics: (id, data) => client.post(`/saves/${id}/tactics`, data),

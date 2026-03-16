@@ -1,0 +1,277 @@
+.team-training-page {
+  display: grid;
+  gap: 14px;
+}
+
+.tt-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+
+.tt-card {
+  border: 1px solid #223a63;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(11, 27, 59, 0.9), rgba(8, 20, 44, 0.95));
+  padding: 14px;
+}
+
+.tt-card h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #f5f9ff;
+}
+
+.tt-subhead {
+  color: #8eaae2;
+  font-size: 14px;
+  margin: 10px 0 8px;
+}
+
+.tt-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tt-focus-card {
+  border: 1px solid #34527f;
+  border-radius: 10px;
+  background: rgba(30, 49, 81, 0.78);
+  color: #e5efff;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.tt-focus-card div {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.tt-focus-card small {
+  display: block;
+  color: #a3b8dd;
+  font-size: 18px;
+  margin-top: 5px;
+}
+
+.tt-focus-card.is-active {
+  border-color: #a655ff;
+  background: linear-gradient(180deg, #b129ff, #8f18ee);
+}
+
+.tt-focus-card.secondary.is-active {
+  background: rgba(9, 24, 49, 0.88);
+  border-color: #3191ff;
+}
+
+.tt-side {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.tt-impact-row {
+  display: flex;
+  justify-content: space-between;
+  color: #9fc0f3;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.tt-impact-row .pos {
+  color: #25f595;
+}
+
+.tt-impact-row .neg {
+  color: #ff5f79;
+}
+
+.tt-impact-bar {
+  margin-top: 6px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(73, 99, 143, 0.4);
+  overflow: hidden;
+}
+
+.tt-impact-bar span {
+  display: block;
+  height: 100%;
+  background: #16d972;
+}
+
+.tt-impact-bar span.neg {
+  background: #ff2f4f;
+}
+
+.tt-summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  color: #a4bbe4;
+  font-size: 14px;
+}
+
+.tt-summary-row strong {
+  color: #f0f6ff;
+}
+
+.tt-primary-btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #b028ff, #8b16ec);
+}
+
+.tt-presets {
+  display: grid;
+  gap: 8px;
+}
+
+.tt-preset-item {
+  border: 1px solid #314a76;
+  border-radius: 10px;
+  background: rgba(32, 49, 80, 0.78);
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.tt-preset-item div {
+  color: #edf4ff;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tt-preset-item small {
+  color: #9cb4dc;
+  font-size: 16px;
+}
+
+.tt-slider-wrap {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tt-slider-head {
+  display: flex;
+  justify-content: space-between;
+  color: #a7bfe8;
+}
+
+.tt-slider-wrap input[type='range'] {
+  width: 100%;
+  accent-color: #8f22e8;
+}
+
+.tt-slider-scale {
+  display: flex;
+  justify-content: space-between;
+  color: #6f91c8;
+  font-size: 12px;
+}
+
+.tt-week-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tt-week-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #2e466f;
+  border-radius: 10px;
+  background: rgba(35, 53, 87, 0.68);
+  padding: 10px 12px;
+}
+
+.tt-week-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(640px, 100%);
+  flex-wrap: wrap;
+}
+
+.tt-week-select {
+  border: 1px solid #34527f;
+  border-radius: 8px;
+  background: rgba(31, 48, 79, 0.92);
+  color: #e7efff;
+  padding: 6px 8px;
+  min-width: 130px;
+}
+
+.tt-week-range {
+  width: 100%;
+  accent-color: #8f22e8;
+}
+
+.tt-week-number {
+  width: 84px;
+  border: 1px solid #34527f;
+  border-radius: 8px;
+  background: rgba(31, 48, 79, 0.92);
+  color: #e7efff;
+  padding: 6px 8px;
+}
+
+.tt-week-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tt-week-left input[type='checkbox'] {
+  accent-color: #8f22e8;
+}
+
+.tt-week-left strong {
+  color: #f0f6ff;
+  display: block;
+}
+
+.tt-week-left small {
+  color: #95aedb;
+}
+
+.tt-pill {
+  border-radius: 7px;
+  padding: 4px 8px;
+  color: #d8b8ff;
+  background: rgba(119, 48, 180, 0.46);
+  font-size: 12px;
+}
+
+.tt-week-impact {
+  color: #95aedb;
+  font-size: 11px;
+  width: 100%;
+}
+
+.tt-primary-btn.full {
+  margin-top: 12px;
+}
+
+@media (max-width: 1200px) {
+  .tt-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .tt-focus-grid {
+    grid-template-columns: 1fr;
+  }
+  .tt-week-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

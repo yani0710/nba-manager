@@ -1,15 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState, PageHeader } from '../../components/ui';
 import { useGameStore } from '../../state/gameStore';
+import {
+  formatFixtureDateTime,
+  formatFixtureStatus,
+  getFixtureDateKeyEt,
+  isFixtureCompleted,
+  isFixtureSimulatable,
+} from '../../domain/fixtures';
 
-function fmtDate(v) {
-  if (!v) return '-';
-  return new Date(v).toLocaleDateString();
+function getCurrentDateKey(save) {
+  return String(save?.data?.currentDate || '').slice(0, 10);
+}
+
+function getFixtureDateKeyUtc(dateValue) {
+  if (!dateValue) return null;
+  return new Date(dateValue).toISOString().slice(0, 10);
 }
 
 export function MatchCenter() {
   const SIM_TICK_MS = 160;
-  const { currentSave, scheduleGames, fetchSchedule, advanceToDate } = useGameStore();
+  const { currentSave, scheduleGames, fetchSchedule, advanceSave } = useGameStore();
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [simulating, setSimulating] = useState(false);
   const [minute, setMinute] = useState(0);
@@ -21,7 +32,7 @@ export function MatchCenter() {
   useEffect(() => { if (currentSave?.id) fetchSchedule(); }, [currentSave?.id, fetchSchedule]);
 
   const upcomingGames = useMemo(
-    () => (scheduleGames || []).filter((g) => g.status !== 'final').sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate)),
+    () => (scheduleGames || []).filter((g) => !isFixtureCompleted(g)).sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate)),
     [scheduleGames],
   );
 
@@ -34,6 +45,15 @@ export function MatchCenter() {
   }, [upcomingGames, selectedGameId, currentSave?.data?.career?.teamShortName]);
 
   const selectedGame = upcomingGames.find((g) => g.id === selectedGameId) || null;
+  const currentDate = getCurrentDateKey(currentSave);
+  const selectedGameDay = selectedGame?.gameDate ? getFixtureDateKeyUtc(selectedGame.gameDate) : null;
+  // Match Center sim should only run for the active in-game day to avoid multi-day jumps.
+  const canSimulateSelected = Boolean(
+    selectedGame
+      && isFixtureSimulatable(selectedGame, currentDate)
+      && selectedGameDay
+      && selectedGameDay === currentDate,
+  );
   const storageKey = currentSave?.id ? `match-center-state:${currentSave.id}` : null;
 
   const resetLiveView = () => {
@@ -84,7 +104,7 @@ export function MatchCenter() {
   }, [storageKey, selectedGameId, minute, events, liveScore, liveGameMeta]);
 
   const simulatePresentation = async () => {
-    if (!selectedGame || simulating) return;
+    if (!selectedGame || simulating || !canSimulateSelected) return;
     const simGame = {
       id: selectedGame.id,
       gameDate: selectedGame.gameDate,
@@ -113,54 +133,82 @@ export function MatchCenter() {
       'scores in transition',
       'sinks two free throws',
     ];
+    const pointChunk = (remaining, seed) => {
+      if (remaining <= 1) return 1;
+      if (remaining === 2) return 2;
+      const roll = rnd(seed + remaining);
+      if (remaining >= 3 && roll > 0.86) return 3;
+      if (roll > 0.18) return 2;
+      return 1;
+    };
     const rnd = (seed) => {
       const x = Math.sin(seed) * 10000;
       return x - Math.floor(x);
     };
     try {
+      // Resolve backend result first, then present live feed to that exact final score.
+      // Resolve today's games only (single-day advance), so one sim click cannot skip multiple days.
+      if (!currentSave?.id) return;
+      await advanceSave(currentSave.id);
+      const stateAfterAdvance = useGameStore.getState();
+      const latestResults = stateAfterAdvance.results || [];
+      const latestSchedule = stateAfterAdvance.scheduleGames || [];
+      const resolved = latestResults.find((g) => g.id === simGame.id)
+        || latestSchedule.find((g) => g.id === simGame.id);
+      if (!resolved) {
+        setEvents((prev) => ['Could not resolve this game result. Try again.', ...prev].slice(0, 16));
+        return;
+      }
+
+      const finalHome = Number(resolved.homeScore ?? 0);
+      const finalAway = Number(resolved.awayScore ?? 0);
+      let runningHome = 0;
+      let runningAway = 0;
+
       for (let m = 1; m <= 48; m += 1) {
-        // eslint-disable-next-line no-await-in-loop
         await new Promise((r) => setTimeout(r, SIM_TICK_MS));
         setMinute(m);
+
         const minuteSeed = selectedGame.id * 97 + m * 13;
-        // Simulate 1-3 scoring events per minute so preview totals land near realistic NBA scores.
-        const eventCountRoll = rnd(minuteSeed + 50);
-        const scoringEventsThisMinute = eventCountRoll > 0.82 ? 3 : eventCountRoll > 0.28 ? 2 : 1;
-        for (let e = 0; e < scoringEventsThisMinute; e += 1) {
-          const eventSeed = minuteSeed + (e * 7);
-          setLiveScore((prev) => {
-            const homeScores = rnd(eventSeed + 1) > 0.49;
-            const pointsRoll = rnd(eventSeed + 2);
-            const pts = pointsRoll > 0.90 ? 3 : (pointsRoll > 0.07 ? 2 : 1);
-            const next = {
-              home: prev.home + (homeScores ? pts : 0),
-              away: prev.away + (homeScores ? 0 : pts),
-            };
-            const teamCode = homeScores ? simGame.homeTeam.shortName : simGame.awayTeam.shortName;
-            const phrase = scorePhrases[(m + e + pts + selectedGame.id) % scorePhrases.length];
-            const sec = String(Math.max(0, 59 - (e * 9))).padStart(2, '0');
-            setEvents((prevEvents) => [
-              `Q${Math.ceil(m / 12)} ${m}:${sec} - ${teamCode} ${phrase} (+${pts}) [${next.away}-${next.home}]`,
-              ...prevEvents,
-            ].slice(0, 16));
-            return next;
-          });
+        const minuteEvents = [];
+        const targetHome = Math.round((finalHome * m) / 48);
+        const targetAway = Math.round((finalAway * m) / 48);
+        let homeToAdd = Math.max(0, targetHome - runningHome);
+        let awayToAdd = Math.max(0, targetAway - runningAway);
+
+        let slot = 0;
+        while (homeToAdd > 0 || awayToAdd > 0) {
+          const homeFirst = homeToAdd > 0 && (awayToAdd === 0 || rnd(minuteSeed + slot) > 0.5);
+          if (homeFirst) {
+            const pts = Math.min(homeToAdd, pointChunk(homeToAdd, minuteSeed + slot + 1));
+            runningHome += pts;
+            homeToAdd -= pts;
+            const phrase = scorePhrases[(m + slot + pts + selectedGame.id) % scorePhrases.length];
+            const sec = String(Math.max(0, 59 - (slot * 7))).padStart(2, '0');
+            minuteEvents.push(`Q${Math.ceil(m / 12)} ${m}:${sec} - ${simGame.homeTeam.shortName} ${phrase} (+${pts}) [${runningAway}-${runningHome}]`);
+          } else {
+            const pts = Math.min(awayToAdd, pointChunk(awayToAdd, minuteSeed + slot + 2));
+            runningAway += pts;
+            awayToAdd -= pts;
+            const phrase = scorePhrases[(m + slot + pts + selectedGame.id + 2) % scorePhrases.length];
+            const sec = String(Math.max(0, 59 - (slot * 7))).padStart(2, '0');
+            minuteEvents.push(`Q${Math.ceil(m / 12)} ${m}:${sec} - ${simGame.awayTeam.shortName} ${phrase} (+${pts}) [${runningAway}-${runningHome}]`);
+          }
+          slot += 1;
         }
-        if (m % 3 === 0) {
+
+        if (minuteEvents.length === 0 && m % 3 === 0) {
           const snippet = snippets[(m + selectedGame.id) % snippets.length];
-          setEvents((prev) => [`Q${Math.ceil(m / 12)} ${m}:00 - ${snippet}`, ...prev].slice(0, 16));
+          minuteEvents.push(`Q${Math.ceil(m / 12)} ${m}:00 - ${snippet}`);
+        }
+
+        setLiveScore({ home: runningHome, away: runningAway });
+        if (minuteEvents.length > 0) {
+          setEvents((prev) => [...minuteEvents.reverse(), ...prev].slice(0, 16));
         }
       }
-      // Resolve the actual selected fixture by advancing to the selected game date.
-      await advanceToDate(String(simGame.gameDate).slice(0, 10));
-      const latestResults = useGameStore.getState().results || [];
-      const resolved = latestResults.find((g) => g.id === simGame.id);
-      if (resolved) {
-        setLiveScore({ home: resolved.homeScore, away: resolved.awayScore });
-        setEvents((prev) => [`Backend final: ${resolved.awayTeam.shortName} ${resolved.awayScore} - ${resolved.homeScore} ${resolved.homeTeam.shortName}`, ...prev].slice(0, 16));
-      } else {
-        setEvents((prev) => ['Game resolved via backend simulation (advance day). Final score synced from backend results list.', ...prev]);
-      }
+
+      setLiveScore({ home: finalHome, away: finalAway });
     } finally {
       setSimulating(false);
     }
@@ -173,7 +221,7 @@ export function MatchCenter() {
       <PageHeader
         title="Match Center"
         subtitle="Select an upcoming game and run a live minute-by-minute presentation while the backend resolves the day."
-        actions={panelGame ? <span className="ui-badge">{fmtDate(panelGame.gameDate)}</span> : null}
+        actions={panelGame ? <span className="ui-badge">{formatFixtureDateTime(panelGame.gameDate)}</span> : null}
       />
 
       <div className="ui-card-grid">
@@ -195,7 +243,7 @@ export function MatchCenter() {
                   }}
                 >
                   <div style={{ fontWeight: 700 }}>{g.awayTeam.shortName} @ {g.homeTeam.shortName}</div>
-                  <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>{fmtDate(g.gameDate)} • {g.status}</div>
+                  <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>{formatFixtureDateTime(g.gameDate)} | {formatFixtureStatus(g.status)}</div>
                 </button>
               ))}
             </div>
@@ -211,9 +259,14 @@ export function MatchCenter() {
               <div className="ui-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 18 }}>{panelGame.awayTeam.shortName} @ {panelGame.homeTeam.shortName}</div>
-                  <div style={{ color: 'var(--ui-text-muted)' }}>{fmtDate(panelGame.gameDate)}</div>
+                  <div style={{ color: 'var(--ui-text-muted)' }}>{formatFixtureDateTime(panelGame.gameDate)}</div>
+                  {!canSimulateSelected ? (
+                    <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>
+                      You can simulate only today&apos;s game day. Selected: {getFixtureDateKeyUtc(panelGame.gameDate)} | Current: {currentDate || 'N/A'}.
+                    </div>
+                  ) : null}
                 </div>
-                <button className="ui-btn ui-btn-primary" type="button" onClick={simulatePresentation} disabled={simulating}>
+                <button className="ui-btn ui-btn-primary" type="button" onClick={simulatePresentation} disabled={simulating || !canSimulateSelected}>
                   {simulating ? 'Simulating...' : 'Start Live Sim'}
                 </button>
               </div>
@@ -231,7 +284,7 @@ export function MatchCenter() {
                   </div>
                 </div>
                 <div style={{ marginTop: 8, color: 'var(--ui-text-muted)', fontSize: 12 }}>
-                  Live presentation score preview (backend result is applied after day advance).
+                  Live simulation score.
                 </div>
               </div>
 
@@ -264,3 +317,4 @@ export function MatchCenter() {
     </div>
   );
 }
+

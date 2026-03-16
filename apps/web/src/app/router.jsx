@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 const PAGES = {
   dashboard: 'Home',
+  prepare: 'Prepare',
   inbox: 'Inbox',
   squad: 'Squad',
   'training/team': 'Team Training',
@@ -23,7 +24,8 @@ export function useRouter() {
 
   useEffect(() => {
     const handleNavigation = (e) => {
-      const hash = window.location.hash.slice(1) || 'dashboard';
+      const hashRaw = window.location.hash.slice(1) || 'dashboard';
+      const hash = hashRaw.split('?')[0];
       if (PAGES[hash]) {
         setCurrentPage(hash);
       }

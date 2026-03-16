@@ -1,0 +1,264 @@
+.squad-page-v2 {
+  display: grid;
+  gap: 14px;
+}
+
+.sq-top-strip {
+  border: 1px solid #1f3255;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(8, 21, 47, 0.95), rgba(6, 17, 40, 1));
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 14px 16px;
+}
+
+.sq-team-head {
+  display: flex;
+  gap: 10px;
+}
+
+.sq-team-badge {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: #fff;
+  background: linear-gradient(180deg, #9f38ff, #7a14e6);
+}
+
+.sq-team-head h1 {
+  margin: 0;
+  color: #f4f9ff;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.sq-team-head p {
+  margin: 4px 0 0;
+  color: #85a2d2;
+  font-size: 14px;
+}
+
+.sq-top-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(90px, auto));
+  gap: 18px;
+}
+
+.sq-top-stats span {
+  display: block;
+  color: #7b99cb;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.sq-top-stats strong {
+  display: block;
+  margin-top: 2px;
+  color: #f8fbff;
+  font-size: 33px;
+  font-weight: 800;
+}
+
+.sq-top-stats strong.streak {
+  color: #34ffb0;
+}
+
+.sq-top-stats strong.payroll {
+  color: #d983ff;
+}
+
+.sq-top-stats small {
+  color: #7391c4;
+  font-size: 12px;
+}
+
+.sq-filter-tabs {
+  border: 1px solid #1f3255;
+  border-radius: 10px;
+  display: flex;
+  overflow: hidden;
+}
+
+.sq-tab {
+  border: 0;
+  background: rgba(11, 24, 52, 0.95);
+  color: #9db7e4;
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 62px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.sq-tab.is-active {
+  background: #ff6a00;
+  color: #fff;
+}
+
+.sq-card {
+  border: 1px solid #1f3255;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(10, 22, 49, 0.9), rgba(7, 18, 41, 1));
+  padding: 14px;
+}
+
+.sq-card h3 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.sq-card p {
+  margin: 6px 0 12px;
+  color: #84a1d3;
+  font-size: 20px;
+}
+
+.sq-table-wrap {
+  border: 1px solid #22365c;
+  border-radius: 10px;
+  overflow: auto;
+}
+
+.sq-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sq-table thead th {
+  background: rgba(14, 30, 64, 0.95);
+  color: #7e9fce;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  padding: 10px 10px;
+  border-bottom: 1px solid #22365c;
+}
+
+.sq-table tbody td {
+  padding: 10px 10px;
+  border-top: 1px solid #192e53;
+  color: #e6f0ff;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.sq-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sq-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #b539ff, #7f14e8);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sq-player-cell strong {
+  display: block;
+  color: #f3f8ff;
+}
+
+.sq-player-cell small {
+  color: #86a4d2;
+  font-size: 11px;
+}
+
+.sq-ovr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sq-ovr > span {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #0fbf5f;
+  color: #fff;
+  font-weight: 800;
+}
+
+.sq-ovr small {
+  color: #35ffa9;
+  font-weight: 700;
+}
+
+.sq-stat-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sq-stat-cell i {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff7f1f, #ff6a00);
+  min-width: 4px;
+}
+
+.sq-bottom-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sq-bottom-stats article {
+  border: 1px solid #20365e;
+  border-radius: 10px;
+  background: rgba(11, 24, 53, 0.95);
+  padding: 11px 12px;
+}
+
+.sq-bottom-stats span {
+  color: #7f9fce;
+  font-size: 13px;
+}
+
+.sq-bottom-stats strong {
+  display: block;
+  margin-top: 5px;
+  color: #f7fbff;
+  font-size: 27px;
+  font-weight: 800;
+}
+
+@media (max-width: 1200px) {
+  .sq-top-strip {
+    flex-direction: column;
+  }
+  .sq-top-stats {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sq-bottom-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .sq-bottom-stats {
+    grid-template-columns: 1fr;
+  }
+  .sq-card h3 {
+    font-size: 24px;
+  }
+  .sq-card p {
+    font-size: 14px;
+  }
+}
+

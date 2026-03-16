@@ -1,276 +1,419 @@
 import { useEffect, useMemo, useState } from 'react';
-import { EmptyState, PageHeader } from '../../components/ui';
+import { PageHeader } from '../../components/ui';
 import { useGameStore } from '../../state/gameStore';
+import { api } from '../../api/client';
+import './training-players.css';
+
+const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_LABELS = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
 
 const FOCUS_OPTIONS = [
-  { value: 'BALANCED', label: 'Balanced' },
-  { value: 'SHOOTING', label: 'Shooting' },
-  { value: 'PLAYMAKING', label: 'Playmaking' },
-  { value: 'DEFENSE', label: 'Defense' },
-  { value: 'CONDITIONING', label: 'Conditioning' },
+  { key: 'shooting', label: 'Shooting', apiFocus: 'SHOOTING', saveFocus: 'shooting' },
+  { key: 'defense', label: 'Defense', apiFocus: 'DEFENSE', saveFocus: 'defense' },
+  { key: 'passing', label: 'Passing', apiFocus: 'PLAYMAKING', saveFocus: 'playmaking' },
+  { key: 'dribbling', label: 'Dribbling', apiFocus: 'PLAYMAKING', saveFocus: 'playmaking' },
+  { key: 'athleticism', label: 'Athleticism', apiFocus: 'CONDITIONING', saveFocus: 'fitness' },
+  { key: 'bbiq', label: 'BBIQ', apiFocus: 'BALANCED', saveFocus: 'balanced' },
 ];
 
-const INTENSITY_OPTIONS = [
-  { value: 'LOW', label: 'Low' },
-  { value: 'BALANCED', label: 'Balanced' },
-  { value: 'HIGH', label: 'High' },
-];
+function toApiIntensity(percent) {
+  if (percent <= 45) return 'LOW';
+  if (percent >= 75) return 'HIGH';
+  return 'BALANCED';
+}
 
-const fmtDate = (v) => {
-  if (!v) return '--';
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return '--';
-  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-};
+function toSaveIntensity(percent) {
+  if (percent <= 45) return 'low';
+  if (percent >= 75) return 'high';
+  return 'balanced';
+}
+
+function fromStoredIntensityWithPercent(value, percentValue, fallback = 60) {
+  const pct = Number(percentValue);
+  if (Number.isFinite(pct)) return Math.max(20, Math.min(100, pct));
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(20, Math.min(100, value));
+  if (value === 'low' || value === 'LOW') return 35;
+  if (value === 'high' || value === 'HIGH') return 80;
+  if (value === 'balanced' || value === 'BALANCED') return 60;
+  return fallback;
+}
+
+function getInitials(name) {
+  return String(name || '').split(' ').map((part) => part[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'NA';
+}
+
+function toSafeNumber(value, fallback = 70) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function pickAttr(attrs, keys, fallback) {
+  for (const key of keys) {
+    const raw = attrs?.[key];
+    const n = Number(raw);
+    if (Number.isFinite(n)) return n;
+  }
+  return fallback;
+}
+
+function deriveMetrics(player) {
+  const attrs = (player?.attributes && typeof player.attributes === 'object') ? player.attributes : {};
+  const shooting3 = pickAttr(attrs, ['shooting3', 'shooting', 'att'], toSafeNumber(player?.fg3Pct, 0) * 100 || 70);
+  const shootingMid = pickAttr(attrs, ['shootingMid', 'shooting', 'att'], toSafeNumber(player?.fgPct, 0) * 100 || 70);
+  const offense = toSafeNumber(player?.offensiveRating, 70);
+  const shooting = Math.round((shooting3 + shootingMid + offense) / 3);
+  const defense = pickAttr(attrs, ['defense', 'def'], toSafeNumber(player?.defensiveRating, 70));
+  const passing = pickAttr(attrs, ['playmaking', 'play'], toSafeNumber(player?.iqRating, 70));
+  const athleticism = pickAttr(attrs, ['athleticism', 'phy'], toSafeNumber(player?.physicalRating, 70));
+  const dribbling = Math.round((passing * 0.9) + (athleticism * 0.1));
+  const bbiq = pickAttr(attrs, ['iq', 'bbiq'], toSafeNumber(player?.iqRating, 70));
+  const clamp = (value) => Math.min(99, Math.max(40, Math.round(value)));
+  return {
+    shooting: clamp(shooting),
+    defense: clamp(defense),
+    passing: clamp(passing),
+    dribbling: clamp(dribbling),
+    athleticism: clamp(athleticism),
+    bbiq: clamp(bbiq),
+  };
+}
 
 export function TrainingPlayers() {
   const {
     currentSave,
     squadPlayers,
     playerTrainingPlans,
+    saveTrainingConfig,
     fetchSquad,
     fetchPlayerTrainingPlans,
     upsertPlayerTrainingPlan,
-    deletePlayerTrainingPlan,
   } = useGameStore();
 
-  const [selectedPlayerId, setSelectedPlayerId] = useState('');
-  const [focus, setFocus] = useState('BALANCED');
-  const [intensity, setIntensity] = useState('BALANCED');
-  const [search, setSearch] = useState('');
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
+  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState(null);
+  const [focusKey, setFocusKey] = useState('shooting');
+  const [intensity, setIntensity] = useState(60);
+  const [dayPlan, setDayPlan] = useState(() => Object.fromEntries(
+    DAY_KEYS.map((day) => [day, { intensity: 60, focusKey: 'shooting' }]),
+  ));
   const [saving, setSaving] = useState(false);
-  const [loadingPlans, setLoadingPlans] = useState(false);
-  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    let active = true;
     (async () => {
       await fetchSquad();
-      setLoadingPlans(true);
-      try {
-        await fetchPlayerTrainingPlans();
-      } finally {
-        if (active) setLoadingPlans(false);
-      }
+      await fetchPlayerTrainingPlans();
     })();
-    return () => { active = false; };
   }, [fetchSquad, fetchPlayerTrainingPlans, currentSave?.id]);
 
   useEffect(() => {
-    if (!toast) return undefined;
-    const t = setTimeout(() => setToast(null), 1800);
-    return () => clearTimeout(t);
-  }, [toast]);
+    if (!selectedPlayerId && squadPlayers?.length) {
+      setSelectedPlayerId(squadPlayers[0].id);
+    }
+  }, [selectedPlayerId, squadPlayers]);
 
-  const filteredPlayers = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return squadPlayers;
-    return squadPlayers.filter((p) => {
-      const text = `${p.name || ''} ${p.position || ''} ${p.team?.shortName || ''}`.toLowerCase();
-      return text.includes(q);
-    });
-  }, [squadPlayers, search]);
-
-  const selected = useMemo(
-    () => squadPlayers.find((p) => String(p.id) === String(selectedPlayerId)),
+  const selectedPlayer = useMemo(
+    () => (squadPlayers || []).find((player) => player.id === selectedPlayerId) || null,
     [squadPlayers, selectedPlayerId],
   );
 
-  const onSave = async () => {
-    if (!selected) return;
+  useEffect(() => {
+    let active = true;
+    if (!selectedPlayerId) {
+      setSelectedPlayerDetails(null);
+      return () => { active = false; };
+    }
+    (async () => {
+      try {
+        const saveParams = currentSave?.id ? { saveId: currentSave.id } : {};
+        const { data } = await api.players.getById(selectedPlayerId, saveParams);
+        if (active) setSelectedPlayerDetails(data);
+      } catch {
+        if (active) setSelectedPlayerDetails(null);
+      }
+    })();
+    return () => { active = false; };
+  }, [selectedPlayerId, currentSave?.id]);
+
+  useEffect(() => {
+    if (!selectedPlayer) return;
+    const existing = (playerTrainingPlans || []).find((plan) => Number(plan.playerId) === Number(selectedPlayer.id));
+    const savedFromJson = currentSave?.data?.training?.playerPlans?.[String(selectedPlayer.id)];
+    if (existing) {
+      if (existing.focus === 'SHOOTING') setFocusKey('shooting');
+      else if (existing.focus === 'DEFENSE') setFocusKey('defense');
+      else if (existing.focus === 'PLAYMAKING') setFocusKey('passing');
+      else if (existing.focus === 'CONDITIONING') setFocusKey('athleticism');
+      else setFocusKey('bbiq');
+      setIntensity(fromStoredIntensityWithPercent(existing.intensity, savedFromJson?.intensityPercent, 60));
+    } else {
+      setFocusKey('shooting');
+      setIntensity(60);
+    }
+    const storedPlan = existing?.dayPlan
+      ? { dayPlan: existing.dayPlan }
+      : currentSave?.data?.training?.playerPlans?.[String(selectedPlayer.id)];
+    const mappedDefaultFocus = existing?.focus === 'DEFENSE' ? 'defense' : existing?.focus === 'PLAYMAKING' ? 'passing' : existing?.focus === 'CONDITIONING' ? 'athleticism' : 'shooting';
+    const nextDayPlan = Object.fromEntries(
+      DAY_KEYS.map((day) => [day, { intensity: 60, focusKey: mappedDefaultFocus }]),
+    );
+    if (storedPlan?.dayPlan && typeof storedPlan.dayPlan === 'object') {
+      for (const day of DAY_KEYS) {
+        const row = storedPlan.dayPlan[day];
+        if (!row) continue;
+        const mappedFocus = typeof row.focusKey === 'string'
+          ? row.focusKey
+          : row.focus === 'defense'
+            ? 'defense'
+            : row.focus === 'fitness'
+              ? 'athleticism'
+              : row.focus === 'playmaking'
+                ? 'passing'
+                : row.focus === 'balanced'
+                  ? 'bbiq'
+                  : 'shooting';
+        nextDayPlan[day] = {
+          intensity: fromStoredIntensityWithPercent(row.intensity, row.intensityPercent, 60),
+          focusKey: mappedFocus,
+        };
+      }
+    }
+    setDayPlan(nextDayPlan);
+  }, [selectedPlayer, playerTrainingPlans, currentSave?.data?.training?.playerPlans]);
+
+  const metrics = deriveMetrics(selectedPlayerDetails || selectedPlayer);
+  const selectedFocus = FOCUS_OPTIONS.find((item) => item.key === focusKey) || FOCUS_OPTIONS[0];
+
+  const realStats = useMemo(() => {
+    const player = selectedPlayerDetails || selectedPlayer;
+    if (!player) return [];
+    const pairs = [
+      ['Career Games', player.gamesCareer],
+      ['Career PTS', player.ptsCareer],
+      ['Career REB', player.trbCareer],
+      ['Career AST', player.astCareer],
+      ['FG%', player.fgPct],
+      ['3P%', player.fg3Pct],
+      ['FT%', player.ftPct],
+      ['PER', player.per],
+      ['WS', player.ws],
+      ['eFG%', player.efgPct],
+      ['Salary', player.salary ? `$${Math.round(player.salary / 1_000_000)}M` : '--'],
+    ];
+    return pairs
+      .filter(([, value]) => value !== null && value !== undefined && value !== '')
+      .map(([label, value]) => {
+        if (typeof value === 'number') {
+          const formatted = Number.isInteger(value) ? String(value) : value.toFixed(1);
+          return { label, value: formatted };
+        }
+        return { label, value: String(value) };
+      });
+  }, [selectedPlayer, selectedPlayerDetails]);
+
+  const dayImpact = (focusValue, intensityValue) => {
+    const i = Number(intensityValue ?? intensity);
+    const attack = focusValue === 'shooting' ? 2 : focusValue === 'passing' || focusValue === 'dribbling' ? 1 : 0;
+    const defense = focusValue === 'defense' ? 2 : 0;
+    const physicality = focusValue === 'athleticism' ? 2 : i > 75 ? 1 : 0;
+    const stamina = focusValue === 'athleticism' ? 2 : i <= 45 ? 1 : -1;
+    const health = i > 82 ? -2 : i > 70 ? -1 : i <= 45 ? 1 : 0;
+    const morale = i > 85 ? -1 : i <= 50 ? 1 : 0;
+    return { attack, defense, physicality, stamina, health, morale };
+  };
+
+  const savePlan = async () => {
+    if (!selectedPlayer) return;
     setSaving(true);
     try {
-      await upsertPlayerTrainingPlan({ playerId: selected.id, focus, intensity });
-      setToast({ type: 'success', text: 'Saved' });
-    } catch (error) {
-      setToast({ type: 'error', text: error?.response?.data?.message || 'Error' });
+      await upsertPlayerTrainingPlan({
+        playerId: selectedPlayer.id,
+        focus: selectedFocus.apiFocus,
+        intensity: toApiIntensity(intensity),
+        dayPlan: Object.fromEntries(
+          DAY_KEYS.map((day) => [day, {
+            intensity: toSaveIntensity(dayPlan[day]?.intensity ?? intensity),
+            intensityPercent: Number(dayPlan[day]?.intensity ?? intensity),
+            focus: Object.fromEntries(FOCUS_OPTIONS.map((option) => [option.key, option.saveFocus]))[dayPlan[day]?.focusKey] || selectedFocus.saveFocus,
+            focusKey: dayPlan[day]?.focusKey || focusKey,
+          }]),
+        ),
+      });
+
+      const focusMap = Object.fromEntries(FOCUS_OPTIONS.map((option) => [option.key, option.saveFocus]));
+      const dayPlanPayload = Object.fromEntries(
+        DAY_KEYS.map((day) => [day, {
+          intensity: toSaveIntensity(dayPlan[day]?.intensity ?? intensity),
+          intensityPercent: Number(dayPlan[day]?.intensity ?? intensity),
+          focus: focusMap[dayPlan[day]?.focusKey] || selectedFocus.saveFocus,
+          focusKey: dayPlan[day]?.focusKey || focusKey,
+        }]),
+      );
+
+      await saveTrainingConfig({
+        playerPlans: {
+          [String(selectedPlayer.id)]: {
+            intensity: toSaveIntensity(intensity),
+            intensityPercent: intensity,
+            focus: selectedFocus.saveFocus,
+            dayPlan: dayPlanPayload,
+          },
+        },
+      });
+      await fetchPlayerTrainingPlans();
     } finally {
       setSaving(false);
     }
   };
 
-  const onEdit = (plan) => {
-    setSelectedPlayerId(String(plan.playerId));
-    setFocus(plan.focus || 'BALANCED');
-    setIntensity(plan.intensity || 'BALANCED');
-  };
-
-  const onDelete = async (plan) => {
-    try {
-      await deletePlayerTrainingPlan(plan.playerId);
-      if (String(plan.playerId) === String(selectedPlayerId)) {
-        setSelectedPlayerId('');
-      }
-      setToast({ type: 'success', text: 'Deleted' });
-    } catch (error) {
-      setToast({ type: 'error', text: error?.response?.data?.message || 'Error' });
-    }
-  };
-
   return (
-    <div>
-      <PageHeader title="Individual Training" subtitle="Manage save-scoped player training plans with focus and intensity presets." />
-      <div className="ui-card-grid" style={{ gridTemplateColumns: 'repeat(12, minmax(0,1fr))' }}>
-        <div className="ui-card ui-col-4">
-          <h3 style={{ marginTop: 0 }}>Create / Update Plan</h3>
-          {toast && (
-            <div
-              style={{
-                marginBottom: 12,
-                padding: '10px 12px',
-                borderRadius: 10,
-                background: toast.type === 'error' ? 'rgba(220,80,80,0.18)' : 'rgba(70,170,110,0.18)',
-                border: `1px solid ${toast.type === 'error' ? 'rgba(220,80,80,0.35)' : 'rgba(70,170,110,0.35)'}`,
-              }}
-            >
-              {toast.text}
+    <div className="player-training-page">
+      <PageHeader title="Player Training" subtitle="Customize individual training programs for each player" />
+      <div className="pt-grid">
+        <aside className="pt-sidebar">
+          <section className="pt-card">
+            <h3>Select Player</h3>
+            <div className="pt-player-list">
+              {(squadPlayers || []).map((player) => {
+                const isActive = player.id === selectedPlayerId;
+                return (
+                  <button
+                    key={player.id}
+                    type="button"
+                    className={`pt-player-item ${isActive ? 'is-active' : ''}`}
+                    onClick={() => setSelectedPlayerId(player.id)}
+                  >
+                    <div className="pt-avatar">{getInitials(player.name)}</div>
+                    <div>
+                      <div className="pt-player-name">{player.name}</div>
+                      <small>{player.position || 'N/A'} | OVR {player.overallCurrent ?? player.overall ?? '--'} | POT {player.potential ?? '--'}</small>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          )}
+          </section>
+        </aside>
 
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            <strong>Search Player</strong>
-          </label>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search roster..."
-            className="players-search"
-            style={{ width: '100%', marginBottom: 12 }}
-          />
-
-          <label style={{ display: 'block', marginBottom: 8 }}>
-            <strong>Player</strong>
-          </label>
-          <select
-            value={selectedPlayerId}
-            onChange={(e) => setSelectedPlayerId(e.target.value)}
-            className="ui-select"
-            style={{ marginBottom: 16 }}
-          >
-            <option value="">Select player</option>
-            {filteredPlayers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.position}) - {p.team?.shortName || '--'}
-              </option>
-            ))}
-          </select>
-
-          <div style={{ marginBottom: 16 }}>
-            <strong>Focus</strong>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-              {FOCUS_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={focus === opt.value ? 'ui-btn ui-btn-primary' : 'ui-btn'}
-                  onClick={() => setFocus(opt.value)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <strong>Intensity</strong>
-            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-              {INTENSITY_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className={intensity === opt.value ? 'ui-btn ui-btn-primary' : 'ui-btn'}
-                  onClick={() => setIntensity(opt.value)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {selected && (
-            <div style={{ marginBottom: 14, opacity: 0.92 }}>
-              <div><strong>{selected.name}</strong> ({selected.position || '--'})</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}>
-                OVR {selected.overallCurrent ?? selected.overall ?? '--'} | Form {selected.form ?? '--'} | Fatigue {selected.fatigue ?? '--'}
-              </div>
-            </div>
-          )}
-
-          <button className="ui-btn ui-btn-primary" onClick={onSave} disabled={!selected || saving}>
-            {saving ? 'Saving...' : 'Save Player Plan'}
-          </button>
-        </div>
-
-        <div className="ui-card ui-col-8" style={{ minHeight: 420 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-            <h3 style={{ marginTop: 0, marginBottom: 10 }}>Saved Plans</h3>
-            <button
-              type="button"
-              className="ui-btn"
-              onClick={async () => {
-                setLoadingPlans(true);
-                try {
-                  await fetchPlayerTrainingPlans();
-                } finally {
-                  setLoadingPlans(false);
-                }
-              }}
-            >
-              Refresh
-            </button>
-          </div>
-
-          {loadingPlans ? (
-            <p>Loading saved plans...</p>
-          ) : playerTrainingPlans.length === 0 ? (
-            <EmptyState title="No saved player plans" description="Save a player plan and it will appear here for edit/delete." />
-          ) : (
-            <div className="ui-table-shell">
-              <table className="ui-table" style={{ minWidth: 860 }}>
-                <thead>
-                  <tr>
-                    <th>Player</th>
-                    <th>Pos</th>
-                    <th>Focus</th>
-                    <th>Intensity</th>
-                    <th className="ui-num">Form</th>
-                    <th className="ui-num">OVR (B/C)</th>
-                    <th className="ui-num">Fatigue</th>
-                    <th>Updated</th>
-                    <th className="ui-num">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {playerTrainingPlans.map((plan) => (
-                    <tr key={`${plan.saveId}-${plan.playerId}`}>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{plan.player?.name || '--'}</div>
-                        <div style={{ fontSize: 12, opacity: 0.7 }}>{plan.player?.team?.shortName || '--'}</div>
-                      </td>
-                      <td>{plan.player?.pos || '--'}</td>
-                      <td>{plan.focus}</td>
-                      <td>{plan.intensity}</td>
-                      <td className="ui-num">{plan.player?.form ?? '--'}</td>
-                      <td className="ui-num">
-                        {plan.player?.overallBase ?? '--'} / {plan.player?.overallCurrent ?? '--'}
-                      </td>
-                      <td className="ui-num">{plan.player?.fatigue ?? '--'}</td>
-                      <td>{fmtDate(plan.updatedAt)}</td>
-                      <td className="ui-num" style={{ whiteSpace: 'nowrap' }}>
-                        <button type="button" className="ui-btn" onClick={() => onEdit(plan)} style={{ marginRight: 8 }}>
-                          Edit
-                        </button>
-                        <button type="button" className="ui-btn" onClick={() => onDelete(plan)}>
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
+        <main className="pt-main">
+          {!selectedPlayer ? null : (
+            <>
+              <section className="pt-card">
+                <div className="pt-header-row">
+                  <div className="pt-header-player">
+                    <div className="pt-avatar big">{getInitials(selectedPlayer.name)}</div>
+                    <div>
+                      <h2>{selectedPlayer.name}</h2>
+                      <p>#{selectedPlayer.jerseyNumber ?? selectedPlayer.number ?? '--'} | {selectedPlayer.position || 'N/A'} | {selectedPlayer.age ?? '--'} years old</p>
+                    </div>
+                  </div>
+                  <div className="pt-overall">
+                    <div>{selectedPlayer.overallCurrent ?? selectedPlayer.overall ?? '--'}</div>
+                    <small>Overall Rating</small>
+                    <strong>Potential: {selectedPlayer.potential ?? '--'}</strong>
+                  </div>
+                </div>
+                <div className="pt-metrics-grid">
+                  {[
+                    ['Shooting', metrics.shooting],
+                    ['Defense', metrics.defense],
+                    ['Passing', metrics.passing],
+                    ['Dribbling', metrics.dribbling],
+                    ['Athleticism', metrics.athleticism],
+                    ['Bbiq', metrics.bbiq],
+                  ].map(([label, value]) => (
+                    <div key={label} className="pt-metric-card">
+                      <span>{label}</span>
+                      <div className="pt-metric-bar"><span style={{ width: `${value}%` }} /></div>
+                      <strong>{value}</strong>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+                <div className="pt-real-stats-grid">
+                  {realStats.map((stat) => (
+                    <div key={stat.label} className="pt-real-stat">
+                      <span>{stat.label}</span>
+                      <strong>{stat.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="pt-card">
+                <h3>Training Focus</h3>
+                <div className="pt-focus-grid">
+                  {FOCUS_OPTIONS.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      className={`pt-focus-card ${focusKey === option.key ? 'is-active' : ''}`}
+                      onClick={() => setFocusKey(option.key)}
+                    >
+                      <div>{option.label}</div>
+                      <strong>{metrics[option.key]}</strong>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pt-slider-wrap">
+                  <div className="pt-slider-head"><span>Training Intensity</span><strong>{intensity}%</strong></div>
+                  <input type="range" min="20" max="100" value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} />
+                  <div className="pt-slider-scale"><span>Light</span><span>Moderate</span><span>Intense</span></div>
+                </div>
+
+                <div className="pt-impact-box">
+                  <div className="pt-impact-title">Expected Weekly Improvement</div>
+                  <ul>
+                    <li>{selectedFocus.label} will improve by approximately {Math.max(0, Math.round((intensity - 55) / 8))} points per week</li>
+                    <li>Fitness impact: {intensity > 80 ? '-1%' : '0%'}</li>
+                    <li>Morale: Excellent</li>
+                  </ul>
+                  <strong>+{Math.max(0, Math.round((intensity - 50) / 10))}</strong>
+                </div>
+              </section>
+
+              <section className="pt-card">
+                <h3>Weekly Training Schedule (Per Player)</h3>
+                <div className="pt-week-list">
+                  {DAY_KEYS.map((day) => (
+                    <label key={day} className="pt-week-row">
+                      <div className="pt-week-meta">
+                        <strong>{DAY_LABELS[day]}</strong>
+                        <small>{(FOCUS_OPTIONS.find((option) => option.key === (dayPlan[day]?.focusKey || focusKey)) || selectedFocus).label} Training</small>
+                      </div>
+                      <div className="pt-week-controls">
+                        <select
+                          className="pt-week-select"
+                          value={dayPlan[day]?.focusKey || focusKey}
+                          onChange={(e) => setDayPlan((prev) => ({ ...prev, [day]: { ...(prev[day] || {}), focusKey: e.target.value } }))}
+                        >
+                          {FOCUS_OPTIONS.map((option) => <option key={`${day}-${option.key}`} value={option.key}>{option.label}</option>)}
+                        </select>
+                        <input
+                          className="pt-week-range"
+                          type="range"
+                          min="20"
+                          max="100"
+                          value={dayPlan[day]?.intensity ?? intensity}
+                          onChange={(e) => setDayPlan((prev) => ({ ...prev, [day]: { ...(prev[day] || {}), intensity: Number(e.target.value) } }))}
+                        />
+                        <span>{dayPlan[day]?.intensity ?? intensity}%</span>
+                        <small className="pt-week-impact">
+                          {(() => {
+                            const eff = dayImpact(dayPlan[day]?.focusKey || focusKey, dayPlan[day]?.intensity ?? intensity);
+                            return `ATT ${eff.attack >= 0 ? '+' : ''}${eff.attack} | DEF ${eff.defense >= 0 ? '+' : ''}${eff.defense} | PHY ${eff.physicality >= 0 ? '+' : ''}${eff.physicality} | STA ${eff.stamina >= 0 ? '+' : ''}${eff.stamina} | HLT ${eff.health >= 0 ? '+' : ''}${eff.health} | MOR ${eff.morale >= 0 ? '+' : ''}${eff.morale}`;
+                          })()}
+                        </small>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                <button className="pt-primary-btn" type="button" onClick={savePlan} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save Player Plan'}
+                </button>
+              </section>
+            </>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );

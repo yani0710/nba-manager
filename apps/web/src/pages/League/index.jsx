@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { EmptyState, PageHeader, SkeletonTable } from '../../components/ui';
+import '../League.css';
 
 const SORT_FIELDS = ['wins', 'losses', 'pct', 'gb', 'streak'];
 

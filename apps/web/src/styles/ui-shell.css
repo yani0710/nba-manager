@@ -28,8 +28,9 @@
   display: flex;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 12% 12%, rgba(40,209,124,0.08), transparent 40%),
-    radial-gradient(circle at 88% 6%, rgba(89,153,255,0.10), transparent 45%),
+    radial-gradient(circle at 12% 10%, rgba(116, 52, 196, 0.14), transparent 38%),
+    radial-gradient(circle at 88% 6%, rgba(56, 122, 214, 0.14), transparent 45%),
+    linear-gradient(180deg, #020e2d, #020b23 55%, #01081c),
     var(--ui-bg);
   color: var(--ui-text);
 }

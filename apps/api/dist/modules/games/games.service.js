@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GamesService = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
+const fixtureStatus_1 = require("../fixtures/fixtureStatus");
 class GamesService {
     async getAllGames() {
         return prisma_1.default.game.findMany({
@@ -44,7 +45,7 @@ class GamesService {
     }
     async getUpcomingGames(limit = 10) {
         return prisma_1.default.game.findMany({
-            where: { status: "scheduled" },
+            where: { status: { in: fixtureStatus_1.UPCOMING_GAME_STATUSES } },
             include: {
                 homeTeam: true,
                 awayTeam: true,

@@ -35,6 +35,7 @@
     "etl:import:impact": "ts-node scripts/import/importImpactSeason.ts",
     "etl:run": "npm run etl:import:players && npm run etl:import:advanced && npm run etl:import:impact && npm run etl:import:salaries && npm run etl:import:gamelogs",
     "normalize:units": "ts-node scripts/normalizePlayerUnits.ts",
+    "fixtures:sync:saves": "ts-node scripts/syncExistingSavesWithFixtures.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

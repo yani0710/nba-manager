@@ -34,8 +34,9 @@ export class SavesController {
   async advance(req: Request, res: Response, next: NextFunction) {
     try {
       const targetDate = typeof req.body?.targetDate === "string" ? req.body.targetDate : undefined;
+      const includeTargetDay = req.body?.includeTargetDay === true;
       const save = targetDate
-        ? await savesService.advanceSaveToDate(Number(req.params.id), targetDate)
+        ? await savesService.advanceSaveToDate(Number(req.params.id), targetDate, includeTargetDay)
         : await savesService.advanceSave(Number(req.params.id));
       res.json(save);
     } catch (err) {
@@ -128,6 +129,19 @@ export class SavesController {
     }
   }
 
+  async respondInboxMessage(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await savesService.respondInboxMessage(
+        Number(req.params.id),
+        Number(req.params.msgId),
+        String(req.body?.responseId ?? ""),
+      );
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async saveRotation(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await savesService.saveRotation(Number(req.params.id), req.body?.rotation ?? {});
@@ -139,7 +153,11 @@ export class SavesController {
 
   async saveTactics(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await savesService.saveTactics(Number(req.params.id), req.body?.tactics ?? {});
+      const data = await savesService.saveTactics(
+        Number(req.params.id),
+        req.body?.tactics ?? {},
+        req.body?.rotation ?? undefined,
+      );
       res.json(data);
     } catch (err) {
       next(err);
@@ -185,6 +203,7 @@ export class SavesController {
         playerId: Number(req.body?.playerId),
         focus: String(req.body?.focus ?? "BALANCED"),
         intensity: String(req.body?.intensity ?? "BALANCED"),
+        dayPlan: req.body?.dayPlan,
       });
       res.json(data);
     } catch (err) {

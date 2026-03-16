@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma";
+import { UPCOMING_GAME_STATUSES } from "../fixtures/fixtureStatus";
 
 export class GamesService {
   async getAllGames() {
@@ -42,7 +43,7 @@ export class GamesService {
 
   async getUpcomingGames(limit = 10) {
     return prisma.game.findMany({
-      where: { status: "scheduled" },
+      where: { status: { in: UPCOMING_GAME_STATUSES } },
       include: {
         homeTeam: true,
         awayTeam: true,

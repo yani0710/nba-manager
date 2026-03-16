@@ -56,6 +56,20 @@ export const useGameStore = create((set, get) => ({
     }
   },
 
+  deleteSave: async (id) => {
+    try {
+      await api.saves.delete(id);
+      set((state) => ({
+        saves: state.saves.filter((s) => s.id !== id),
+        currentSave: state.currentSave?.id === id ? null : state.currentSave,
+      }));
+      return true;
+    } catch (error) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
   loadSave: async (id) => {
     try {
       const { data } = await api.saves.getById(id);
@@ -118,12 +132,12 @@ export const useGameStore = create((set, get) => ({
     }
   },
 
-  advanceToDate: async (targetDate) => {
+  advanceToDate: async (targetDate, options = {}) => {
     const save = get().currentSave;
     if (!save || !targetDate) return;
     set({ loading: true });
     try {
-      const { data } = await api.saves.advance(save.id, { targetDate });
+      const { data } = await api.saves.advance(save.id, { targetDate, includeTargetDay: options.includeTargetDay === true });
       set({ currentSave: data });
       await get().fetchPlayers();
       await get().fetchTeams();
@@ -306,6 +320,16 @@ export const useGameStore = create((set, get) => ({
     await get().fetchDashboard();
   },
 
+  respondInboxMessage: async (msgId, responseId) => {
+    const save = get().currentSave;
+    if (!save) return null;
+    await api.saves.respondInboxMessage(save.id, msgId, { responseId });
+    await get().fetchInbox({ take: get().inbox?.take ?? 30, skip: get().inbox?.skip ?? 0 });
+    await get().fetchDashboard();
+    await get().fetchPlayers();
+    return true;
+  },
+
   deleteInboxMessage: async (msgId) => {
     const save = get().currentSave;
     if (!save) return;
@@ -328,10 +352,10 @@ export const useGameStore = create((set, get) => ({
     set({ currentSave: data });
   },
 
-  saveTactics: async (tactics) => {
+  saveTactics: async (tactics, rotation) => {
     const save = get().currentSave;
     if (!save) return;
-    await api.saves.saveTactics(save.id, { tactics });
+    await api.saves.saveTactics(save.id, { tactics, rotation });
     const { data } = await api.saves.getById(save.id);
     set({ currentSave: data });
   },
@@ -394,11 +418,11 @@ export const useGameStore = create((set, get) => ({
     }
   },
 
-  upsertPlayerTrainingPlan: async ({ playerId, focus, intensity }) => {
+  upsertPlayerTrainingPlan: async ({ playerId, focus, intensity, dayPlan }) => {
     const save = get().currentSave;
     if (!save) return null;
     try {
-      const { data } = await api.saves.savePlayerTrainingPlan(save.id, { playerId, focus, intensity });
+      const { data } = await api.saves.savePlayerTrainingPlan(save.id, { playerId, focus, intensity, dayPlan });
       await get().fetchPlayerTrainingPlans();
       return data;
     } catch (error) {

@@ -13,6 +13,7 @@ export declare class SavesController {
     getResultDetails(req: Request, res: Response, next: NextFunction): Promise<void>;
     markInboxRead(req: Request, res: Response, next: NextFunction): Promise<void>;
     deleteInboxMessage(req: Request, res: Response, next: NextFunction): Promise<void>;
+    respondInboxMessage(req: Request, res: Response, next: NextFunction): Promise<void>;
     saveRotation(req: Request, res: Response, next: NextFunction): Promise<void>;
     saveTactics(req: Request, res: Response, next: NextFunction): Promise<void>;
     saveTraining(req: Request, res: Response, next: NextFunction): Promise<void>;

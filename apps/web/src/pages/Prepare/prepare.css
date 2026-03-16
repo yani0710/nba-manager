@@ -1,0 +1,247 @@
+.prepare-page {
+  display: grid;
+  gap: 14px;
+  color: #e7efff;
+}
+
+.prepare-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prepare-top h1 {
+  margin: 0;
+  font-size: 34px;
+  color: #ffffff;
+}
+
+.prepare-top p {
+  margin: 6px 0 0;
+  color: #8ea8d8;
+}
+
+.prepare-quick-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prepare-quick-btn {
+  border: 1px solid #29416d;
+  background: rgba(19, 36, 68, 0.7);
+  color: #d6e4ff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.prepare-card {
+  background: linear-gradient(180deg, rgba(11, 27, 59, 0.9), rgba(8, 20, 44, 0.95));
+  border: 1px solid #1f3760;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.prepare-card h3 {
+  margin: 0 0 12px;
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.prepare-fixtures-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.prepare-fixture-pill {
+  border: 1px solid #29416d;
+  background: rgba(20, 37, 70, 0.7);
+  color: #c5d7fb;
+  border-radius: 999px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.prepare-fixture-pill.is-active {
+  border-color: #a464ff;
+  background: linear-gradient(180deg, rgba(161, 64, 255, 0.3), rgba(120, 36, 220, 0.26));
+  color: #ffffff;
+}
+
+.prepare-fixture-selected {
+  margin-top: 10px;
+  color: #84a6dd;
+  font-size: 13px;
+}
+
+.prepare-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+
+.prepare-card-main {
+  min-height: 720px;
+}
+
+.prepare-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.prepare-select {
+  border: 1px solid #365181;
+  border-radius: 10px;
+  background: #1d2f4f;
+  color: #f3f8ff;
+  padding: 8px 12px;
+  min-width: 180px;
+}
+
+.prepare-court {
+  margin-top: 8px;
+  position: relative;
+  width: 100%;
+  min-height: 620px;
+  border: 1px solid #7d2c2c;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 40%, rgba(65, 42, 75, 0.35), rgba(27, 23, 41, 0.96));
+  overflow: hidden;
+}
+
+.prepare-court-halfline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  height: 1px;
+  background: #7d2c2c;
+}
+
+.prepare-court-center-circle {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 66px;
+  height: 66px;
+  border: 2px solid #7d2c2c;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.prepare-court-paint {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 34%;
+  height: 28%;
+  border: 2px solid #7d2c2c;
+  border-bottom: 0;
+  transform: translateX(-50%);
+}
+
+.prepare-court-rim-circle {
+  position: absolute;
+  left: 50%;
+  bottom: 15%;
+  width: 54px;
+  height: 54px;
+  border: 2px solid #7d2c2c;
+  border-radius: 999px;
+  transform: translate(-50%, 50%);
+}
+
+.prepare-token {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 3px solid #bf88ff;
+  background: #8f22e8;
+  display: grid;
+  place-items: center;
+  color: #f8f1ff;
+  font-weight: 800;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.prepare-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.prepare-primary-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #af2dff, #7f12e8);
+}
+
+.prepare-side {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.prepare-form {
+  display: grid;
+  gap: 10px;
+}
+
+.prepare-form-row {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.prepare-form-row span {
+  color: #8fb0e2;
+  font-size: 12px;
+}
+
+.prepare-slider-row {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.prepare-slider-label {
+  display: flex;
+  justify-content: space-between;
+  color: #a9bfe8;
+}
+
+.prepare-slider-row input[type='range'] {
+  width: 100%;
+  accent-color: #8f22e8;
+}
+
+.prepare-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #d6e4ff;
+}
+
+.prepare-check input[type='checkbox'] {
+  accent-color: #8f22e8;
+}
+
+@media (max-width: 1100px) {
+  .prepare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

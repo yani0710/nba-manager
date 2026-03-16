@@ -35,3 +35,4 @@ export function Topbar({ title, breadcrumbs, actions = null, isDark = true, onTo
     </header>
   );
 }
+

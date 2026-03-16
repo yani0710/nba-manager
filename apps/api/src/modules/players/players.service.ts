@@ -1,5 +1,6 @@
 import prisma from "../../config/prisma";
 import { enrichPlayersFromSalariesRoster } from "../../data/enrichPlayers";
+import { normalizePlayerName } from "../../data/loadSalariesRoster";
 
 const contractSelect = {
   id: true,
@@ -17,16 +18,20 @@ const contractSelect = {
 
 export class PlayersService {
   async getPlayersByTeamId(teamId: number, includeInactive = false, saveId?: number) {
-    const [team, allTeams] = await Promise.all([
-      prisma.team.findUnique({ where: { id: teamId }, select: { id: true, shortName: true } }),
-      prisma.team.findMany({ select: { id: true, shortName: true } }),
-    ]);
-    if (!team) return [];
-    const salariesRoster = await enrichPlayersFromSalariesRoster();
-    const rosterByTeam = await this.buildRosterOverridesByTeam(saveId, allTeams, salariesRoster.byTeam);
-    const roster = rosterByTeam.get(team.shortName) ?? salariesRoster.byTeam.get(team.shortName) ?? [];
-    const filtered = includeInactive ? roster : roster;
-    return this.attachSaveStateToRoster(filtered, saveId);
+    const players = await prisma.player.findMany({
+      where: {
+        teamId,
+        ...(includeInactive ? {} : { active: true }),
+      },
+      include: {
+        team: true,
+        contracts: { select: contractSelect },
+      },
+      orderBy: [{ overallCurrent: "desc" }, { overall: "desc" }, { name: "asc" }],
+    });
+    const withState = await this.attachSaveState(players, saveId);
+    const withOverrides = await this.attachTransferOverridesToPlayers(withState as any[], saveId);
+    return this.applySalaryFallbackFromRoster(withOverrides as any[]);
   }
 
   async getPlayerById(id: number, saveId?: number) {
@@ -63,7 +68,60 @@ export class PlayersService {
       ...(take ? { take } : {}),
     });
     const withState = await this.attachSaveState(players, saveId);
-    return this.attachTransferOverridesToPlayers(withState as any[], saveId);
+    const withOverrides = await this.attachTransferOverridesToPlayers(withState as any[], saveId);
+    return this.applySalaryFallbackFromRoster(withOverrides as any[]);
+  }
+
+  private async applySalaryFallbackFromRoster<T extends { id: number; name: string; team?: { shortName?: string | null } | null; salary?: number | null }>(
+    players: T[],
+  ): Promise<T[]> {
+    if (!players || players.length === 0) return players;
+    const needsFallback = players.some((p) => !Number.isFinite(Number(p.salary)) || Number(p.salary) <= 0);
+    if (!needsFallback) return players;
+
+    const roster = await enrichPlayersFromSalariesRoster();
+    const byId = new Map<number, number>();
+    const byNameTeam = new Map<string, number>();
+    const byName = new Map<string, number>();
+
+    for (const teamRows of roster.byTeam.values()) {
+      for (const row of teamRows) {
+        const salary = Number(row.salary);
+        if (!Number.isFinite(salary) || salary <= 0) continue;
+        if (Number.isFinite(Number(row.id))) {
+          const id = Number(row.id);
+          const prev = byId.get(id) ?? -1;
+          if (salary > prev) byId.set(id, salary);
+        }
+        const key = `${normalizePlayerName(String(row.name ?? row.rosterName ?? ""))}|${String(row.team?.shortName ?? row.rosterTeamCode ?? "").toUpperCase()}`;
+        if (key !== "|") {
+          const prev = byNameTeam.get(key) ?? -1;
+          if (salary > prev) byNameTeam.set(key, salary);
+        }
+        const nameKey = normalizePlayerName(String(row.name ?? row.rosterName ?? ""));
+        if (nameKey) {
+          const prev = byName.get(nameKey) ?? -1;
+          if (salary > prev) byName.set(nameKey, salary);
+        }
+      }
+    }
+
+    return players.map((player) => {
+      const current = Number(player.salary);
+      const byIdSalary = byId.get(Number(player.id));
+      const key = `${normalizePlayerName(String(player.name ?? ""))}|${String(player.team?.shortName ?? "").toUpperCase()}`;
+      const byNameSalary = byNameTeam.get(key);
+      const nameOnlySalary = byName.get(normalizePlayerName(String(player.name ?? "")));
+      const nextSalary = (Number.isFinite(byIdSalary) && byIdSalary! > 0)
+        ? byIdSalary
+        : (Number.isFinite(byNameSalary) && byNameSalary! > 0
+          ? byNameSalary
+          : (Number.isFinite(nameOnlySalary) && nameOnlySalary! > 0 ? nameOnlySalary : current));
+      return {
+        ...player,
+        salary: Number.isFinite(nextSalary) && Number(nextSalary) > 0 ? Number(nextSalary) : (Number.isFinite(current) ? current : null),
+      };
+    });
   }
 
   async getPlayerStats(playerId: number, saveId?: number) {
