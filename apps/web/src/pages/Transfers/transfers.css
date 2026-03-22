@@ -1,0 +1,546 @@
+﻿.transfer-page {
+  --tr-surface-1: #0b1631;
+  --tr-surface-2: #0f2042;
+  --tr-surface-3: #162b52;
+  --tr-border: rgba(117, 150, 216, 0.22);
+  --tr-text: #ecf3ff;
+  --tr-muted: #9cb3d9;
+  --tr-accent: #f7a529;
+  --tr-violet: #8d31ff;
+  --tr-green: #18dd86;
+  --tr-red: #ff6f75;
+  display: grid;
+  gap: 14px;
+  color: var(--tr-text);
+}
+
+.transfer-toast {
+  border: 1px solid var(--tr-border);
+  background: linear-gradient(180deg, rgba(24, 46, 89, 0.86), rgba(16, 34, 68, 0.9));
+  color: #dce9ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.transfer-top-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.transfer-stat-card {
+  border: 1px solid var(--tr-border);
+  background: linear-gradient(180deg, rgba(15, 30, 63, 0.96), rgba(11, 23, 49, 0.98));
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.transfer-stat-label {
+  color: var(--tr-muted);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+}
+
+.transfer-stat-value {
+  margin-top: 8px;
+  font-size: clamp(28px, 2.1vw, 36px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.transfer-stat-bar {
+  margin-top: 12px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(68, 94, 141, 0.4);
+  overflow: hidden;
+}
+
+.transfer-stat-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #1dde7f, #45eec1);
+}
+
+.transfer-stat-bar.is-blue span {
+  background: linear-gradient(90deg, #3a8fff, #52c6ff);
+}
+
+.transfer-cap-state {
+  margin-top: 8px;
+  font-size: clamp(30px, 2.3vw, 42px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.transfer-cap-state.is-good { color: var(--tr-green); }
+.transfer-cap-state.is-bad { color: var(--tr-red); }
+
+.transfer-cap-sub {
+  margin-top: 6px;
+  color: var(--tr-muted);
+  font-size: 13px;
+}
+
+.transfer-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 12px;
+  align-items: start;
+}
+
+.transfer-left,
+.transfer-right {
+  display: grid;
+  gap: 12px;
+}
+
+.transfer-right {
+  position: sticky;
+  top: 72px;
+}
+
+.transfer-filter-card,
+.transfer-market-card,
+.transfer-detail-card {
+  border: 1px solid var(--tr-border);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(14, 29, 61, 0.95), rgba(10, 22, 47, 0.98));
+  padding: 12px;
+}
+
+.transfer-search-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px;
+  align-items: center;
+  border: 1px solid rgba(95, 130, 198, 0.4);
+  border-radius: 10px;
+  background: #22365a;
+  color: #abc1e8;
+  padding: 0 10px;
+}
+
+.transfer-search-wrap span {
+  font-size: 14px;
+}
+
+.transfer-search {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #eef4ff;
+  padding: 10px 0;
+  font-size: 15px;
+  outline: none;
+}
+
+.transfer-pos-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.transfer-pos-tab {
+  border: 1px solid #365383;
+  background: #21365a;
+  color: #d3e2ff;
+  border-radius: 9px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: 120ms ease;
+}
+
+.transfer-pos-tab:hover {
+  border-color: #87aee9;
+}
+
+.transfer-pos-tab.is-active {
+  border-color: var(--tr-accent);
+  background: var(--tr-accent);
+  color: #101010;
+}
+
+.transfer-filter-meta {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--tr-muted);
+  font-size: 12px;
+}
+
+.transfer-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.transfer-market-card h3 {
+  margin: 0;
+  font-size: clamp(23px, 1.8vw, 30px);
+  line-height: 1;
+}
+
+.transfer-section-note {
+  color: var(--tr-muted);
+  font-size: 12px;
+}
+
+.transfer-player-list,
+.transfer-offers-list {
+  display: grid;
+  gap: 8px;
+}
+
+.transfer-player-row {
+  border: 1px solid rgba(95, 129, 194, 0.32);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(30, 48, 79, 0.68), rgba(21, 36, 64, 0.74));
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  color: #eaf3ff;
+  cursor: pointer;
+  transition: 130ms ease;
+}
+
+.transfer-player-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(132, 168, 236, 0.62);
+}
+
+.transfer-player-row.is-active {
+  border-color: #8d31ff;
+  box-shadow: inset 0 0 0 1px rgba(141, 49, 255, 0.28);
+}
+
+.transfer-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #f1f6ff;
+  background: linear-gradient(150deg, #2f4670, #223859);
+  border: 1px solid rgba(126, 157, 214, 0.42);
+}
+
+.transfer-avatar.big {
+  width: 62px;
+  height: 62px;
+  font-size: 24px;
+}
+
+.transfer-player-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.transfer-player-head strong {
+  font-size: clamp(18px, 1.4vw, 25px);
+  line-height: 1;
+}
+
+.transfer-player-ovr {
+  font-size: clamp(24px, 2vw, 34px);
+  font-weight: 900;
+  line-height: 1;
+  color: #cfe0ff;
+}
+
+.transfer-player-ovr.is-elite { color: #29e890; }
+.transfer-player-ovr.is-starter { color: #70baff; }
+.transfer-player-ovr.is-rotation { color: #ffbf5b; }
+
+.transfer-player-meta {
+  margin-top: 5px;
+  color: #95add4;
+  font-size: 14px;
+}
+
+.transfer-mini-stats {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  color: #9cb5dd;
+  font-size: 11px;
+}
+
+.transfer-mini-stats span b {
+  color: #fff;
+  margin-left: 3px;
+  font-size: 14px;
+}
+
+.transfer-player-price {
+  display: grid;
+  justify-items: end;
+}
+
+.transfer-player-price b {
+  font-size: clamp(18px, 1.6vw, 26px);
+  line-height: 1;
+  color: #d3e5ff;
+}
+
+.transfer-player-price small {
+  color: var(--tr-muted);
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.transfer-offer-item {
+  border: 1px solid rgba(88, 122, 187, 0.35);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(16, 31, 58, 0.78);
+  display: grid;
+  gap: 8px;
+}
+
+.transfer-offer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.transfer-offer-sub {
+  color: #92abd3;
+  font-size: 12px;
+}
+
+.transfer-proposals {
+  display: grid;
+  gap: 6px;
+}
+
+.transfer-proposal-row {
+  border: 1px solid rgba(88, 122, 187, 0.35);
+  border-radius: 8px;
+  padding: 7px;
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+}
+
+.transfer-proposal-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.transfer-detail-head {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.transfer-detail-head h3 {
+  margin: 0;
+  font-size: clamp(24px, 1.8vw, 32px);
+  line-height: 1;
+}
+
+.transfer-detail-head p {
+  margin: 6px 0 0;
+  color: #9cb4d7;
+  font-size: 14px;
+}
+
+.transfer-detail-line {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #a8bedf;
+  font-size: 13px;
+}
+
+.transfer-detail-line b {
+  color: #fff;
+}
+
+.transfer-range {
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(63, 88, 128, 0.5);
+  overflow: hidden;
+}
+
+.transfer-range span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8d31ff, #c75fff);
+}
+
+.transfer-select {
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid rgba(95, 130, 198, 0.44);
+  border-radius: 10px;
+  background: #22375d;
+  color: #f3f8ff;
+  padding: 9px 10px;
+  font-size: 14px;
+}
+
+.transfer-outgoing {
+  margin-top: 12px;
+}
+
+.transfer-outgoing h4 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.transfer-outgoing-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-height: 128px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.transfer-chip {
+  border: 1px solid rgba(88, 122, 187, 0.5);
+  background: #22385f;
+  color: #e5eeff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.transfer-chip.is-active {
+  border-color: var(--tr-accent);
+  background: rgba(247, 165, 41, 0.2);
+}
+
+.transfer-summary-box {
+  margin-top: 12px;
+  border: 1px solid rgba(88, 122, 187, 0.42);
+  border-radius: 10px;
+  background: rgba(31, 50, 82, 0.78);
+  padding: 10px;
+  display: grid;
+  gap: 7px;
+}
+
+.transfer-summary-box div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #b5cae9;
+  font-size: 13px;
+}
+
+.transfer-summary-box b {
+  color: #fff;
+}
+
+.transfer-summary-box b.is-good { color: var(--tr-green); }
+.transfer-summary-box b.is-bad { color: var(--tr-red); }
+
+.transfer-likelihood-bar {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(71, 92, 130, 0.45);
+  overflow: hidden;
+}
+
+.transfer-likelihood-bar span {
+  display: block;
+  height: 100%;
+  width: 52%;
+}
+
+.transfer-likelihood-bar span.is-high {
+  width: 84%;
+  background: linear-gradient(90deg, #19dc83, #36f5a2);
+}
+
+.transfer-likelihood-bar span.is-medium {
+  width: 58%;
+  background: linear-gradient(90deg, #f2aa2f, #ffd277);
+}
+
+.transfer-likelihood-bar span.is-low {
+  width: 30%;
+  background: linear-gradient(90deg, #ff7078, #ffa08f);
+}
+
+.transfer-submit {
+  margin-top: 12px;
+  width: 100%;
+  border: 0;
+  border-radius: 11px;
+  padding: 11px 14px;
+  background: linear-gradient(180deg, #a72bff, #8416e9);
+  color: #fff;
+  font-size: clamp(20px, 1.6vw, 26px);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.transfer-submit:hover {
+  filter: brightness(1.05);
+}
+
+.transfer-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1200px) {
+  .transfer-top-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .transfer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .transfer-right {
+    position: static;
+  }
+
+  .transfer-mini-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .transfer-player-row {
+    grid-template-columns: 44px 1fr;
+  }
+
+  .transfer-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 17px;
+  }
+
+  .transfer-player-price {
+    grid-column: 2;
+    justify-items: start;
+  }
+}
