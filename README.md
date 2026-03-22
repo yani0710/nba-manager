@@ -97,9 +97,9 @@ npm run dev
 
 ## Ежедневно пускане след първата инсталация
 
-```powershell
 npm run db:up
 npm run dev
+```powershell
 ```
 
 Спиране на базата:

@@ -15,7 +15,29 @@ function clamp01(value) {
   return Math.max(0.05, Math.min(0.95, value));
 }
 
-export function CourtBoard({ players = [], board = {}, onBoardChange }) {
+function toDisplayCoord(view, slot) {
+  const x = clamp01(slot?.x ?? 0.5);
+  const y = clamp01(slot?.y ?? 0.5);
+  if (view === 'defense') {
+    return { x, y: clamp01(1 - y) };
+  }
+  if (view === 'transition') {
+    return { x, y: clamp01((y * 0.82) + 0.09) };
+  }
+  return { x, y };
+}
+
+function toStorageCoord(view, x, y) {
+  if (view === 'defense') {
+    return { x, y: clamp01(1 - y) };
+  }
+  if (view === 'transition') {
+    return { x, y: clamp01((y - 0.09) / 0.82) };
+  }
+  return { x, y };
+}
+
+export function CourtBoard({ players = [], board = {}, onBoardChange, view = 'attack' }) {
   const rootRef = useRef(null);
   const [dragPos, setDragPos] = useState(() => ({ ...DEFAULT_BOARD, ...(board || {}) }));
   const [dragging, setDragging] = useState(null);
@@ -32,8 +54,9 @@ export function CourtBoard({ players = [], board = {}, onBoardChange }) {
     const onMove = (event) => {
       if (!rootRef.current) return;
       const rect = rootRef.current.getBoundingClientRect();
-      const x = clamp01((event.clientX - rect.left) / rect.width);
-      const y = clamp01((event.clientY - rect.top) / rect.height);
+      const rawX = clamp01((event.clientX - rect.left) / rect.width);
+      const rawY = clamp01((event.clientY - rect.top) / rect.height);
+      const { x, y } = toStorageCoord(view, rawX, rawY);
 
       setDragPos((prev) => {
         const next = {
@@ -57,7 +80,7 @@ export function CourtBoard({ players = [], board = {}, onBoardChange }) {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [dragging, onBoardChange]);
+  }, [dragging, onBoardChange, view]);
 
   const assignPlayer = (position, playerId) => {
     setDragPos((prev) => {
@@ -75,22 +98,36 @@ export function CourtBoard({ players = [], board = {}, onBoardChange }) {
 
   return (
     <div className="court-board-wrap">
-      <div ref={rootRef} className="court-board">
-        <div className="court-key" />
-        <div className="court-rim" />
-        <div className="court-arc" />
-        <div className="court-three" />
+      <div ref={rootRef} className={`court-board court-board-${view}`}>
+        {view === 'transition' ? (
+          <>
+            <div className="court-mid-line" />
+            <div className="court-mid-circle" />
+            <div className="court-key-top" />
+            <div className="court-key-bottom" />
+            <div className="court-rim-top" />
+            <div className="court-rim-bottom" />
+          </>
+        ) : (
+          <>
+            <div className="court-key" />
+            <div className="court-rim" />
+            <div className="court-arc" />
+            <div className="court-three" />
+          </>
+        )}
 
         {POSITIONS.map((position) => {
           const slot = dragPos[position] || DEFAULT_BOARD[position];
+          const ui = toDisplayCoord(view, slot);
           const player = slot.playerId ? playerMap.get(slot.playerId) : null;
           return (
             <button
               key={position}
               className="court-token"
               style={{
-                left: `${(slot.x || 0.5) * 100}%`,
-                top: `${(slot.y || 0.5) * 100}%`,
+                left: `${(ui.x || 0.5) * 100}%`,
+                top: `${(ui.y || 0.5) * 100}%`,
               }}
               onMouseDown={() => setDragging(position)}
               type="button"

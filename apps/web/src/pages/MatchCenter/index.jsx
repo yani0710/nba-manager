@@ -13,11 +13,6 @@ function getCurrentDateKey(save) {
   return String(save?.data?.currentDate || '').slice(0, 10);
 }
 
-function getFixtureDateKeyUtc(dateValue) {
-  if (!dateValue) return null;
-  return new Date(dateValue).toISOString().slice(0, 10);
-}
-
 export function MatchCenter() {
   const SIM_TICK_MS = 160;
   const { currentSave, scheduleGames, fetchSchedule, advanceSave } = useGameStore();
@@ -46,7 +41,7 @@ export function MatchCenter() {
 
   const selectedGame = upcomingGames.find((g) => g.id === selectedGameId) || null;
   const currentDate = getCurrentDateKey(currentSave);
-  const selectedGameDay = selectedGame?.gameDate ? getFixtureDateKeyUtc(selectedGame.gameDate) : null;
+  const selectedGameDay = selectedGame?.gameDate ? getFixtureDateKeyEt(selectedGame.gameDate) : null;
   // Match Center sim should only run for the active in-game day to avoid multi-day jumps.
   const canSimulateSelected = Boolean(
     selectedGame
@@ -153,10 +148,13 @@ export function MatchCenter() {
       const stateAfterAdvance = useGameStore.getState();
       const latestResults = stateAfterAdvance.results || [];
       const latestSchedule = stateAfterAdvance.scheduleGames || [];
-      const resolved = latestResults.find((g) => g.id === simGame.id)
-        || latestSchedule.find((g) => g.id === simGame.id);
-      if (!resolved) {
-        setEvents((prev) => ['Could not resolve this game result. Try again.', ...prev].slice(0, 16));
+      const resolvedFromResults = latestResults.find((g) => g.id === simGame.id);
+      const resolvedFromSchedule = latestSchedule.find((g) => g.id === simGame.id && isFixtureCompleted(g));
+      const resolved = resolvedFromResults || resolvedFromSchedule;
+      if (!resolved || !isFixtureCompleted(resolved)) {
+        setEvents((prev) => ['Game was not resolved for this day. Check selected game day and try again.', ...prev].slice(0, 16));
+        setMinute(0);
+        setLiveScore({ home: 0, away: 0 });
         return;
       }
 
@@ -262,7 +260,7 @@ export function MatchCenter() {
                   <div style={{ color: 'var(--ui-text-muted)' }}>{formatFixtureDateTime(panelGame.gameDate)}</div>
                   {!canSimulateSelected ? (
                     <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>
-                      You can simulate only today&apos;s game day. Selected: {getFixtureDateKeyUtc(panelGame.gameDate)} | Current: {currentDate || 'N/A'}.
+                      You can simulate only today&apos;s game day. Selected: {getFixtureDateKeyEt(panelGame.gameDate)} | Current: {currentDate || 'N/A'}.
                     </div>
                   ) : null}
                 </div>

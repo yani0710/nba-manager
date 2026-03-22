@@ -13,6 +13,15 @@ const fixtureCsvLoader_1 = require("../fixtures/fixtureCsvLoader");
 const gameweekCalendar_1 = require("../fixtures/gameweekCalendar");
 const fixtureStatus_1 = require("../fixtures/fixtureStatus");
 const fixtureModel_1 = require("../fixtures/fixtureModel");
+const ET_TIMEZONE = "America/New_York";
+function getDateKeyEt(dateValue) {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: ET_TIMEZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(dateValue);
+}
 class SavesService {
     constructor() {
         this.tradesService = new trades_service_1.TradesService();
@@ -230,19 +239,18 @@ class SavesService {
         const save = await this.getSaveById(id);
         const currentData = (save.data ?? {});
         const currentDate = new Date(currentData.currentDate ?? save.currentDate.toISOString().slice(0, 10));
-        const dateStart = new Date(`${currentDate.toISOString().slice(0, 10)}T00:00:00.000Z`);
-        const dateEnd = new Date(`${currentDate.toISOString().slice(0, 10)}T23:59:59.999Z`);
-        const todaysGames = await prisma_1.default.game.findMany({
+        const currentDateEtKey = String(currentData.currentDate ?? currentDate.toISOString().slice(0, 10));
+        const dayCandidates = await prisma_1.default.game.findMany({
             where: {
                 saveId: save.id,
                 status: { in: fixtureStatus_1.SIMULATABLE_GAME_STATUSES },
-                gameDate: { gte: dateStart, lte: dateEnd },
             },
             include: {
                 homeTeam: { include: { players: true } },
                 awayTeam: { include: { players: true } },
             },
         });
+        const todaysGames = dayCandidates.filter((game) => getDateKeyEt(game.gameDate) === currentDateEtKey);
         currentData.playerState = currentData.playerState ?? {};
         currentData.teamState = currentData.teamState ?? {};
         const activePlayers = await prisma_1.default.player.findMany({

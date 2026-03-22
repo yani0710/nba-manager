@@ -15,6 +15,93 @@
   overflow: hidden;
 }
 
+.court-board-defense .court-key {
+  top: auto;
+  bottom: 0;
+  border-top: 2px solid rgba(255, 255, 255, 0.85);
+  border-bottom: 0;
+}
+
+.court-board-defense .court-rim {
+  top: auto;
+  bottom: 6%;
+}
+
+.court-board-defense .court-arc {
+  top: auto;
+  bottom: 11%;
+}
+
+.court-board-defense .court-three {
+  top: auto;
+  bottom: 0;
+  border-top: 2px solid rgba(255, 255, 255, 0.82);
+  border-bottom: 0;
+  border-radius: 45% 45% 0 0;
+}
+
+.court-board-transition {
+  background: linear-gradient(180deg, #cc9358, #bf8041);
+}
+
+.court-mid-line {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  border-top: 2px solid rgba(255, 255, 255, 0.78);
+}
+
+.court-mid-circle {
+  position: absolute;
+  left: 43%;
+  top: 41%;
+  width: 14%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  border-radius: 50%;
+}
+
+.court-key-top {
+  position: absolute;
+  left: 35%;
+  top: 0;
+  width: 30%;
+  height: 26%;
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  border-top: 0;
+}
+
+.court-key-bottom {
+  position: absolute;
+  left: 35%;
+  bottom: 0;
+  width: 30%;
+  height: 26%;
+  border: 2px solid rgba(255, 255, 255, 0.84);
+  border-bottom: 0;
+}
+
+.court-rim-top {
+  position: absolute;
+  left: 48.5%;
+  top: 6%;
+  width: 3%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid #ff4f4f;
+  border-radius: 50%;
+}
+
+.court-rim-bottom {
+  position: absolute;
+  left: 48.5%;
+  bottom: 6%;
+  width: 3%;
+  aspect-ratio: 1 / 1;
+  border: 2px solid #ff4f4f;
+  border-radius: 50%;
+}
+
 .court-key {
   position: absolute;
   left: 35%;

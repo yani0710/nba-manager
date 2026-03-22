@@ -175,6 +175,17 @@ type StandingsRow = {
   streak: string;
 };
 
+const ET_TIMEZONE = "America/New_York";
+
+function getDateKeyEt(dateValue: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ET_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(dateValue);
+}
+
 export class SavesService {
   private tradesService = new TradesService();
 
@@ -407,20 +418,19 @@ export class SavesService {
     const currentData = (save.data ?? {}) as SavePayload;
 
     const currentDate = new Date(currentData.currentDate ?? save.currentDate.toISOString().slice(0, 10));
-    const dateStart = new Date(`${currentDate.toISOString().slice(0, 10)}T00:00:00.000Z`);
-    const dateEnd = new Date(`${currentDate.toISOString().slice(0, 10)}T23:59:59.999Z`);
+    const currentDateEtKey = String(currentData.currentDate ?? currentDate.toISOString().slice(0, 10));
 
-    const todaysGames = await prisma.game.findMany({
+    const dayCandidates = await prisma.game.findMany({
       where: {
         saveId: save.id,
         status: { in: SIMULATABLE_GAME_STATUSES },
-        gameDate: { gte: dateStart, lte: dateEnd },
       },
       include: {
         homeTeam: { include: { players: true } },
         awayTeam: { include: { players: true } },
       },
     });
+    const todaysGames = dayCandidates.filter((game) => getDateKeyEt(game.gameDate) === currentDateEtKey);
 
     currentData.playerState = currentData.playerState ?? {};
     currentData.teamState = currentData.teamState ?? {};

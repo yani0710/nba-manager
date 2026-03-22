@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import { api } from '../../api/client';
-import { EmptyState, PageHeader, SkeletonCard } from '../../components/ui';
+import { EmptyState, SkeletonCard } from '../../components/ui';
 import {
   formatFixtureDate,
   formatFixtureStatus,
   getFixtureDateKeyEt,
   isFixtureCompleted,
+  isFixtureSimulatable,
 } from '../../domain/fixtures';
 import './Schedule.css';
 
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const CALENDAR_TABS = ['Calendar', 'Social Media', 'Trading Block', 'Team Status'];
 
 const logoPath = (team) => {
   const short = (team?.shortName || '').toLowerCase();
@@ -37,9 +38,36 @@ function buildSeasonMonthKeys(season) {
   return out;
 }
 
+function formatTopDate(dateValue) {
+  if (!dateValue) return 'NO DATE';
+  const date = new Date(`${dateValue}T12:00:00Z`);
+  return date.toLocaleDateString(undefined, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).toUpperCase();
+}
+
+function gameSummaryForTeam(game, teamShort) {
+  if (!game || !teamShort) return null;
+  const short = String(teamShort).toUpperCase();
+  const homeShort = String(game.homeTeam?.shortName || '').toUpperCase();
+  const awayShort = String(game.awayTeam?.shortName || '').toUpperCase();
+  if (homeShort !== short && awayShort !== short) return null;
+
+  const isHome = homeShort === short;
+  const opponent = isHome ? game.awayTeam : game.homeTeam;
+  return {
+    team: isHome ? game.homeTeam : game.awayTeam,
+    opponent,
+    isHome,
+  };
+}
+
 export function Schedule() {
   const { currentSave, scheduleGames, fetchSchedule, loading, advanceDays, loadSave } = useGameStore();
   const [monthCursor, setMonthCursor] = useState(null);
+  const [selectedDateKey, setSelectedDateKey] = useState(null);
   const [skipProgress, setSkipProgress] = useState(null);
 
   useEffect(() => {
@@ -80,38 +108,56 @@ export function Schedule() {
     }
   }, [availableMonths, monthCursor, currentSave?.data?.currentDate]);
 
+  const currentDateKey = currentSave?.data?.currentDate ?? null;
+
+  useEffect(() => {
+    if (selectedDateKey) return;
+    if (currentDateKey) {
+      setSelectedDateKey(currentDateKey);
+      return;
+    }
+    if (scheduleGames.length > 0) {
+      const first = getFixtureDateKeyEt(scheduleGames[0].gameDate);
+      if (first) setSelectedDateKey(first);
+    }
+  }, [selectedDateKey, currentDateKey, scheduleGames]);
+
   if (!currentSave?.data?.career?.teamShortName) {
     return (
       <div className="calendar-page">
-        <PageHeader title="Schedule" subtitle="Calendar and matchday skipping tools." />
         <EmptyState title="No team selected" description="Start a career with a team to view the schedule calendar." />
       </div>
     );
   }
 
   if (loading) return <SkeletonCard />;
-  if (!monthCursor) return <div className="calendar-page"><PageHeader title="Schedule" subtitle="Calendar and matchday skipping tools." /><EmptyState title="No games scheduled" description="No calendar games are available yet." /></div>;
+  if (!monthCursor) {
+    return (
+      <div className="calendar-page">
+        <EmptyState title="No games scheduled" description="No calendar games are available yet." />
+      </div>
+    );
+  }
 
   const [yearStr, monthStr] = monthCursor.split('-');
   const year = Number(yearStr);
   const month = Number(monthStr) - 1;
-  const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startOffset = firstDay.getDay();
 
   const cells = [];
-  for (let i = 0; i < startOffset; i += 1) cells.push(null);
   for (let d = 1; d <= daysInMonth; d += 1) cells.push(new Date(year, month, d));
-  while (cells.length % 7 !== 0) cells.push(null);
 
   const monthIndex = availableMonths.indexOf(monthCursor);
   const nextMonth = monthIndex >= 0 && monthIndex < availableMonths.length - 1 ? availableMonths[monthIndex + 1] : null;
   const prevMonth = monthIndex > 0 ? availableMonths[monthIndex - 1] : null;
 
-  const currentDate = currentSave?.data?.currentDate ?? null;
-  const currentDateKey = currentDate || null;
+  const teamShort = String(currentSave.data.career.teamShortName || '').toUpperCase();
+  const seasonLabel = currentSave?.data?.season || '-';
 
-  const highlightedDayGames = currentDateKey ? (byDay.get(currentDateKey) ?? []) : [];
+  const selectedGames = selectedDateKey ? (byDay.get(selectedDateKey) ?? []) : [];
+  const selectedTeamGame = selectedGames.find((g) => gameSummaryForTeam(g, teamShort));
+  const selectedGameSummary = gameSummaryForTeam(selectedTeamGame, teamShort);
+
   const nextMatchDateKey = scheduleGames
     .filter((g) => !isFixtureCompleted(g))
     .map((g) => getFixtureDateKeyEt(g.gameDate))
@@ -122,11 +168,15 @@ export function Schedule() {
     const saveId = currentSave?.id;
     if (!saveId || !nextMatchDateKey) return;
     const targetDate = nextMatchDateKey;
-    setSkipProgress({ label: 'Skipping to next matchday...', value: 15, targetDate });
+    setSkipProgress({ label: 'Skipping to next match day...', value: 20, targetDate });
     try {
       const { data } = await api.saves.advance(saveId, { targetDate });
       setSkipProgress({ label: `Reached ${targetDate}`, value: 100, targetDate });
       await loadSave(data.id);
+      setSelectedDateKey(targetDate);
+      if (String(targetDate).slice(0, 7) !== monthCursor) {
+        setMonthCursor(String(targetDate).slice(0, 7));
+      }
     } catch {
       setSkipProgress({ label: 'Failed to skip', value: 100, targetDate });
     } finally {
@@ -135,82 +185,121 @@ export function Schedule() {
   };
 
   return (
-    <div className="calendar-page">
-      <PageHeader title={`Schedule - ${currentSave.data.career.teamShortName}`} subtitle="Browse the season calendar and jump to the next matchday." />
-      <div className="calendar-toolbar">
-        <div className="calendar-actions">
-          <button className="calendar-btn" onClick={() => advanceDays(1)}>Skip 1 Day</button>
-          <button className="calendar-btn" onClick={() => advanceDays(3)}>Skip 3 Days</button>
-          <button className="calendar-btn" onClick={() => advanceDays(7)}>Skip 7 Days</button>
-          <button className="calendar-btn" disabled={!nextMatchDateKey} onClick={skipToNextMatchday}>Skip to Next Matchday</button>
+    <div className="calendar-page calendar-cinematic">
+      <header className="calendar-hero">
+        <div>
+          <h1>Calendar</h1>
+          <p>Schedule your season, skip to match days.</p>
         </div>
+        <div className="calendar-hero-meta">
+          <div className="calendar-hero-date">{formatTopDate(currentDateKey || selectedDateKey)}</div>
+          <div className="calendar-hero-team">{teamShort} • Season {seasonLabel}</div>
+        </div>
+      </header>
+
+      <div className="calendar-tabbar" role="tablist" aria-label="Sections">
+        {CALENDAR_TABS.map((tab, idx) => (
+          <button key={tab} className={`calendar-tab ${idx === 0 ? 'is-active' : ''}`} type="button" disabled={idx !== 0}>
+            {tab}
+          </button>
+        ))}
       </div>
-      {skipProgress && (
+
+      {skipProgress ? (
         <div className="calendar-progress">
           <div className="calendar-progress-label">{skipProgress.label}</div>
           <div className="calendar-progress-bar"><span style={{ width: `${skipProgress.value}%` }} /></div>
         </div>
-      )}
+      ) : null}
 
       <div className="calendar-shell">
-        <div className="calendar-main">
+        <section className="calendar-main">
           <div className="calendar-month-header">
-            <button className="calendar-nav" disabled={!prevMonth} onClick={() => prevMonth && setMonthCursor(prevMonth)}>Prev</button>
-            <h3>{monthLabel(year, month)}</h3>
-            <button className="calendar-nav" disabled={!nextMonth} onClick={() => nextMonth && setMonthCursor(nextMonth)}>Next</button>
+            <button className="calendar-nav" disabled={!prevMonth} onClick={() => prevMonth && setMonthCursor(prevMonth)}>
+              <span aria-hidden="true">&lt;</span> Previous Month
+            </button>
+            <h2>{monthLabel(year, month)}</h2>
+            <button className="calendar-nav" disabled={!nextMonth} onClick={() => nextMonth && setMonthCursor(nextMonth)}>
+              Next Month <span aria-hidden="true">&gt;</span>
+            </button>
           </div>
 
           <div className="calendar-grid">
-            {WEEK_DAYS.map((day) => (
-              <div key={day} className="calendar-weekday">{day}</div>
-            ))}
-            {cells.map((date, idx) => {
-              if (!date) return <div key={`empty-${idx}`} className="calendar-cell empty" />;
+            {cells.map((date) => {
               const key = dateKey(date);
               const games = byDay.get(key) ?? [];
+              const teamGame = games.find((g) => gameSummaryForTeam(g, teamShort));
+              const summary = gameSummaryForTeam(teamGame, teamShort);
               const isToday = currentDateKey === key;
-              const hasFinal = games.some((g) => isFixtureCompleted(g));
+              const isSelected = selectedDateKey === key;
               const hasScheduled = games.some((g) => !isFixtureCompleted(g));
+
               return (
-                <div key={key} className={`calendar-cell ${isToday ? 'today' : ''} ${hasFinal ? 'final' : ''} ${hasScheduled ? 'scheduled' : ''}`}>
-                  <div className="calendar-day-number">{date.getDate()}</div>
-                  <div className="calendar-day-games">
-                    {games.slice(0, 2).map((game) => (
-                      <div key={game.id} className="calendar-game-row">
-                        <img src={logoPath(game.awayTeam)} alt={game.awayTeam.shortName} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                        <span>{game.awayTeam.shortName}@{game.homeTeam.shortName}</span>
-                      </div>
-                    ))}
-                    {games.length > 2 ? <small>+{games.length - 2} more</small> : null}
+                <button
+                  key={key}
+                  type="button"
+                  className={`calendar-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${hasScheduled ? 'scheduled' : ''}`}
+                  onClick={() => setSelectedDateKey(key)}
+                >
+                  <div className="calendar-day-heading">
+                    <span>{new Date(date).toLocaleDateString(undefined, { month: 'short' }).toUpperCase()}</span>
+                    <span>{date.getDate()}</span>
                   </div>
-                </div>
+
+                  {summary ? (
+                    <div className="calendar-opponent-badge">
+                      <img src={logoPath(summary.opponent)} alt={summary.opponent?.shortName || 'Opponent'} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      <strong>{summary.opponent?.shortName || '-'}</strong>
+                    </div>
+                  ) : (
+                    <div className="calendar-empty-slot">No Team Game</div>
+                  )}
+
+                  <div className="calendar-day-footer">
+                    {summary ? (summary.isHome ? 'Home' : 'Away') : (games.length > 0 ? `${games.length} games` : '-')}
+                  </div>
+                </button>
               );
             })}
           </div>
-        </div>
+        </section>
 
         <aside className="calendar-side">
-          <h3>{currentDateKey ? formatFixtureDate(`${currentDateKey}T12:00:00Z`) : 'Current Day'}</h3>
-          <p className="calendar-side-subtitle">Upcoming / Current Day Games</p>
-          <div className="calendar-side-list">
-            {highlightedDayGames.length === 0 && <p>No games for this day.</p>}
-            {highlightedDayGames.map((game) => (
-              <div key={game.id} className="calendar-side-item">
-                <div className="teams">
-                  <img src={logoPath(game.awayTeam)} alt={game.awayTeam.shortName} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  <span>{game.awayTeam.shortName} @ {game.homeTeam.shortName}</span>
-                  <img src={logoPath(game.homeTeam)} alt={game.homeTeam.shortName} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                </div>
-                <small>{isFixtureCompleted(game) ? `${game.awayScore}-${game.homeScore}` : formatFixtureStatus(game.status)}</small>
+          <div className="calendar-side-card">
+            <h3>{selectedDateKey ? formatFixtureDate(`${selectedDateKey}T12:00:00Z`) : 'Select Date'}</h3>
+            {selectedGameSummary ? (
+              <div className="calendar-matchup-box">
+                <div className="team-dot is-home">{selectedGameSummary.isHome ? teamShort : selectedGameSummary.opponent?.shortName}</div>
+                <span>VS</span>
+                <div className="team-dot is-away">{selectedGameSummary.isHome ? selectedGameSummary.opponent?.shortName : teamShort}</div>
               </div>
-            ))}
+            ) : (
+              <p className="calendar-side-subtitle">No game for your team on this date.</p>
+            )}
+
+            {selectedTeamGame ? (
+              <p className="calendar-side-subtitle">
+                {selectedGameSummary?.isHome ? 'Home Game' : 'Away Game'} • {isFixtureCompleted(selectedTeamGame)
+                  ? `${selectedTeamGame.awayScore}-${selectedTeamGame.homeScore}`
+                  : formatFixtureStatus(selectedTeamGame.status)}
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              className="calendar-play-btn"
+              disabled={!selectedTeamGame || !isFixtureSimulatable(selectedTeamGame, currentDateKey)}
+              onClick={() => { window.location.hash = 'match-center'; }}
+            >
+              Play Match
+            </button>
           </div>
 
-          <div className="calendar-rules">
-            <h4>Schedule Rules</h4>
-            <p>Before Match: Rest Day</p>
-            <p>After Match: Recovery Day</p>
-            <p>Week Plan: Intermittent Rest</p>
+          <div className="calendar-side-card">
+            <h4>Quick Actions</h4>
+            <button type="button" className="calendar-quick primary" onClick={skipToNextMatchday} disabled={!nextMatchDateKey}>Skip to Next Match</button>
+            <button type="button" className="calendar-quick" onClick={() => advanceDays(1)}>Advance 1 Day</button>
+            <button type="button" className="calendar-quick" onClick={() => advanceDays(7)}>Advance 1 Week</button>
           </div>
         </aside>
       </div>
