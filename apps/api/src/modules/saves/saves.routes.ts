@@ -21,6 +21,7 @@ router.post("/:id/rotation", (req, res, next) => controller.saveRotation(req, re
 router.post("/:id/tactics", (req, res, next) => controller.saveTactics(req, res, next));
 router.get("/:id/training", (req, res, next) => controller.getTraining(req, res, next));
 router.post("/:id/training", (req, res, next) => controller.saveTraining(req, res, next));
+router.post("/:id/roster-management", (req, res, next) => controller.saveRosterManagement(req, res, next));
 router.get("/:id/training/players", (req, res, next) => controller.getPlayerTrainingPlans(req, res, next));
 router.post("/:id/training/players", (req, res, next) => controller.upsertPlayerTrainingPlan(req, res, next));
 router.delete("/:id/training/players/:playerId", (req, res, next) => controller.deletePlayerTrainingPlan(req, res, next));

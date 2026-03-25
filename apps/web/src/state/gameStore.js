@@ -376,6 +376,20 @@ export const useGameStore = create((set, get) => ({
     set({ currentSave: data });
   },
 
+  saveRosterManagement: async (payload) => {
+    const save = get().currentSave;
+    if (!save) return null;
+    try {
+      const { data } = await api.saves.saveRosterManagement(save.id, payload);
+      const { data: refreshed } = await api.saves.getById(save.id);
+      set({ currentSave: refreshed, error: null });
+      return data;
+    } catch (error) {
+      set({ error: error.message });
+      throw error;
+    }
+  },
+
   fetchTrainingConfig: async () => {
     const save = get().currentSave;
     if (!save) return null;

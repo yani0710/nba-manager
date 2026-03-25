@@ -30,7 +30,10 @@ export declare class TeamsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        form: number;
+        morale: number;
         shortName: string;
+        nbaTeamId: number | null;
         city: string;
         conference: string | null;
         division: string | null;
@@ -38,9 +41,6 @@ export declare class TeamsService {
         secondaryColor: string | null;
         logoKey: string | null;
         logoPath: string | null;
-        form: number;
-        morale: number;
-        nbaTeamId: number | null;
     }[]>;
     getTeamById(id: number, saveId?: number): Promise<{
         players: any[];
@@ -73,7 +73,10 @@ export declare class TeamsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        form: number;
+        morale: number;
         shortName: string;
+        nbaTeamId: number | null;
         city: string;
         conference: string | null;
         division: string | null;
@@ -81,9 +84,6 @@ export declare class TeamsService {
         secondaryColor: string | null;
         logoKey: string | null;
         logoPath: string | null;
-        form: number;
-        morale: number;
-        nbaTeamId: number | null;
     } | null>;
     getTeamByName(name: string, saveId?: number): Promise<{
         players: any[];
@@ -92,7 +92,10 @@ export declare class TeamsService {
         name: string;
         createdAt: Date;
         updatedAt: Date;
+        form: number;
+        morale: number;
         shortName: string;
+        nbaTeamId: number | null;
         city: string;
         conference: string | null;
         division: string | null;
@@ -100,9 +103,6 @@ export declare class TeamsService {
         secondaryColor: string | null;
         logoKey: string | null;
         logoPath: string | null;
-        form: number;
-        morale: number;
-        nbaTeamId: number | null;
     } | null>;
     getRosterByTeamId(id: number, saveId?: number): Promise<{
         id: number;
@@ -126,7 +126,8 @@ export declare class TeamsService {
             defenseRating: number;
         };
     } | null>;
-    private buildRosterOverridesByTeam;
+    private resolveSalary;
+    private buildRosterByTeamId;
     private attachTeamState;
     private readSingleTeamState;
 }

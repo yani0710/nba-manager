@@ -4,6 +4,17 @@ import { TradesController } from "./trades.controller";
 const router = Router();
 const controller = new TradesController();
 
+router.get("/cap-summary", (req, res, next) => controller.getCapSummary(req, res, next));
+router.get("/contract-offers", (req, res, next) => controller.listContractOffers(req, res, next));
+router.post("/contract-offers", (req, res, next) => controller.submitContractOffer(req, res, next));
+router.post("/contract-offers/:offerId/withdraw", (req, res, next) => controller.withdrawContractOffer(req, res, next));
+router.get("/trade-proposals", (req, res, next) => controller.listTradeProposals(req, res, next));
+router.post("/trade-proposals", (req, res, next) => controller.submitTradeProposal(req, res, next));
+router.post("/trade-proposals/:proposalId/withdraw", (req, res, next) => controller.withdrawTradeProposal(req, res, next));
+router.get("/negotiations", (req, res, next) => controller.listNegotiationEvents(req, res, next));
+router.get("/history", (req, res, next) => controller.listTransactionHistory(req, res, next));
+router.get("/free-agents", (req, res, next) => controller.listFreeAgents(req, res, next));
+router.post("/free-agents/:playerId/sign", (req, res, next) => controller.signFreeAgent(req, res, next));
 router.get("/", (req, res, next) => controller.list(req, res, next));
 router.post("/", (req, res, next) => controller.create(req, res, next));
 router.post("/:id/send", (req, res, next) => controller.send(req, res, next));

@@ -142,6 +142,12 @@ type SavePayload = {
             status: "COMPLETED";
         }>;
     };
+    rosterManagement?: {
+        tradeBlockPlayerIds?: number[];
+        developmentLeaguePlayerIds?: number[];
+        comparePlayerIds?: number[];
+        playerRoles?: Record<string, string>;
+    };
 };
 type StandingsRow = {
     teamId: number;
@@ -161,13 +167,13 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
-        description: string | null;
+        teamId: number | null;
         createdAt: Date;
         updatedAt: Date;
+        season: string;
+        description: string | null;
         coachProfileId: number | null;
         currentDate: Date;
-        season: string;
-        teamId: number | null;
         managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
@@ -180,7 +186,10 @@ export declare class SavesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -188,9 +197,6 @@ export declare class SavesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
@@ -206,13 +212,13 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
-        description: string | null;
+        teamId: number | null;
         createdAt: Date;
         updatedAt: Date;
+        season: string;
+        description: string | null;
         coachProfileId: number | null;
         currentDate: Date;
-        season: string;
-        teamId: number | null;
         managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
@@ -232,13 +238,13 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
-        description: string | null;
+        teamId: number | null;
         createdAt: Date;
         updatedAt: Date;
+        season: string;
+        description: string | null;
         coachProfileId: number | null;
         currentDate: Date;
-        season: string;
-        teamId: number | null;
         managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
@@ -261,7 +267,10 @@ export declare class SavesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -269,9 +278,6 @@ export declare class SavesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
@@ -429,6 +435,12 @@ export declare class SavesService {
                     status: "COMPLETED";
                 }>;
             };
+            rosterManagement?: {
+                tradeBlockPlayerIds?: number[];
+                developmentLeaguePlayerIds?: number[];
+                comparePlayerIds?: number[];
+                playerRoles?: Record<string, string>;
+            };
         };
         createdAt: Date;
         updatedAt: Date;
@@ -439,7 +451,10 @@ export declare class SavesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -447,9 +462,6 @@ export declare class SavesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
@@ -465,13 +477,13 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
-        description: string | null;
+        teamId: number | null;
         createdAt: Date;
         updatedAt: Date;
+        season: string;
+        description: string | null;
         coachProfileId: number | null;
         currentDate: Date;
-        season: string;
-        teamId: number | null;
         managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
@@ -479,13 +491,17 @@ export declare class SavesService {
         version: number;
     }>;
     private getSeasonDay;
+    private applyWeeklyFreeAgentOverallDecay;
     advanceSaveToDate(id: number, targetDate: string, includeTargetDay?: boolean): Promise<{
         team: {
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -493,9 +509,6 @@ export declare class SavesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         } | null;
         coachProfile: {
             id: number;
@@ -511,13 +524,13 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
-        description: string | null;
+        teamId: number | null;
         createdAt: Date;
         updatedAt: Date;
+        season: string;
+        description: string | null;
         coachProfileId: number | null;
         currentDate: Date;
-        season: string;
-        teamId: number | null;
         managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
@@ -528,13 +541,13 @@ export declare class SavesService {
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
         name: string;
-        description: string | null;
+        teamId: number | null;
         createdAt: Date;
         updatedAt: Date;
+        season: string;
+        description: string | null;
         coachProfileId: number | null;
         currentDate: Date;
-        season: string;
-        teamId: number | null;
         managedTeamId: number | null;
         coachName: string | null;
         coachAvatarId: string | null;
@@ -575,7 +588,10 @@ export declare class SavesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -583,16 +599,16 @@ export declare class SavesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
         awayTeam: {
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -600,9 +616,6 @@ export declare class SavesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
         homeScore: number;
         awayScore: number;
@@ -808,6 +821,20 @@ export declare class SavesService {
             }>;
         };
     }>;
+    saveRosterManagement(saveId: number, payload: {
+        tradeBlockPlayerIds?: number[];
+        developmentLeaguePlayerIds?: number[];
+        comparePlayerIds?: number[];
+        playerRoles?: Record<string, string>;
+    }): Promise<{
+        success: boolean;
+        rosterManagement: {
+            tradeBlockPlayerIds?: number[];
+            developmentLeaguePlayerIds?: number[];
+            comparePlayerIds?: number[];
+            playerRoles?: Record<string, string>;
+        };
+    }>;
     getTrainingConfig(saveId: number): Promise<{
         success: boolean;
         trainingPlan: {
@@ -883,8 +910,8 @@ export declare class SavesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            saveId: number;
             playerId: number;
+            saveId: number;
             intensity: string;
             focus: string;
             dayPlan: import("@prisma/client/runtime/library").JsonValue | null;

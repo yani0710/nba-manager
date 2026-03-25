@@ -1,318 +1,440 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { EmptyState, PageHeader } from '../../components/ui';
 import { useGameStore } from '../../state/gameStore';
+import { getFixtureDateKeyEt, isFixtureCompleted, isFixtureSimulatable } from '../../domain/fixtures';
+import { buildAdvice, formatClock, getLineupByPosition, quarterLabel } from './matchSimUtils';
 import {
-  formatFixtureDateTime,
-  formatFixtureStatus,
-  getFixtureDateKeyEt,
-  isFixtureCompleted,
-  isFixtureSimulatable,
-} from '../../domain/fixtures';
+  advanceSimulationSecond,
+  applyOfficialResultToState,
+  createMatchState,
+  deriveTopPerformers,
+  getConsistencySnapshot,
+  playOnePossession,
+  playUntilQuarterEnd,
+} from './matchSimulationEngine';
+import './match-center.css';
 
-function getCurrentDateKey(save) {
-  return String(save?.data?.currentDate || '').slice(0, 10);
+function logoFor(team) {
+  const short = (team?.shortName || '').toLowerCase();
+  return team?.logoPath || `/images/teams/${short}.png`;
+}
+
+function pct(made, att) {
+  if (!att) return 0;
+  return Number(((Number(made || 0) / Number(att || 1)) * 100).toFixed(1));
+}
+
+function scoreBarValue(left, right) {
+  const total = Number(left || 0) + Number(right || 0);
+  if (!total) return 50;
+  return Math.max(5, Math.min(95, (Number(left || 0) / total) * 100));
+}
+
+function cloneState(state) {
+  const { rng, ...serializable } = state || {};
+  const out = structuredClone(serializable);
+  out.rng = rng;
+  return out;
 }
 
 export function MatchCenter() {
-  const SIM_TICK_MS = 160;
-  const { currentSave, scheduleGames, fetchSchedule, advanceSave } = useGameStore();
-  const [selectedGameId, setSelectedGameId] = useState(null);
-  const [simulating, setSimulating] = useState(false);
-  const [minute, setMinute] = useState(0);
-  const [events, setEvents] = useState([]);
-  const [liveScore, setLiveScore] = useState({ home: 0, away: 0 });
-  const [liveGameMeta, setLiveGameMeta] = useState(null);
-  const hydratedRef = useRef(false);
+  const {
+    currentSave,
+    teams,
+    players,
+    scheduleGames,
+    fetchTeams,
+    fetchPlayers,
+    fetchSchedule,
+    fetchResultDetails,
+    advanceSave,
+  } = useGameStore();
 
-  useEffect(() => { if (currentSave?.id) fetchSchedule(); }, [currentSave?.id, fetchSchedule]);
+  const [selectedGameId, setSelectedGameId] = useState(null);
+  const [simMode, setSimMode] = useState('watch');
+  const [speed, setSpeed] = useState(1);
+  const [running, setRunning] = useState(false);
+  const [officialResultLocked, setOfficialResultLocked] = useState(false);
+  const [simError, setSimError] = useState('');
+  const [simState, setSimState] = useState(null);
+  const tickerRef = useRef(null);
+
+  const managedCode = currentSave?.data?.career?.teamShortName;
+  const currentDate = String(currentSave?.data?.currentDate || '').slice(0, 10);
+
+  useEffect(() => {
+    if (!currentSave?.id) return;
+    fetchSchedule();
+    if (!teams?.length) fetchTeams();
+    if (!players?.length) fetchPlayers();
+  }, [currentSave?.id, fetchSchedule, fetchTeams, fetchPlayers, teams?.length, players?.length]);
 
   const upcomingGames = useMemo(
-    () => (scheduleGames || []).filter((g) => !isFixtureCompleted(g)).sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate)),
+    () => (scheduleGames || [])
+      .filter((g) => !isFixtureCompleted(g))
+      .sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate)),
     [scheduleGames],
   );
 
   useEffect(() => {
-    if (!upcomingGames.length) return;
+    if (!upcomingGames.length) {
+      setSelectedGameId(null);
+      return;
+    }
     if (selectedGameId && upcomingGames.some((g) => g.id === selectedGameId)) return;
-    const managedCode = currentSave?.data?.career?.teamShortName;
-    const managedNext = upcomingGames.find((g) => g.homeTeam?.shortName === managedCode || g.awayTeam?.shortName === managedCode);
-    setSelectedGameId((managedNext || upcomingGames[0]).id);
-  }, [upcomingGames, selectedGameId, currentSave?.data?.career?.teamShortName]);
+    const preferred = upcomingGames.find((g) => g.homeTeam?.shortName === managedCode || g.awayTeam?.shortName === managedCode);
+    setSelectedGameId((preferred || upcomingGames[0]).id);
+  }, [upcomingGames, selectedGameId, managedCode]);
 
-  const selectedGame = upcomingGames.find((g) => g.id === selectedGameId) || null;
-  const currentDate = getCurrentDateKey(currentSave);
-  const selectedGameDay = selectedGame?.gameDate ? getFixtureDateKeyEt(selectedGame.gameDate) : null;
-  // Match Center sim should only run for the active in-game day to avoid multi-day jumps.
-  const canSimulateSelected = Boolean(
-    selectedGame
-      && isFixtureSimulatable(selectedGame, currentDate)
-      && selectedGameDay
-      && selectedGameDay === currentDate,
+  const selectedGame = useMemo(
+    () => upcomingGames.find((g) => g.id === selectedGameId) || null,
+    [upcomingGames, selectedGameId],
   );
-  const storageKey = currentSave?.id ? `match-center-state:${currentSave.id}` : null;
 
-  const resetLiveView = () => {
-    setMinute(0);
-    setEvents([]);
-    setLiveScore({ home: 0, away: 0 });
-    setSimulating(false);
-    setLiveGameMeta(null);
+  const gameDay = selectedGame?.gameDate ? getFixtureDateKeyEt(selectedGame.gameDate) : null;
+  const canLiveSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate));
+  const canOfficialSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate) && gameDay === currentDate);
+
+  const homeTeamObj = useMemo(
+    () => teams.find((t) => t.id === selectedGame?.homeTeamId) || selectedGame?.homeTeam || null,
+    [teams, selectedGame],
+  );
+  const awayTeamObj = useMemo(
+    () => teams.find((t) => t.id === selectedGame?.awayTeamId) || selectedGame?.awayTeam || null,
+    [teams, selectedGame],
+  );
+
+  const rosters = useMemo(() => {
+    if (!selectedGame) return { home: [], away: [] };
+    return {
+      home: players.filter((p) => Number(p.teamId) === Number(selectedGame.homeTeamId)),
+      away: players.filter((p) => Number(p.teamId) === Number(selectedGame.awayTeamId)),
+    };
+  }, [players, selectedGame]);
+
+  const lineups = useMemo(() => {
+    if (!selectedGame) return { home: {}, away: {} };
+    return {
+      home: getLineupByPosition(rosters.home, selectedGame.homeTeam?.shortName || 'HOME'),
+      away: getLineupByPosition(rosters.away, selectedGame.awayTeam?.shortName || 'AWAY'),
+    };
+  }, [selectedGame?.id, rosters.home, rosters.away]);
+
+  const ctx = useMemo(() => ({
+    homeTeam: homeTeamObj || {},
+    awayTeam: awayTeamObj || {},
+    homeLineup: lineups.home,
+    awayLineup: lineups.away,
+    tactics: { slowPace: false, transitionPush: true, fullCourtPress: false, isoPlays: false, feedPost: false },
+  }), [homeTeamObj, awayTeamObj, lineups.home, lineups.away]);
+
+  useEffect(() => {
+    if (!selectedGame) return;
+    const seed = `${currentSave?.id || 0}-${selectedGame.id}-${selectedGame.gameDate || ''}`;
+    const st = createMatchState({
+      seed,
+      homeLineup: lineups.home,
+      awayLineup: lineups.away,
+      debug: true,
+    });
+    setSimState(st);
+    setRunning(false);
+    setOfficialResultLocked(false);
+  }, [selectedGame?.id]);
+
+  const pushMatchdayWarning = () => {
+    setSimState((prev) => {
+      if (!prev) return prev;
+      const next = cloneState(prev);
+      next.playByPlay.unshift({
+        id: `warning-${Date.now()}`,
+        quarter: quarterLabel(next.quarter),
+        gameClock: formatClock(next.gameClockSeconds),
+        team: 'neutral',
+        playerId: null,
+        playerName: null,
+        assistPlayerId: null,
+        eventType: 'warning',
+        pointsDelta: 0,
+        resultingHomeScore: next.homeScore,
+        resultingAwayScore: next.awayScore,
+        text: 'Simulation actions are allowed only on the current match day.',
+      });
+      return next;
+    });
+  };
+
+  const safeSetSim = (updater) => {
+    setSimState((prev) => {
+      try {
+        return updater(prev);
+      } catch (error) {
+        setRunning(false);
+        setSimError(error?.message || 'Simulation error');
+        return prev;
+      }
+    });
   };
 
   useEffect(() => {
-    hydratedRef.current = false;
-    if (!storageKey) return;
-    try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) {
-        hydratedRef.current = true;
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') {
-        if (Number.isFinite(parsed.selectedGameId)) setSelectedGameId(parsed.selectedGameId);
-        if (Number.isFinite(parsed.minute)) setMinute(parsed.minute);
-        if (Array.isArray(parsed.events)) setEvents(parsed.events.slice(0, 16));
-        if (parsed.liveScore && Number.isFinite(parsed.liveScore.home) && Number.isFinite(parsed.liveScore.away)) {
-          setLiveScore({ home: parsed.liveScore.home, away: parsed.liveScore.away });
-        }
-        if (parsed.liveGameMeta && typeof parsed.liveGameMeta === 'object') {
-          setLiveGameMeta(parsed.liveGameMeta);
-        }
-      }
-    } catch {
-      // Ignore corrupted session state.
-    } finally {
-      hydratedRef.current = true;
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!storageKey || !hydratedRef.current) return;
-    window.sessionStorage.setItem(storageKey, JSON.stringify({
-      selectedGameId,
-      minute,
-      events: events.slice(0, 16),
-      liveScore,
-      liveGameMeta,
-    }));
-  }, [storageKey, selectedGameId, minute, events, liveScore, liveGameMeta]);
-
-  const simulatePresentation = async () => {
-    if (!selectedGame || simulating || !canSimulateSelected) return;
-    const simGame = {
-      id: selectedGame.id,
-      gameDate: selectedGame.gameDate,
-      homeTeam: selectedGame.homeTeam,
-      awayTeam: selectedGame.awayTeam,
+    if (!running || !simState) return undefined;
+    const ms = Math.max(80, Math.round(1000 / (speed * 3)));
+    tickerRef.current = window.setInterval(() => {
+      safeSetSim((prev) => {
+        if (!prev || prev.isFinal || officialResultLocked || !canLiveSim) return prev;
+        const next = cloneState(prev);
+        advanceSimulationSecond(next, ctx);
+        return next;
+      });
+    }, ms);
+    return () => {
+      if (tickerRef.current) window.clearInterval(tickerRef.current);
     };
-    setSimulating(true);
-    setMinute(0);
-    setLiveScore({ home: 0, away: 0 });
-    setLiveGameMeta(simGame);
-    setEvents([`Tip-off: ${simGame.awayTeam.shortName} at ${simGame.homeTeam.shortName}`]);
-    const snippets = [
-      'Fast break score',
-      'Turnover forced',
-      'And-one finish',
-      'Corner three',
-      'Second-chance putback',
-      'Defensive stop',
-      'Timeout called',
-      'Pick-and-roll assist',
-    ];
-    const scorePhrases = [
-      'knocks down a jumper',
-      'hits from deep',
-      'finishes at the rim',
-      'scores in transition',
-      'sinks two free throws',
-    ];
-    const pointChunk = (remaining, seed) => {
-      if (remaining <= 1) return 1;
-      if (remaining === 2) return 2;
-      const roll = rnd(seed + remaining);
-      if (remaining >= 3 && roll > 0.86) return 3;
-      if (roll > 0.18) return 2;
-      return 1;
-    };
-    const rnd = (seed) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-    try {
-      // Resolve backend result first, then present live feed to that exact final score.
-      // Resolve today's games only (single-day advance), so one sim click cannot skip multiple days.
-      if (!currentSave?.id) return;
-      await advanceSave(currentSave.id);
-      const stateAfterAdvance = useGameStore.getState();
-      const latestResults = stateAfterAdvance.results || [];
-      const latestSchedule = stateAfterAdvance.scheduleGames || [];
-      const resolvedFromResults = latestResults.find((g) => g.id === simGame.id);
-      const resolvedFromSchedule = latestSchedule.find((g) => g.id === simGame.id && isFixtureCompleted(g));
-      const resolved = resolvedFromResults || resolvedFromSchedule;
-      if (!resolved || !isFixtureCompleted(resolved)) {
-        setEvents((prev) => ['Game was not resolved for this day. Check selected game day and try again.', ...prev].slice(0, 16));
-        setMinute(0);
-        setLiveScore({ home: 0, away: 0 });
-        return;
-      }
+  }, [running, speed, simState, officialResultLocked, canLiveSim, ctx]);
 
-      const finalHome = Number(resolved.homeScore ?? 0);
-      const finalAway = Number(resolved.awayScore ?? 0);
-      let runningHome = 0;
-      let runningAway = 0;
-
-      for (let m = 1; m <= 48; m += 1) {
-        await new Promise((r) => setTimeout(r, SIM_TICK_MS));
-        setMinute(m);
-
-        const minuteSeed = selectedGame.id * 97 + m * 13;
-        const minuteEvents = [];
-        const targetHome = Math.round((finalHome * m) / 48);
-        const targetAway = Math.round((finalAway * m) / 48);
-        let homeToAdd = Math.max(0, targetHome - runningHome);
-        let awayToAdd = Math.max(0, targetAway - runningAway);
-
-        let slot = 0;
-        while (homeToAdd > 0 || awayToAdd > 0) {
-          const homeFirst = homeToAdd > 0 && (awayToAdd === 0 || rnd(minuteSeed + slot) > 0.5);
-          if (homeFirst) {
-            const pts = Math.min(homeToAdd, pointChunk(homeToAdd, minuteSeed + slot + 1));
-            runningHome += pts;
-            homeToAdd -= pts;
-            const phrase = scorePhrases[(m + slot + pts + selectedGame.id) % scorePhrases.length];
-            const sec = String(Math.max(0, 59 - (slot * 7))).padStart(2, '0');
-            minuteEvents.push(`Q${Math.ceil(m / 12)} ${m}:${sec} - ${simGame.homeTeam.shortName} ${phrase} (+${pts}) [${runningAway}-${runningHome}]`);
-          } else {
-            const pts = Math.min(awayToAdd, pointChunk(awayToAdd, minuteSeed + slot + 2));
-            runningAway += pts;
-            awayToAdd -= pts;
-            const phrase = scorePhrases[(m + slot + pts + selectedGame.id + 2) % scorePhrases.length];
-            const sec = String(Math.max(0, 59 - (slot * 7))).padStart(2, '0');
-            minuteEvents.push(`Q${Math.ceil(m / 12)} ${m}:${sec} - ${simGame.awayTeam.shortName} ${phrase} (+${pts}) [${runningAway}-${runningHome}]`);
-          }
-          slot += 1;
-        }
-
-        if (minuteEvents.length === 0 && m % 3 === 0) {
-          const snippet = snippets[(m + selectedGame.id) % snippets.length];
-          minuteEvents.push(`Q${Math.ceil(m / 12)} ${m}:00 - ${snippet}`);
-        }
-
-        setLiveScore({ home: runningHome, away: runningAway });
-        if (minuteEvents.length > 0) {
-          setEvents((prev) => [...minuteEvents.reverse(), ...prev].slice(0, 16));
-        }
-      }
-
-      setLiveScore({ home: finalHome, away: finalAway });
-    } finally {
-      setSimulating(false);
-    }
+  const onPlayPossession = () => {
+    if (!canLiveSim) return pushMatchdayWarning();
+    if (!simState || simState.isFinal || officialResultLocked) return;
+    safeSetSim((prev) => {
+      const next = cloneState(prev);
+      playOnePossession(next, ctx);
+      return next;
+    });
   };
 
-  const panelGame = ((simulating || minute > 0 || events.length > 0) && liveGameMeta) ? liveGameMeta : selectedGame;
+  const onPlayQuarter = () => {
+    if (!canLiveSim) return pushMatchdayWarning();
+    if (!simState || simState.isFinal || officialResultLocked) return;
+    safeSetSim((prev) => {
+      const next = cloneState(prev);
+      playUntilQuarterEnd(next, ctx);
+      return next;
+    });
+  };
+
+  const runOfficialSimToEnd = async () => {
+    if (!currentSave?.id || !selectedGame || officialResultLocked) return;
+    if (!canOfficialSim) return pushMatchdayWarning();
+    setRunning(false);
+    await advanceSave(currentSave.id);
+    const details = await fetchResultDetails(selectedGame.id);
+    if (!details) return;
+    safeSetSim((prev) => {
+      if (!prev) return prev;
+      const next = cloneState(prev);
+      applyOfficialResultToState(next, details);
+      return next;
+    });
+    setOfficialResultLocked(true);
+  };
+
+  const state = simState;
+  const performers = useMemo(() => (state ? deriveTopPerformers(state) : { home: null, away: null, leader: null }), [state]);
+  const advice = useMemo(
+    () => (state ? buildAdvice({
+      homeTactics: { fullCourtPress: false, slowPace: false, isoPlays: false },
+      awayTactics: { feedPost: false },
+      homeStats: state.homeStats || {},
+      awayStats: state.awayStats || {},
+      possessionSide: state.possession === 'home' ? 'home' : 'away',
+      homeTeam: selectedGame?.homeTeam,
+      awayTeam: selectedGame?.awayTeam,
+    }) : []),
+    [state, selectedGame],
+  );
+
+  if (!selectedGame || !state) {
+    return (
+      <div className="matchday-premium">
+        <div className="mc-broadcast">
+          <h1>Match Center</h1>
+          <span className="mc-live">LIVE</span>
+          <span className="mc-conf">Western Conference</span>
+        </div>
+        <div className="mc-empty">No upcoming games available.</div>
+      </div>
+    );
+  }
+
+  const consistency = getConsistencySnapshot({ ...state, debug: false });
+  const momentum = Number(state.momentum || 50);
+  const matchState = state.status || (state.isFinal ? 'finished' : 'live');
+  const attackingLabel = state.possession === 'home' ? selectedGame.homeTeam?.shortName : selectedGame.awayTeam?.shortName;
+  const qAway = state.quarterScores?.away || [0, 0, 0, 0, 0];
+  const qHome = state.quarterScores?.home || [0, 0, 0, 0, 0];
 
   return (
-    <div>
-      <PageHeader
-        title="Match Center"
-        subtitle="Select an upcoming game and run a live minute-by-minute presentation while the backend resolves the day."
-        actions={panelGame ? <span className="ui-badge">{formatFixtureDateTime(panelGame.gameDate)}</span> : null}
-      />
-
-      <div className="ui-card-grid">
-        <section className="ui-card ui-col-5">
-          <h3>Upcoming Games</h3>
-          {upcomingGames.length === 0 ? (
-            <EmptyState title="No upcoming games" description="Advance to a season date with scheduled games." />
-          ) : (
-            <div className="ui-list-stack" style={{ maxHeight: 540, overflow: 'auto' }}>
-              {upcomingGames.slice(0, 20).map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className="ui-list-item"
-                  style={{ textAlign: 'left', cursor: 'pointer', background: selectedGameId === g.id ? 'var(--ui-accent-soft)' : undefined }}
-                  onClick={() => {
-                    if (selectedGameId !== g.id) resetLiveView();
-                    setSelectedGameId(g.id);
-                  }}
-                >
-                  <div style={{ fontWeight: 700 }}>{g.awayTeam.shortName} @ {g.homeTeam.shortName}</div>
-                  <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>{formatFixtureDateTime(g.gameDate)} | {formatFixtureStatus(g.status)}</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="ui-card ui-col-7">
-          <h3>Live Match Simulation</h3>
-          {!panelGame ? (
-            <EmptyState title="Select a game" description="Choose a game from the left to start live simulation view." />
-          ) : (
-            <div className="ui-list-stack">
-              <div className="ui-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 18 }}>{panelGame.awayTeam.shortName} @ {panelGame.homeTeam.shortName}</div>
-                  <div style={{ color: 'var(--ui-text-muted)' }}>{formatFixtureDateTime(panelGame.gameDate)}</div>
-                  {!canSimulateSelected ? (
-                    <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>
-                      You can simulate only today&apos;s game day. Selected: {getFixtureDateKeyEt(panelGame.gameDate)} | Current: {currentDate || 'N/A'}.
-                    </div>
-                  ) : null}
-                </div>
-                <button className="ui-btn ui-btn-primary" type="button" onClick={simulatePresentation} disabled={simulating || !canSimulateSelected}>
-                  {simulating ? 'Simulating...' : 'Start Live Sim'}
-                </button>
-              </div>
-
-              <div className="ui-card" style={{ padding: 14 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12 }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>{panelGame.awayTeam.shortName}</div>
-                    <div style={{ fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{liveScore.away}</div>
-                  </div>
-                  <div style={{ color: 'var(--ui-text-muted)', fontWeight: 700 }}>:</div>
-                  <div>
-                    <div style={{ color: 'var(--ui-text-muted)', fontSize: 12 }}>{panelGame.homeTeam.shortName}</div>
-                    <div style={{ fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{liveScore.home}</div>
-                  </div>
-                </div>
-                <div style={{ marginTop: 8, color: 'var(--ui-text-muted)', fontSize: 12 }}>
-                  Live simulation score.
-                </div>
-              </div>
-
-              <div className="ui-card" style={{ padding: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--ui-text-muted)', marginBottom: 8 }}>
-                  <span>Game Clock Progress</span>
-                  <span>{minute}/48 min</span>
-                </div>
-                <div style={{ height: 12, borderRadius: 999, background: 'var(--ui-bg-elev-2)', overflow: 'hidden', border: '1px solid var(--ui-border)' }}>
-                  <div style={{ width: `${(minute / 48) * 100}%`, height: '100%', background: 'var(--ui-accent)', transition: `width ${Math.max(80, SIM_TICK_MS - 20)}ms linear` }} />
-                </div>
-              </div>
-
-              <div className="ui-table-shell">
-                <table className="ui-table">
-                  <thead><tr><th>Live Feed</th></tr></thead>
-                  <tbody>
-                    {events.length === 0 ? (
-                      <tr><td style={{ color: 'var(--ui-text-muted)' }}>No events yet. Start simulation.</td></tr>
-                    ) : events.map((e, idx) => (
-                      <tr key={`${idx}-${e}`}><td>{e}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </section>
+    <div className="matchday-premium">
+      <div className="mc-broadcast">
+        <h1>Match Center</h1>
+        <span className="mc-live">LIVE</span>
+        <span className="mc-conf">Western Conference</span>
       </div>
+
+      <div className="mc-game-select">
+        <select className="ui-select" value={selectedGameId || ''} onChange={(e) => setSelectedGameId(Number(e.target.value) || null)}>
+          {upcomingGames.map((game) => (
+            <option key={game.id} value={game.id}>{game.awayTeam?.shortName} @ {game.homeTeam?.shortName} ({getFixtureDateKeyEt(game.gameDate)})</option>
+          ))}
+        </select>
+        <div className="mc-mode">
+          <button type="button" className={`ui-btn ${simMode === 'watch' ? 'active' : ''}`} onClick={() => setSimMode('watch')}>Watch</button>
+          <button type="button" className={`ui-btn ${simMode === 'simulate' ? 'active' : ''}`} onClick={() => setSimMode('simulate')}>Simulate</button>
+        </div>
+      </div>
+      {simError ? <div className="transfer-toast">Simulation error: {simError}</div> : null}
+
+      <section className="mc-hero">
+        <div className="mc-score-row">
+          <article className="mc-team-side">
+            <img src={logoFor(selectedGame.awayTeam)} alt={selectedGame.awayTeam?.shortName} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <div>
+              <small>{selectedGame.awayTeam?.city || selectedGame.awayTeam?.name}</small>
+              <h3>{selectedGame.awayTeam?.name || selectedGame.awayTeam?.shortName}</h3>
+            </div>
+            <strong>{state.awayScore}</strong>
+          </article>
+          <div className="mc-clock-tile">
+            <strong>{state.isFinal ? '0:00' : formatClock(state.gameClockSeconds)}</strong>
+            <span>{state.isFinal ? 'FINAL' : quarterLabel(state.quarter)}</span>
+          </div>
+          <article className="mc-team-side right">
+            <strong>{state.homeScore}</strong>
+            <div>
+              <small>{selectedGame.homeTeam?.city || selectedGame.homeTeam?.name}</small>
+              <h3>{selectedGame.homeTeam?.name || selectedGame.homeTeam?.shortName}</h3>
+            </div>
+            <img src={logoFor(selectedGame.homeTeam)} alt={selectedGame.homeTeam?.shortName} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          </article>
+        </div>
+        <div className="mc-venue">Crypto.com Arena</div>
+        <div className="mc-court-wire">
+          <div className="mc-wire-left-circle" />
+          <div className="mc-wire-mid-circle" />
+          <div className="mc-wire-right-circle" />
+          <div className="mc-wire-mid-line" />
+        </div>
+        <div className="mc-momentum-wrap">
+          <span>{selectedGame.awayTeam?.shortName} Momentum</span>
+          <div className="mc-momentum">
+            <div className="mc-momentum-fill" style={{ width: `${momentum}%` }} />
+            <div className="mc-momentum-marker" style={{ left: `${momentum}%` }} />
+            <div className={`mc-attack-marker ${state.possession || 'home'}`} />
+          </div>
+          <span>{selectedGame.homeTeam?.shortName} Momentum</span>
+        </div>
+        <div className="mc-possession-row">
+          <span className={`mc-possession-pill ${state.possession || 'home'}`}>Attacking: {attackingLabel}</span>
+        </div>
+      </section>
+
+      <section className="mc-grid">
+        <article className="mc-card mc-controls">
+          <h3>Simulation Controls</h3>
+          <div className="mc-controls-row">
+            <button
+              className="ui-btn"
+              type="button"
+              disabled={!canLiveSim || officialResultLocked}
+              onClick={() => {
+                if (!canLiveSim) return pushMatchdayWarning();
+                setRunning((prev) => !prev);
+              }}
+            >
+              {running ? 'Pause' : 'Start'}
+            </button>
+            <button className="ui-btn" type="button" onClick={() => setSpeed((prev) => (prev === 1 ? 2 : (prev === 2 ? 3 : 1)))}>{speed}x</button>
+          </div>
+          <button className="ui-btn ui-btn-primary mc-full" type="button" onClick={() => { setSimMode('watch'); setRunning(false); }}>Play Game - Jump In</button>
+          <button className="ui-btn mc-full" type="button" disabled={!canOfficialSim || officialResultLocked} onClick={runOfficialSimToEnd}>Quick Sim to End</button>
+          <div className="mc-controls-row">
+            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked} onClick={onPlayPossession}>Play Possession</button>
+            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked} onClick={onPlayQuarter}>Play Quarter</button>
+          </div>
+          <div className="mc-status-row">
+            <span className="mc-tag">{matchState}</span>
+            {!canLiveSim ? <span className="mc-tag warn">Live sim unavailable for this date</span> : null}
+            {!canOfficialSim ? <span className="mc-tag warn">Quick Sim locked to matchday</span> : null}
+            {officialResultLocked ? <span className="mc-tag">Official Result Saved</span> : null}
+            {consistency.issues.length ? <span className="mc-tag warn">Consistency warning</span> : null}
+          </div>
+        </article>
+
+        <article className="mc-card mc-quarter">
+          <h3>Quarter Breakdown</h3>
+          <table>
+            <thead><tr><th>Team</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th><th>Total</th></tr></thead>
+            <tbody>
+              <tr><td>{selectedGame.awayTeam?.shortName}</td><td>{qAway[0] || 0}</td><td>{qAway[1] || '-'}</td><td>{qAway[2] || '-'}</td><td>{qAway[3] || '-'}</td><td>{state.awayScore}</td></tr>
+              <tr><td>{selectedGame.homeTeam?.shortName}</td><td>{qHome[0] || 0}</td><td>{qHome[1] || '-'}</td><td>{qHome[2] || '-'}</td><td>{qHome[3] || '-'}</td><td>{state.homeScore}</td></tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article className="mc-card mc-performers">
+          <h3>Top Performers</h3>
+          {[performers.away, performers.home].filter(Boolean).map((row) => (
+            <div key={row.playerId} className="mc-performer-row">
+              <strong>{row.name}</strong>
+              <div><span>PTS {row.points || 0}</span><span>REB {row.rebounds || 0}</span><span>AST {row.assists || 0}</span></div>
+            </div>
+          ))}
+          {performers.leader ? <p className="mc-overall-top">Game Leader: {performers.leader.name} ({performers.leader.points || 0} pts)</p> : null}
+        </article>
+
+        <article className="mc-card mc-advice">
+          <h3>Scout Advice</h3>
+          {advice.map((msg) => <p key={msg}>{msg}</p>)}
+        </article>
+
+        <article className="mc-card mc-play">
+          <h3>Play-by-Play</h3>
+          <div className="mc-play-list">
+            {state.playByPlay.map((event) => (
+              <div key={event.id} className={`mc-play-item ${event.team || 'neutral'}`}>
+                <div>
+                  <strong>{event.text}</strong>
+                  <small>{event.quarter} - {event.gameClock} • {event.resultingAwayScore}-{event.resultingHomeScore}</small>
+                </div>
+                <span>{event.pointsDelta > 0 ? `+${event.pointsDelta}` : '0'}</span>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <aside className="mc-right-stack">
+          <article className="mc-card mc-team-stats">
+            <h3>Team Stats</h3>
+            {[
+              ['Field Goal %', pct(state.awayStats.fgMade, state.awayStats.fgAtt), pct(state.homeStats.fgMade, state.homeStats.fgAtt)],
+              ['3-Point %', pct(state.awayStats.threeMade, state.awayStats.threeAtt), pct(state.homeStats.threeMade, state.homeStats.threeAtt)],
+              ['Free Throw %', pct(state.awayStats.ftMade, state.awayStats.ftAtt), pct(state.homeStats.ftMade, state.homeStats.ftAtt)],
+              ['Rebounds', Number(state.awayStats.reb || 0), Number(state.homeStats.reb || 0)],
+              ['Assists', Number(state.awayStats.ast || 0), Number(state.homeStats.ast || 0)],
+              ['Turnovers', Number(state.awayStats.tov || 0), Number(state.homeStats.tov || 0)],
+            ].map(([label, leftVal, rightVal]) => (
+              <div key={label} className="mc-stat-row">
+                <div className="mc-stat-head">
+                  <strong>{leftVal}</strong>
+                  <span>{label}</span>
+                  <strong>{rightVal}</strong>
+                </div>
+                <div className="mc-stat-bars">
+                  <span className="left" style={{ width: `${scoreBarValue(leftVal, rightVal)}%` }} />
+                  <span className="right" style={{ width: `${scoreBarValue(rightVal, leftVal)}%` }} />
+                </div>
+              </div>
+            ))}
+          </article>
+
+          <article className="mc-card mc-match-info">
+            <h3>Match Info</h3>
+            <p><span>Venue:</span><strong>Crypto.com Arena</strong></p>
+            <p><span>Attendance:</span><strong>18,997</strong></p>
+            <p><span>Referees:</span><strong>3 Officials</strong></p>
+            <p><span>Temperature:</span><strong>72°F</strong></p>
+          </article>
+        </aside>
+      </section>
     </div>
   );
 }
-

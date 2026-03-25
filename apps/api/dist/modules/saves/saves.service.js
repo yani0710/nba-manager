@@ -11,9 +11,11 @@ const simulateGame_1 = require("../../engine/simulation/simulateGame");
 const trades_service_1 = require("../trades/trades.service");
 const fixtureCsvLoader_1 = require("../fixtures/fixtureCsvLoader");
 const gameweekCalendar_1 = require("../fixtures/gameweekCalendar");
+const loadDetailedPositions_1 = require("../../data/loadDetailedPositions");
 const fixtureStatus_1 = require("../fixtures/fixtureStatus");
 const fixtureModel_1 = require("../fixtures/fixtureModel");
 const ET_TIMEZONE = "America/New_York";
+const FREE_AGENT_TEAM_SHORT = "FA";
 function getDateKeyEt(dateValue) {
     return new Intl.DateTimeFormat("en-CA", {
         timeZone: ET_TIMEZONE,
@@ -129,6 +131,12 @@ class SavesService {
             transferState: {
                 playerTeamOverrides: {},
                 transactions: [],
+            },
+            rosterManagement: {
+                tradeBlockPlayerIds: [],
+                developmentLeaguePlayerIds: [],
+                comparePlayerIds: [],
+                playerRoles: {},
             },
         };
         const save = await prisma_1.default.save.create({
@@ -454,6 +462,9 @@ class SavesService {
             trend: trainingRating >= 75 ? "up" : "steady",
         };
         this.applyDailyTrainingEffects(currentData, nextDate, rolledWeek, playerPlanByPlayerId);
+        if (rolledWeek) {
+            await this.applyWeeklyFreeAgentOverallDecay(currentData.week ?? previousWeek + 1);
+        }
         await this.applyFormTrendAndSyncPlayers({
             data: currentData,
             playerMetaById,
@@ -462,6 +473,9 @@ class SavesService {
         const nextSeasonDay = this.getSeasonDay(save.season, nextDate);
         await this.tradesService.resolvePendingOffersForDay(save.id, nextSeasonDay, nextDate);
         await this.tradesService.resolvePendingPlayerProposalResponsesForDay(save.id, nextSeasonDay, nextDate);
+        await this.tradesService.resolvePendingContractOffersForDay(save.id, nextSeasonDay, nextDate);
+        await this.tradesService.resolvePendingTradeProposalsForDay(save.id, nextSeasonDay, nextDate);
+        await this.tradesService.snapshotTeamCapsForDay(save.id, nextSeasonDay);
         // Transfer execution may update Save.data.transferState inside TradesService.
         // Refresh and merge it here so the final save update below does not overwrite it with stale currentData.
         {
@@ -496,6 +510,40 @@ class SavesService {
         const startYear = Number(String(season ?? "2025-26").slice(0, 4)) || date.getUTCFullYear();
         const seasonStart = new Date(Date.UTC(startYear, 9, 1));
         return Math.max(0, Math.floor((date.getTime() - seasonStart.getTime()) / (1000 * 60 * 60 * 24)));
+    }
+    async applyWeeklyFreeAgentOverallDecay(currentWeek) {
+        const freeAgentTeam = await prisma_1.default.team.findUnique({
+            where: { shortName: FREE_AGENT_TEAM_SHORT },
+            select: { id: true },
+        });
+        if (!freeAgentTeam)
+            return;
+        const freeAgents = await prisma_1.default.player.findMany({
+            where: {
+                active: true,
+                teamId: freeAgentTeam.id,
+            },
+            select: {
+                id: true,
+                overall: true,
+                overallCurrent: true,
+            },
+        });
+        if (freeAgents.length === 0)
+            return;
+        const updates = freeAgents.map((player) => {
+            const drop = 1 + ((player.id + currentWeek) % 2); // 1 or 2 each rolled week
+            const curr = player.overallCurrent ?? player.overall ?? 60;
+            const next = this.clamp(curr - drop, 45, 99);
+            return prisma_1.default.player.update({
+                where: { id: player.id },
+                data: {
+                    overallCurrent: next,
+                    overall: next,
+                },
+            });
+        });
+        await prisma_1.default.$transaction(updates);
     }
     async advanceSaveToDate(id, targetDate, includeTargetDay = false) {
         const parsed = new Date(`${targetDate}T00:00:00.000Z`);
@@ -1065,6 +1113,33 @@ class SavesService {
             training: updated.data.training ?? data.training,
         };
     }
+    async saveRosterManagement(saveId, payload) {
+        const save = await this.getSaveById(saveId);
+        const data = (save.data ?? {});
+        const toUniqueIds = (value) => {
+            if (!Array.isArray(value))
+                return [];
+            return [...new Set(value.map((v) => Number(v)).filter(Number.isFinite))];
+        };
+        const next = {
+            tradeBlockPlayerIds: toUniqueIds(payload.tradeBlockPlayerIds ?? data.rosterManagement?.tradeBlockPlayerIds ?? []),
+            developmentLeaguePlayerIds: toUniqueIds(payload.developmentLeaguePlayerIds ?? data.rosterManagement?.developmentLeaguePlayerIds ?? []),
+            comparePlayerIds: toUniqueIds(payload.comparePlayerIds ?? data.rosterManagement?.comparePlayerIds ?? []).slice(0, 2),
+            playerRoles: {
+                ...(data.rosterManagement?.playerRoles ?? {}),
+                ...(payload.playerRoles ?? {}),
+            },
+        };
+        data.rosterManagement = next;
+        const updated = await prisma_1.default.save.update({
+            where: { id: saveId },
+            data: { data },
+        });
+        return {
+            success: true,
+            rosterManagement: updated.data.rosterManagement ?? next,
+        };
+    }
     async getTrainingConfig(saveId) {
         const save = await this.getSaveById(saveId);
         const data = (save.data ?? {});
@@ -1228,6 +1303,14 @@ class SavesService {
         const managedTeam = managedIsHome ? nextMatch.homeTeam : nextMatch.awayTeam;
         const venue = managedIsHome ? "Home" : "Away";
         const payload = (save.data ?? {});
+        const managedPlayers = managedTeam.players.map((player) => ({
+            ...player,
+            position: (0, loadDetailedPositions_1.resolveDetailedPosition)(player.name, managedTeam.shortName, player.position) ?? player.position,
+        }));
+        const opponentPlayers = opponentTeam.players.map((player) => ({
+            ...player,
+            position: (0, loadDetailedPositions_1.resolveDetailedPosition)(player.name, opponentTeam.shortName, player.position) ?? player.position,
+        }));
         return {
             gameId: nextMatch.id,
             date: nextMatch.gameDate,
@@ -1243,8 +1326,8 @@ class SavesService {
                 shortName: managedTeam.shortName,
             },
             probableStarters: {
-                managed: this.getManagedProbableStarters(payload, managedTeam.players),
-                opponent: this.getDefaultProbableStarters(opponentTeam.players),
+                managed: this.getManagedProbableStarters(payload, managedPlayers),
+                opponent: this.getDefaultProbableStarters(opponentPlayers),
             },
             last5: {
                 managed: await this.getTeamLastFive(save.id, managedTeam.id),

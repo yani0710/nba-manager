@@ -19,7 +19,7 @@ export function PlayerTable({ players = [] }) {
       <tbody>
         {players.map((player) => (
           <tr key={player.id}>
-            <td className="number">{player.number}</td>
+            <td className="number">{player.jerseyCode ?? player.jerseyNumber ?? player.number ?? '-'}</td>
             <td className="name">{player.name}</td>
             <td>{player.position}</td>
             <td>{formatSalary(player.salary)}</td>

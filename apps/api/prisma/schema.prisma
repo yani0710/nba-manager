@@ -34,6 +34,11 @@ model Team {
   transferOffersReceived TransferOffer[] @relation("TransferOffersToTeam")
   transferTransactionsSent TransferTransactionLog[] @relation("TransferTxnFromTeam")
   transferTransactionsReceived TransferTransactionLog[] @relation("TransferTxnToTeam")
+  contractOffers ContractOffer[]
+  tradeProposalsSent TradeProposal[] @relation("TradeProposalsFromTeam")
+  tradeProposalsReceived TradeProposal[] @relation("TradeProposalsToTeam")
+  capSnapshots TeamCapSnapshot[]
+  transactionHistory TransactionHistory[]
 }
 
 model Player {
@@ -42,6 +47,7 @@ model Player {
   externalRef String?    @unique
   number      Int?
   jerseyNumber Int?
+  jerseyCode  String?
   position    String
   salary      Int?
   teamId      Int
@@ -98,8 +104,10 @@ model Player {
   transferOfferPieces TransferOfferPlayerPiece[]
   gameLogs    PlayerGameLog[]
   team        Team       @relation(fields: [teamId], references: [id])
+  contractOffers ContractOffer[]
+  tradeProposalItems TradeProposalItem[]
 
-  @@unique([teamId, number], map: "team_number_unique")
+  @@unique([teamId, jerseyCode], map: "team_jersey_code_unique")
 }
 
 model PlayerSeasonImpact {
@@ -243,10 +251,149 @@ model Save {
   teamTrainingDayPlans TeamTrainingDayPlan[]
   transferOffers TransferOffer[]
   transferTransactionLogs TransferTransactionLog[]
+  contractOffers ContractOffer[]
+  tradeProposals TradeProposal[]
+  negotiationEvents NegotiationEvent[]
+  transactionHistory TransactionHistory[]
+  capSnapshots TeamCapSnapshot[]
   coachProfile   CoachProfile?  @relation(fields: [coachProfileId], references: [id])
   team           Team?          @relation(fields: [teamId], references: [id])
   managedTeam    Team?          @relation("managedSaves", fields: [managedTeamId], references: [id])
   user           User?          @relation(fields: [userId], references: [id])
+}
+
+model ContractOffer {
+  id               Int      @id @default(autoincrement())
+  saveId           Int
+  teamId           Int
+  playerId         Int
+  salaryPerYear    Int
+  years            Int
+  rolePromise      String
+  optionType       String? // TEAM_OPTION | PLAYER_OPTION | NONE
+  status           String   @default("PENDING") // PENDING | ACCEPTED | REJECTED | WITHDRAWN | EXPIRED
+  submittedDay     Int
+  decisionDay      Int
+  expiresDay       Int?
+  expectedSalary   Int?
+  interestScore    Float?
+  decisionReason   String?
+  capSummary       Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  resolvedAt       DateTime?
+  save             Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  team             Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player           Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([saveId, status, decisionDay])
+  @@index([saveId, teamId, createdAt])
+}
+
+model TradeProposal {
+  id               Int      @id @default(autoincrement())
+  saveId           Int
+  fromTeamId       Int
+  toTeamId         Int
+  status           String   @default("PENDING") // PENDING | ACCEPTED | REJECTED | COUNTERED | WITHDRAWN | EXPIRED | ILLEGAL
+  submittedDay     Int
+  decisionDay      Int
+  expiresDay       Int?
+  cashOut          Int      @default(0)
+  cashIn           Int      @default(0)
+  aiScore          Float?
+  decisionReason   String?
+  validation       Json?
+  counterPayload   Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  resolvedAt       DateTime?
+  save             Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  fromTeam         Team     @relation("TradeProposalsFromTeam", fields: [fromTeamId], references: [id], onDelete: Cascade)
+  toTeam           Team     @relation("TradeProposalsToTeam", fields: [toTeamId], references: [id], onDelete: Cascade)
+  items            TradeProposalItem[]
+
+  @@index([saveId, status, decisionDay])
+  @@index([saveId, submittedDay])
+}
+
+model TradeProposalItem {
+  id              Int      @id @default(autoincrement())
+  proposalId      Int
+  itemType        String   @default("PLAYER") // PLAYER | PICK | CASH
+  direction       String   // OUT | IN (from manager perspective)
+  playerId        Int?
+  pickYear        Int?
+  pickRound       Int?
+  cashAmount      Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  proposal        TradeProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  player          Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([proposalId, direction])
+  @@index([playerId])
+}
+
+model NegotiationEvent {
+  id              Int      @id @default(autoincrement())
+  saveId          Int
+  entityType      String   // CONTRACT_OFFER | TRADE_PROPOSAL
+  entityId        Int
+  eventType       String   // SUBMITTED | COUNTERED | ACCEPTED | REJECTED | EXPIRED | WITHDRAWN
+  actor           String   // USER | AI_TEAM | PLAYER_AGENT | SYSTEM
+  day             Int
+  title           String
+  body            String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  save            Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+
+  @@index([saveId, day, createdAt])
+  @@index([entityType, entityId])
+}
+
+model TransactionHistory {
+  id              Int      @id @default(autoincrement())
+  saveId          Int
+  teamId          Int?
+  category        String   // FREE_AGENCY | TRADE | WAIVER | CONTRACT
+  status          String   // COMPLETED | FAILED | REJECTED | EXPIRED
+  referenceType   String   // CONTRACT_OFFER | TRADE_PROPOSAL | TRANSFER_OFFER
+  referenceId     Int
+  day             Int
+  title           String
+  body            String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  save            Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  team            Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@index([saveId, day, createdAt])
+  @@index([referenceType, referenceId])
+}
+
+model TeamCapSnapshot {
+  id              Int      @id @default(autoincrement())
+  saveId          Int
+  teamId          Int
+  day             Int
+  payroll         Int
+  capSpace        Int
+  luxuryTax       Int
+  overCap         Boolean  @default(false)
+  overTax         Boolean  @default(false)
+  hardCap         Int?
+  apron           Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  save            Save     @relation(fields: [saveId], references: [id], onDelete: Cascade)
+  team            Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([saveId, day])
+  @@unique([saveId, teamId, day])
 }
 
 model PlayerTrainingPlan {

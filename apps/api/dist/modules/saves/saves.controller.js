@@ -171,6 +171,20 @@ class SavesController {
             next(err);
         }
     }
+    async saveRosterManagement(req, res, next) {
+        try {
+            const data = await savesService.saveRosterManagement(Number(req.params.id), {
+                tradeBlockPlayerIds: req.body?.tradeBlockPlayerIds,
+                developmentLeaguePlayerIds: req.body?.developmentLeaguePlayerIds,
+                comparePlayerIds: req.body?.comparePlayerIds,
+                playerRoles: req.body?.playerRoles,
+            });
+            res.json(data);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async getTraining(req, res, next) {
         try {
             const data = await savesService.getTrainingConfig(Number(req.params.id));

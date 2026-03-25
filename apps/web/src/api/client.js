@@ -35,6 +35,7 @@ export const api = {
     saveTactics: (id, data) => client.post(`/saves/${id}/tactics`, data),
     getTraining: (id) => client.get(`/saves/${id}/training`),
     saveTrainingPlan: (id, data) => client.post(`/saves/${id}/training`, data),
+    saveRosterManagement: (id, data) => client.post(`/saves/${id}/roster-management`, data),
     getPlayerTrainingPlans: (id) => client.get(`/saves/${id}/training/players`),
     savePlayerTrainingPlan: (id, data) => client.post(`/saves/${id}/training/players`, data),
     deletePlayerTrainingPlan: (id, playerId) => client.delete(`/saves/${id}/training/players/${playerId}`),
@@ -71,10 +72,20 @@ export const api = {
 
   // Transfers
   transfers: {
+    freeAgents: (params = {}) => client.get('/transfers/free-agents', { params }),
     getAll: (params = {}) => client.get('/transfers', { params }),
     create: (data) => client.post('/transfers', data),
     send: (id, data) => client.post(`/transfers/${id}/send`, data),
     respondToProposal: (proposalId, data) => client.post(`/transfers/proposals/${proposalId}/respond`, data),
+    getCapSummary: (params = {}) => client.get('/transfers/cap-summary', { params }),
+    getContractOffers: (params = {}) => client.get('/transfers/contract-offers', { params }),
+    submitContractOffer: (data) => client.post('/transfers/contract-offers', data),
+    withdrawContractOffer: (offerId, data) => client.post(`/transfers/contract-offers/${offerId}/withdraw`, data),
+    getTradeProposals: (params = {}) => client.get('/transfers/trade-proposals', { params }),
+    submitTradeProposal: (data) => client.post('/transfers/trade-proposals', data),
+    withdrawTradeProposal: (proposalId, data) => client.post(`/transfers/trade-proposals/${proposalId}/withdraw`, data),
+    getNegotiations: (params = {}) => client.get('/transfers/negotiations', { params }),
+    getHistory: (params = {}) => client.get('/transfers/history', { params }),
   },
 };
 

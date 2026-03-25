@@ -135,7 +135,7 @@ export function Player() {
           <div className="player-info-card">
             <h2>{selectedPlayer.name}</h2>
             <p><strong>Team:</strong> {display(selectedPlayer.team?.name)}</p>
-            <p><strong>Jersey:</strong> {display(selectedPlayer.jerseyNumber ?? selectedPlayer.number)}</p>
+            <p><strong>Jersey:</strong> {display(selectedPlayer.jerseyCode ?? selectedPlayer.jerseyNumber ?? selectedPlayer.number)}</p>
             <p><strong>Position:</strong> {display(selectedPlayer.position)}</p>
             <p><strong>Height:</strong> {display(selectedPlayer.heightCm)} cm</p>
             <p><strong>Weight:</strong> {display(selectedPlayer.weightKg)} kg</p>

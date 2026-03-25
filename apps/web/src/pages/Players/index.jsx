@@ -30,7 +30,7 @@ export function Players() {
               <tr key={player.id}>
                 <td className="player-name">{player.name}</td>
                 <td>{player.team?.shortName}</td>
-                <td className="number">{player.number}</td>
+                <td className="number">{player.jerseyCode ?? player.jerseyNumber ?? player.number ?? '-'}</td>
                 <td>{player.position}</td>
                 <td>${(player.salary / 1000000).toFixed(2)}M</td>
               </tr>

@@ -43,11 +43,15 @@
       "timestamp": "2026-02-22T12:40:28.358Z"
     },
     "salaries": {
-      "file": "Salaries_2024_25.csv",
-      "matched": 0,
-      "unmatched": 0,
-      "unmatchedSample": [],
-      "timestamp": "2026-02-22T12:40:21.544Z"
+      "file": "D:\\nba-manager\\apps\\api\\data\\nba_salaries_clean.csv",
+      "matched": 457,
+      "unmatched": 3,
+      "unmatchedSample": [
+        "Nikola Topić (OKC)",
+        "Thomas Sorber (OKC)",
+        "Nikola Djurisic (ATL)"
+      ],
+      "timestamp": "2026-03-24T16:39:17.938Z"
     },
     "gamelogs": {
       "file": "database_24_25.csv",
@@ -78,6 +82,6 @@
       "timestamp": "2026-02-22T12:40:24.933Z"
     }
   },
-  "lastUpdated": "2026-02-22T12:40:28.358Z",
+  "lastUpdated": "2026-03-24T16:39:17.938Z",
   "selectedSeason": 2026
 }

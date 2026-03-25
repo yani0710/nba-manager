@@ -197,6 +197,8 @@ async function main() {
           active: true,
           externalRef: externalRef ?? undefined,
           number: assignedNumber,
+          jerseyNumber: assignedNumber,
+          jerseyCode: String(assignedNumber),
           position: primary,
           primaryPosition: primary,
           secondaryPosition: secondary ?? undefined,

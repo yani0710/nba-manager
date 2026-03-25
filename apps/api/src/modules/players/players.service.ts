@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma";
 import { enrichPlayersFromSalariesRoster } from "../../data/enrichPlayers";
 import { normalizePlayerName } from "../../data/loadSalariesRoster";
+import { resolveDetailedPosition } from "../../data/loadDetailedPositions";
 
 const contractSelect = {
   id: true,
@@ -31,7 +32,8 @@ export class PlayersService {
     });
     const withState = await this.attachSaveState(players, saveId);
     const withOverrides = await this.attachTransferOverridesToPlayers(withState as any[], saveId);
-    return this.applySalaryFallbackFromRoster(withOverrides as any[]);
+    const withSalary = await this.applySalaryFallbackFromRoster(withOverrides as any[]);
+    return this.applyDetailedPositionFallback(withSalary as any[]);
   }
 
   async getPlayerById(id: number, saveId?: number) {
@@ -51,9 +53,11 @@ export class PlayersService {
     const [withState] = await this.attachSaveState([player], saveId);
     if (!withState) return null;
     const [withTransferOverride] = await this.attachTransferOverridesToPlayers([withState], saveId);
+    const [withSalary] = await this.applySalaryFallbackFromRoster([withTransferOverride ?? withState] as any[]);
+    const [withDetailedPosition] = this.applyDetailedPositionFallback([withSalary] as any[]);
     return {
-      ...(withTransferOverride ?? withState),
-      scouting: this.buildStrengthsWeaknesses((withTransferOverride ?? withState).attributes),
+      ...withDetailedPosition,
+      scouting: this.buildStrengthsWeaknesses(withDetailedPosition.attributes),
     };
   }
 
@@ -69,7 +73,8 @@ export class PlayersService {
     });
     const withState = await this.attachSaveState(players, saveId);
     const withOverrides = await this.attachTransferOverridesToPlayers(withState as any[], saveId);
-    return this.applySalaryFallbackFromRoster(withOverrides as any[]);
+    const withSalary = await this.applySalaryFallbackFromRoster(withOverrides as any[]);
+    return this.applyDetailedPositionFallback(withSalary as any[]);
   }
 
   private async applySalaryFallbackFromRoster<T extends { id: number; name: string; team?: { shortName?: string | null } | null; salary?: number | null }>(
@@ -120,6 +125,31 @@ export class PlayersService {
       return {
         ...player,
         salary: Number.isFinite(nextSalary) && Number(nextSalary) > 0 ? Number(nextSalary) : (Number.isFinite(current) ? current : null),
+      };
+    });
+  }
+
+  private applyDetailedPositionFallback<T extends {
+    name: string;
+    team?: { shortName?: string | null } | null;
+    position?: string | null;
+    primaryPosition?: string | null;
+    secondaryPosition?: string | null;
+  }>(players: T[]): T[] {
+    if (!players || players.length === 0) return players;
+
+    return players.map((player) => {
+      const detailed = resolveDetailedPosition(player.name, player.team?.shortName ?? "", player.position ?? null);
+      if (!detailed) return player;
+
+      const nextPosition = detailed;
+      const nextPrimary = player.primaryPosition && String(player.primaryPosition).trim() !== ""
+        ? resolveDetailedPosition(player.name, player.team?.shortName ?? "", player.primaryPosition ?? null) ?? player.primaryPosition
+        : detailed;
+      return {
+        ...player,
+        position: nextPosition,
+        primaryPosition: nextPrimary,
       };
     });
   }

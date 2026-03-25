@@ -6,6 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TradesService = exports.__transferTestUtils = void 0;
 const prisma_1 = __importDefault(require("../../config/prisma"));
 const AppError_1 = require("../../common/errors/AppError");
+const cap_service_1 = require("./cap.service");
+const loadDetailedPositions_1 = require("../../data/loadDetailedPositions");
+const FREE_AGENT_TEAM_SHORT = "FA";
 function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
 }
@@ -41,12 +44,424 @@ function parsePosBucket(pos) {
 }
 function seasonDayFromSave(save) {
     const payload = (save.data ?? {});
-    const current = new Date(`${String(payload.currentDate ?? save.currentDate.toISOString().slice(0, 10))}T00:00:00.000Z`);
+    const saveDate = save.currentDate instanceof Date
+        ? save.currentDate
+        : new Date(`${String(payload.currentDate ?? "1970-01-01")}T00:00:00.000Z`);
+    const current = new Date(`${saveDate.toISOString().slice(0, 10)}T00:00:00.000Z`);
     const startYear = Number(String(save.season ?? "2025-26").slice(0, 4)) || current.getUTCFullYear();
     const seasonStart = new Date(Date.UTC(startYear, 9, 1)); // Oct 1
     return Math.max(0, Math.floor((current.getTime() - seasonStart.getTime()) / 86400000));
 }
 class TradesService {
+    constructor() {
+        this.capService = new cap_service_1.CapService();
+    }
+    async listFreeAgents(saveId) {
+        await this.ensureSave(saveId);
+        const freeAgentTeam = await prisma_1.default.team.findUnique({
+            where: { shortName: FREE_AGENT_TEAM_SHORT },
+            select: { id: true },
+        });
+        if (!freeAgentTeam)
+            return [];
+        const players = await prisma_1.default.player.findMany({
+            where: {
+                active: true,
+                teamId: freeAgentTeam.id,
+            },
+            include: {
+                team: { select: { id: true, name: true, shortName: true, logoPath: true } },
+            },
+            orderBy: [{ overallCurrent: "desc" }, { overallBase: "desc" }, { name: "asc" }],
+        });
+        return players.map((player) => ({
+            ...player,
+            position: (0, loadDetailedPositions_1.resolveDetailedPosition)(player.name, player.team?.shortName ?? "FA", player.position) ?? player.position,
+            primaryPosition: (0, loadDetailedPositions_1.resolveDetailedPosition)(player.name, player.team?.shortName ?? "FA", player.primaryPosition ?? player.position) ?? player.primaryPosition ?? player.position,
+        }));
+    }
+    async getCapSummary(saveId, teamId) {
+        await this.ensureSave(saveId);
+        return this.capService.getTeamCapSummary(teamId);
+    }
+    async listContractOffers(saveId, teamId) {
+        await this.ensureSave(saveId);
+        const offers = await prisma_1.default.contractOffer.findMany({
+            where: {
+                saveId,
+                ...(teamId ? { teamId } : {}),
+            },
+            include: {
+                player: { select: { id: true, name: true, position: true, overallCurrent: true, potential: true, team: { select: { id: true, name: true, shortName: true } } } },
+                team: { select: { id: true, name: true, shortName: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+        return offers.map((offer) => ({
+            ...offer,
+            player: offer.player ? {
+                ...offer.player,
+                position: (0, loadDetailedPositions_1.resolveDetailedPosition)(offer.player.name, offer.player.team?.shortName ?? "", offer.player.position) ?? offer.player.position,
+            } : offer.player,
+        }));
+    }
+    async submitContractOffer(dto) {
+        const save = await this.ensureSave(dto.saveId);
+        const player = await prisma_1.default.player.findUnique({
+            where: { id: dto.playerId },
+            select: { id: true, name: true, teamId: true, overallCurrent: true, potential: true, salary: true },
+        });
+        if (!player)
+            throw new AppError_1.NotFoundError("Player");
+        const freeAgentTeam = await prisma_1.default.team.findUnique({ where: { shortName: FREE_AGENT_TEAM_SHORT }, select: { id: true } });
+        if (!freeAgentTeam || player.teamId !== freeAgentTeam.id)
+            throw new AppError_1.BadRequestError("Player is not in free agency");
+        const validation = await this.capService.validateContractOffer(dto.teamId, {
+            salaryPerYear: dto.salaryPerYear,
+            years: dto.years,
+        });
+        if (!validation.legal) {
+            throw new AppError_1.BadRequestError(`Cap violation: ${validation.warnings.join(" ") || "Offer is not legal under cap rules."}`);
+        }
+        const day = seasonDayFromSave(save);
+        const decisionDays = clamp(Number(dto.decisionDays ?? 2), 1, 7);
+        const expectedSalary = Math.round((player.salary ?? 1500000) * (1 + ((player.overallCurrent ?? 70) - 70) * 0.01));
+        const offer = await prisma_1.default.contractOffer.create({
+            data: {
+                saveId: dto.saveId,
+                teamId: dto.teamId,
+                playerId: dto.playerId,
+                salaryPerYear: Math.max(500000, Math.round(dto.salaryPerYear)),
+                years: clamp(Math.round(dto.years), 1, 5),
+                rolePromise: dto.rolePromise || "rotation",
+                optionType: dto.optionType ?? null,
+                status: "PENDING",
+                submittedDay: day,
+                decisionDay: day + decisionDays,
+                expiresDay: day + Math.max(decisionDays + 3, 7),
+                expectedSalary,
+                capSummary: validation,
+            },
+            include: {
+                player: { select: { id: true, name: true } },
+                team: { select: { id: true, name: true, shortName: true } },
+            },
+        });
+        await this.createInboxMessage({
+            saveId: dto.saveId,
+            date: save.currentDate,
+            type: "transfer",
+            title: "Contract offer submitted",
+            body: `Offer submitted to ${offer.player.name}. Expected response in ${decisionDays} day(s).`,
+            fromName: "General Manager",
+        });
+        await prisma_1.default.negotiationEvent.create({
+            data: {
+                saveId: dto.saveId,
+                entityType: "CONTRACT_OFFER",
+                entityId: offer.id,
+                eventType: "SUBMITTED",
+                actor: "USER",
+                day,
+                title: "Contract offer submitted",
+                body: `${offer.team.shortName} offered ${this.formatMoney(offer.salaryPerYear)} x ${offer.years} to ${offer.player.name}.`,
+            },
+        });
+        return offer;
+    }
+    async withdrawContractOffer(saveId, offerId) {
+        const save = await this.ensureSave(saveId);
+        const offer = await prisma_1.default.contractOffer.findFirst({
+            where: { id: offerId, saveId },
+            include: { player: { select: { name: true } } },
+        });
+        if (!offer)
+            throw new AppError_1.NotFoundError("Contract offer");
+        if (offer.status !== "PENDING")
+            throw new AppError_1.BadRequestError("Only pending offers can be withdrawn");
+        const updated = await prisma_1.default.contractOffer.update({
+            where: { id: offer.id },
+            data: { status: "WITHDRAWN", resolvedAt: save.currentDate, decisionReason: "Offer withdrawn by user." },
+        });
+        await prisma_1.default.negotiationEvent.create({
+            data: {
+                saveId,
+                entityType: "CONTRACT_OFFER",
+                entityId: offer.id,
+                eventType: "WITHDRAWN",
+                actor: "USER",
+                day: seasonDayFromSave(save),
+                title: "Contract offer withdrawn",
+                body: `You withdrew your offer to ${offer.player.name}.`,
+            },
+        });
+        return updated;
+    }
+    async listTradeProposals(saveId) {
+        await this.ensureSave(saveId);
+        const proposals = await prisma_1.default.tradeProposal.findMany({
+            where: { saveId },
+            include: {
+                fromTeam: { select: { id: true, name: true, shortName: true } },
+                toTeam: { select: { id: true, name: true, shortName: true } },
+                items: { include: { player: { select: { id: true, name: true, position: true, salary: true, overallCurrent: true, potential: true } } } },
+            },
+            orderBy: { createdAt: "desc" },
+        });
+        return proposals.map((proposal) => ({
+            ...proposal,
+            items: proposal.items.map((item) => {
+                if (!item.player)
+                    return item;
+                const teamCode = item.direction === "OUT" ? proposal.fromTeam?.shortName : proposal.toTeam?.shortName;
+                return {
+                    ...item,
+                    player: {
+                        ...item.player,
+                        position: (0, loadDetailedPositions_1.resolveDetailedPosition)(item.player.name, teamCode ?? "", item.player.position) ?? item.player.position,
+                        primaryPosition: (0, loadDetailedPositions_1.resolveDetailedPosition)(item.player.name, teamCode ?? "", item.player.primaryPosition ?? item.player.position) ?? item.player.primaryPosition ?? item.player.position,
+                    },
+                };
+            }),
+        }));
+    }
+    async submitTradeProposal(dto) {
+        const save = await this.ensureSave(dto.saveId);
+        const outgoingPlayerIds = [...new Set((dto.outgoingPlayerIds ?? []).map(Number).filter(Number.isFinite))];
+        const incomingPlayerIds = [...new Set((dto.incomingPlayerIds ?? []).map(Number).filter(Number.isFinite))];
+        if (!outgoingPlayerIds.length || !incomingPlayerIds.length) {
+            throw new AppError_1.BadRequestError("Trade proposal requires outgoing and incoming players");
+        }
+        const validation = await this.capService.validateTradeProposal({
+            fromTeamId: dto.fromTeamId,
+            toTeamId: dto.toTeamId,
+            outgoingPlayerIds,
+            incomingPlayerIds,
+            cashOut: dto.cashOut,
+            cashIn: dto.cashIn,
+        });
+        const saveDay = seasonDayFromSave(save);
+        const responseDays = clamp(Number(dto.responseDays ?? 2), 1, 7);
+        const proposal = await prisma_1.default.tradeProposal.create({
+            data: {
+                saveId: dto.saveId,
+                fromTeamId: dto.fromTeamId,
+                toTeamId: dto.toTeamId,
+                status: validation.legal ? "PENDING" : "ILLEGAL",
+                submittedDay: saveDay,
+                decisionDay: saveDay + responseDays,
+                expiresDay: saveDay + Math.max(responseDays + 4, 7),
+                cashOut: Math.max(0, Math.round(dto.cashOut ?? 0)),
+                cashIn: Math.max(0, Math.round(dto.cashIn ?? 0)),
+                validation: validation,
+                decisionReason: validation.legal ? null : validation.reasons.join(" "),
+                items: {
+                    create: [
+                        ...outgoingPlayerIds.map((playerId) => ({ itemType: "PLAYER", direction: "OUT", playerId })),
+                        ...incomingPlayerIds.map((playerId) => ({ itemType: "PLAYER", direction: "IN", playerId })),
+                    ],
+                },
+            },
+            include: {
+                fromTeam: { select: { id: true, name: true, shortName: true } },
+                toTeam: { select: { id: true, name: true, shortName: true } },
+                items: { include: { player: { select: { id: true, name: true, position: true, salary: true, overallCurrent: true, potential: true } } } },
+            },
+        });
+        await prisma_1.default.negotiationEvent.create({
+            data: {
+                saveId: dto.saveId,
+                entityType: "TRADE_PROPOSAL",
+                entityId: proposal.id,
+                eventType: "SUBMITTED",
+                actor: "USER",
+                day: saveDay,
+                title: validation.legal ? "Trade proposal submitted" : "Illegal trade proposal blocked",
+                body: validation.legal
+                    ? `${proposal.fromTeam.shortName} proposed a deal to ${proposal.toTeam.shortName}.`
+                    : `Trade flagged illegal: ${validation.reasons.join(" ")}`,
+                payload: validation,
+            },
+        });
+        if (!validation.legal) {
+            await this.createInboxMessage({
+                saveId: dto.saveId,
+                date: save.currentDate,
+                type: "transfer",
+                title: "Trade proposal flagged illegal",
+                body: validation.reasons.join(" ") || "This move violates cap/salary rules.",
+                fromName: "League Office",
+            });
+        }
+        return {
+            ...proposal,
+            items: proposal.items.map((item) => {
+                if (!item.player)
+                    return item;
+                const teamCode = item.direction === "OUT" ? proposal.fromTeam?.shortName : proposal.toTeam?.shortName;
+                return {
+                    ...item,
+                    player: {
+                        ...item.player,
+                        position: (0, loadDetailedPositions_1.resolveDetailedPosition)(item.player.name, teamCode ?? "", item.player.position) ?? item.player.position,
+                    },
+                };
+            }),
+        };
+    }
+    async withdrawTradeProposal(saveId, proposalId) {
+        const save = await this.ensureSave(saveId);
+        const proposal = await prisma_1.default.tradeProposal.findFirst({
+            where: { id: proposalId, saveId },
+        });
+        if (!proposal)
+            throw new AppError_1.NotFoundError("Trade proposal");
+        if (!["PENDING", "COUNTERED"].includes(proposal.status))
+            throw new AppError_1.BadRequestError("Only pending/countered proposals can be withdrawn");
+        return prisma_1.default.tradeProposal.update({
+            where: { id: proposalId },
+            data: {
+                status: "WITHDRAWN",
+                resolvedAt: save.currentDate,
+                decisionReason: "Proposal withdrawn by user.",
+            },
+        });
+    }
+    async listNegotiationEvents(saveId) {
+        await this.ensureSave(saveId);
+        return prisma_1.default.negotiationEvent.findMany({
+            where: { saveId },
+            orderBy: { createdAt: "desc" },
+            take: 200,
+        });
+    }
+    async listTransactionHistory(saveId) {
+        await this.ensureSave(saveId);
+        return prisma_1.default.transactionHistory.findMany({
+            where: { saveId },
+            orderBy: { createdAt: "desc" },
+            take: 200,
+        });
+    }
+    async snapshotTeamCapsForDay(saveId, day) {
+        const teams = await prisma_1.default.team.findMany({
+            where: { shortName: { not: FREE_AGENT_TEAM_SHORT } },
+            select: { id: true },
+        });
+        for (const team of teams) {
+            const summary = await this.capService.getTeamCapSummary(team.id);
+            await prisma_1.default.teamCapSnapshot.upsert({
+                where: {
+                    saveId_teamId_day: {
+                        saveId,
+                        teamId: team.id,
+                        day,
+                    },
+                },
+                update: {
+                    payroll: summary.payroll,
+                    capSpace: summary.capSpace,
+                    luxuryTax: summary.luxuryTaxOwed,
+                    overCap: summary.overCap,
+                    overTax: summary.overTax,
+                    hardCap: summary.hardCap,
+                    apron: summary.apron,
+                },
+                create: {
+                    saveId,
+                    teamId: team.id,
+                    day,
+                    payroll: summary.payroll,
+                    capSpace: summary.capSpace,
+                    luxuryTax: summary.luxuryTaxOwed,
+                    overCap: summary.overCap,
+                    overTax: summary.overTax,
+                    hardCap: summary.hardCap,
+                    apron: summary.apron,
+                },
+            });
+        }
+    }
+    async signFreeAgent(dto) {
+        const save = await this.ensureSave(dto.saveId);
+        const freeAgentTeam = await prisma_1.default.team.findUnique({
+            where: { shortName: FREE_AGENT_TEAM_SHORT },
+            select: { id: true, name: true },
+        });
+        if (!freeAgentTeam)
+            throw new AppError_1.BadRequestError("Free-agent pool is not initialized");
+        const toTeam = await prisma_1.default.team.findUnique({
+            where: { id: dto.toTeamId },
+            select: { id: true, name: true, shortName: true },
+        });
+        if (!toTeam)
+            throw new AppError_1.NotFoundError("Team");
+        if (toTeam.id === freeAgentTeam.id)
+            throw new AppError_1.BadRequestError("Invalid destination club");
+        const player = await prisma_1.default.player.findUnique({
+            where: { id: dto.playerId },
+            select: {
+                id: true,
+                name: true,
+                teamId: true,
+                salary: true,
+                overallCurrent: true,
+                overallBase: true,
+            },
+        });
+        if (!player)
+            throw new AppError_1.NotFoundError("Player");
+        if (player.teamId !== freeAgentTeam.id) {
+            throw new AppError_1.BadRequestError(`${player.name} is not currently a free agent`);
+        }
+        const years = clamp(Number(dto.years ?? 1), 1, 5);
+        const salary = Math.max(500000, Number(dto.salary ?? player.salary ?? 1500000));
+        const startYear = Number(String(save.season ?? "2025-26").slice(0, 4)) || new Date().getUTCFullYear();
+        const endYear = startYear + years - 1;
+        const [updatedPlayer] = await prisma_1.default.$transaction([
+            prisma_1.default.player.update({
+                where: { id: player.id },
+                data: {
+                    teamId: toTeam.id,
+                    salary,
+                },
+                include: {
+                    team: { select: { id: true, name: true, shortName: true, logoPath: true } },
+                },
+            }),
+            prisma_1.default.contract.upsert({
+                where: { playerId: player.id },
+                update: {
+                    teamId: toTeam.id,
+                    salary,
+                    currentYearSalary: salary,
+                    averageAnnualValue: salary,
+                    startYear,
+                    endYear,
+                    contractType: "signed_free_agent",
+                },
+                create: {
+                    playerId: player.id,
+                    teamId: toTeam.id,
+                    salary,
+                    currentYearSalary: salary,
+                    averageAnnualValue: salary,
+                    startYear,
+                    endYear,
+                    contractType: "signed_free_agent",
+                },
+            }),
+        ]);
+        await this.createInboxMessage({
+            saveId: dto.saveId,
+            date: save.currentDate,
+            type: "transfer",
+            title: "Free agent signed",
+            body: `${updatedPlayer.name} signed with ${toTeam.name} (${this.formatMoney(salary)} / year, ${years} year(s)).`,
+            fromName: "Sporting Director",
+        });
+        return updatedPlayer;
+    }
     async listOffers(saveId) {
         await this.ensureSave(saveId);
         await this.reconcileSaveTransferState(saveId);
@@ -77,8 +492,18 @@ class TradesService {
                 outgoingPlayerIds: pieceArrays.outgoingPlayerIds.length ? pieceArrays.outgoingPlayerIds : offer.outgoingPlayerIds,
                 incomingPlayerIds: pieceArrays.incomingPlayerIds.length ? pieceArrays.incomingPlayerIds : offer.incomingPlayerIds,
                 pieceSummary: {
-                    outgoing: offer.playerPieces.filter((p) => p.direction === "OUT").map((p) => ({ id: p.playerId, name: p.player.name, position: p.player.position, salary: p.player.salary })),
-                    incoming: offer.playerPieces.filter((p) => p.direction === "IN").map((p) => ({ id: p.playerId, name: p.player.name, position: p.player.position, salary: p.player.salary })),
+                    outgoing: offer.playerPieces.filter((p) => p.direction === "OUT").map((p) => ({
+                        id: p.playerId,
+                        name: p.player.name,
+                        position: (0, loadDetailedPositions_1.resolveDetailedPosition)(p.player.name, offer.fromTeam?.shortName ?? "", p.player.position) ?? p.player.position,
+                        salary: p.player.salary,
+                    })),
+                    incoming: offer.playerPieces.filter((p) => p.direction === "IN").map((p) => ({
+                        id: p.playerId,
+                        name: p.player.name,
+                        position: (0, loadDetailedPositions_1.resolveDetailedPosition)(p.player.name, offer.toTeam?.shortName ?? "", p.player.position) ?? p.player.position,
+                        salary: p.player.salary,
+                    })),
                 },
             };
         });
@@ -504,6 +929,324 @@ class TradesService {
             }
         }
         return proposals.length;
+    }
+    async resolvePendingContractOffersForDay(saveId, day, date) {
+        const pending = await prisma_1.default.contractOffer.findMany({
+            where: { saveId, status: "PENDING", decisionDay: { lte: day } },
+            include: {
+                player: { include: { team: true } },
+                team: true,
+            },
+            orderBy: { createdAt: "asc" },
+        });
+        if (pending.length === 0)
+            return 0;
+        const save = await this.ensureSave(saveId);
+        const teamSummaryCache = new Map();
+        const getTeamSummary = async (teamId) => {
+            if (!teamSummaryCache.has(teamId)) {
+                teamSummaryCache.set(teamId, await this.capService.getTeamCapSummary(teamId));
+            }
+            return teamSummaryCache.get(teamId);
+        };
+        const freeAgentTeam = await prisma_1.default.team.findUnique({ where: { shortName: FREE_AGENT_TEAM_SHORT }, select: { id: true } });
+        for (const offer of pending) {
+            const teamSummary = await getTeamSummary(offer.teamId);
+            const expected = Math.max(500000, Number(offer.expectedSalary ?? 1500000));
+            const salaryFactor = clamp((offer.salaryPerYear - expected) / Math.max(1, expected), -0.6, 1.2);
+            const roleFactor = offer.rolePromise === "star" ? 0.2 : offer.rolePromise === "starter" ? 0.12 : offer.rolePromise === "bench" ? -0.06 : 0;
+            const teamQuality = clamp(((teamSummary.payroll / Math.max(1, teamSummary.salaryCap)) - 0.8) * 0.2, -0.1, 0.12);
+            const playtimeFactor = offer.rolePromise === "star" ? 0.15 : offer.rolePromise === "starter" ? 0.08 : 0;
+            const contenderFactor = teamSummary.overTax ? 0.04 : 0;
+            const capFactor = teamSummary.capSpace >= offer.salaryPerYear ? 0.04 : -0.1;
+            const seed = hashString(`${saveId}:${offer.id}:${day}:fa`);
+            const rng = mulberry32(seed);
+            const randomness = (rng() - 0.5) * 0.28;
+            const interestScore = salaryFactor + roleFactor + teamQuality + playtimeFactor + contenderFactor + capFactor + randomness;
+            const accepted = interestScore >= 0.05;
+            const decisionReason = accepted
+                ? `Accepted. Salary/role fit expectations (score ${interestScore.toFixed(2)}).`
+                : `Rejected. Expected better salary/role situation (score ${interestScore.toFixed(2)}).`;
+            if (!accepted) {
+                await prisma_1.default.contractOffer.update({
+                    where: { id: offer.id },
+                    data: { status: "REJECTED", interestScore, decisionReason, resolvedAt: date },
+                });
+                await this.createInboxMessage({
+                    saveId,
+                    date,
+                    type: "transfer",
+                    title: "Contract offer rejected",
+                    body: `${offer.player.name} rejected your offer. ${decisionReason}`,
+                    fromName: "Player Agent",
+                });
+                await prisma_1.default.negotiationEvent.create({
+                    data: {
+                        saveId,
+                        entityType: "CONTRACT_OFFER",
+                        entityId: offer.id,
+                        eventType: "REJECTED",
+                        actor: "PLAYER_AGENT",
+                        day,
+                        title: "Offer rejected",
+                        body: decisionReason,
+                    },
+                });
+                continue;
+            }
+            const years = clamp(Number(offer.years), 1, 5);
+            const seasonStart = Number(String(save.season ?? "2025-26").slice(0, 4)) || new Date().getUTCFullYear();
+            const endYear = seasonStart + years - 1;
+            await prisma_1.default.$transaction([
+                prisma_1.default.contractOffer.update({
+                    where: { id: offer.id },
+                    data: { status: "ACCEPTED", interestScore, decisionReason, resolvedAt: date },
+                }),
+                prisma_1.default.player.update({
+                    where: { id: offer.playerId },
+                    data: {
+                        teamId: offer.teamId,
+                        salary: offer.salaryPerYear,
+                    },
+                }),
+                prisma_1.default.contract.upsert({
+                    where: { playerId: offer.playerId },
+                    update: {
+                        teamId: offer.teamId,
+                        salary: offer.salaryPerYear,
+                        currentYearSalary: offer.salaryPerYear,
+                        averageAnnualValue: offer.salaryPerYear,
+                        startYear: seasonStart,
+                        endYear,
+                        contractType: "signed_free_agent",
+                        optionType: offer.optionType ?? null,
+                    },
+                    create: {
+                        playerId: offer.playerId,
+                        teamId: offer.teamId,
+                        salary: offer.salaryPerYear,
+                        currentYearSalary: offer.salaryPerYear,
+                        averageAnnualValue: offer.salaryPerYear,
+                        startYear: seasonStart,
+                        endYear,
+                        contractType: "signed_free_agent",
+                        optionType: offer.optionType ?? null,
+                    },
+                }),
+                prisma_1.default.transactionHistory.create({
+                    data: {
+                        saveId,
+                        teamId: offer.teamId,
+                        category: "FREE_AGENCY",
+                        status: "COMPLETED",
+                        referenceType: "CONTRACT_OFFER",
+                        referenceId: offer.id,
+                        day,
+                        title: "Free agent signed",
+                        body: `${offer.player.name} signed for ${this.formatMoney(offer.salaryPerYear)} x ${offer.years}.`,
+                        payload: { offerId: offer.id, playerId: offer.playerId, freeAgentTeamId: freeAgentTeam?.id ?? null },
+                    },
+                }),
+            ]);
+            await this.createInboxMessage({
+                saveId,
+                date,
+                type: "transfer",
+                title: "Contract offer accepted",
+                body: `${offer.player.name} accepted your offer (${this.formatMoney(offer.salaryPerYear)} x ${offer.years}).`,
+                fromName: "Player Agent",
+            });
+            await prisma_1.default.negotiationEvent.create({
+                data: {
+                    saveId,
+                    entityType: "CONTRACT_OFFER",
+                    entityId: offer.id,
+                    eventType: "ACCEPTED",
+                    actor: "PLAYER_AGENT",
+                    day,
+                    title: "Offer accepted",
+                    body: decisionReason,
+                },
+            });
+        }
+        return pending.length;
+    }
+    async resolvePendingTradeProposalsForDay(saveId, day, date) {
+        const proposals = await prisma_1.default.tradeProposal.findMany({
+            where: { saveId, status: "PENDING", decisionDay: { lte: day } },
+            include: {
+                fromTeam: true,
+                toTeam: true,
+                items: { include: { player: true } },
+            },
+            orderBy: { createdAt: "asc" },
+        });
+        for (const proposal of proposals) {
+            const outgoing = proposal.items.filter((i) => i.itemType === "PLAYER" && i.direction === "OUT").map((i) => i.player).filter(Boolean);
+            const incoming = proposal.items.filter((i) => i.itemType === "PLAYER" && i.direction === "IN").map((i) => i.player).filter(Boolean);
+            const outgoingValue = outgoing.reduce((s, p) => s + (p.overallCurrent ?? p.overallBase ?? 60) + ((p.potential ?? 70) - (p.overallCurrent ?? 60)) * 0.2, 0);
+            const incomingValue = incoming.reduce((s, p) => s + (p.overallCurrent ?? p.overallBase ?? 60) + ((p.potential ?? 70) - (p.overallCurrent ?? 60)) * 0.2, 0);
+            const valueDiff = incomingValue - outgoingValue;
+            const positionFit = this.computeTradeFitBonus(outgoing, incoming);
+            const contractFactor = incoming.reduce((s, p) => s + ((p.salary ?? 0) > 30000000 ? -2 : 1), 0);
+            const directionFactor = (proposal.toTeam.form ?? 50) >= 55 ? -1 : 1;
+            const seed = hashString(`${saveId}:${proposal.id}:${day}:trade`);
+            const rng = mulberry32(seed);
+            const randomness = (rng() - 0.5) * 8;
+            const acceptanceScore = valueDiff + positionFit + contractFactor + directionFactor + randomness;
+            let status = "REJECTED";
+            let reason = `Rejected. Offer value/fit too low (score ${acceptanceScore.toFixed(1)}).`;
+            let counterPayload = null;
+            if (acceptanceScore >= 4) {
+                status = "ACCEPTED";
+                reason = `Accepted. Offer met team value and fit (score ${acceptanceScore.toFixed(1)}).`;
+            }
+            else if (acceptanceScore >= 0.5) {
+                status = "COUNTERED";
+                const extra = outgoing.sort((a, b) => (a.overallCurrent ?? 0) - (b.overallCurrent ?? 0))[0];
+                counterPayload = {
+                    askAdditionalOutgoingPlayerId: extra?.id ?? null,
+                    askAdditionalCashOut: 1000000,
+                };
+                reason = "Countered. Team wants slightly better outgoing value.";
+            }
+            await prisma_1.default.tradeProposal.update({
+                where: { id: proposal.id },
+                data: {
+                    status,
+                    aiScore: acceptanceScore,
+                    decisionReason: reason,
+                    counterPayload: counterPayload,
+                    resolvedAt: status === "COUNTERED" ? null : date,
+                },
+            });
+            if (status === "ACCEPTED") {
+                await this.executeAcceptedTradeProposal(saveId, proposal.id, day, date);
+            }
+            await this.createInboxMessage({
+                saveId,
+                date,
+                type: "transfer",
+                title: `Trade ${status.toLowerCase()}`,
+                body: `${proposal.toTeam.shortName} ${status.toLowerCase()} your proposal. ${reason}`,
+                fromName: "League Office",
+            });
+            await prisma_1.default.negotiationEvent.create({
+                data: {
+                    saveId,
+                    entityType: "TRADE_PROPOSAL",
+                    entityId: proposal.id,
+                    eventType: status,
+                    actor: "AI_TEAM",
+                    day,
+                    title: `Trade ${status.toLowerCase()}`,
+                    body: reason,
+                    payload: counterPayload,
+                },
+            });
+        }
+        return proposals.length;
+    }
+    async executeAcceptedTradeProposal(saveId, proposalId, day, date) {
+        const proposal = await prisma_1.default.tradeProposal.findUnique({
+            where: { id: proposalId },
+            include: { items: true, fromTeam: true, toTeam: true },
+        });
+        if (!proposal)
+            return;
+        const outgoing = proposal.items.filter((i) => i.itemType === "PLAYER" && i.direction === "OUT").map((i) => i.playerId).filter((v) => v != null);
+        const incoming = proposal.items.filter((i) => i.itemType === "PLAYER" && i.direction === "IN").map((i) => i.playerId).filter((v) => v != null);
+        const movingIds = [...new Set([...outgoing, ...incoming])];
+        const movingPlayers = await prisma_1.default.player.findMany({
+            where: { id: { in: movingIds } },
+            select: { id: true, jerseyCode: true },
+        });
+        const jerseyByPlayerId = new Map(movingPlayers.map((p) => [p.id, p.jerseyCode ?? null]));
+        const fromTeamKeepers = await prisma_1.default.player.findMany({
+            where: {
+                active: true,
+                teamId: proposal.fromTeamId,
+                id: { notIn: outgoing },
+            },
+            select: { jerseyCode: true },
+        });
+        const toTeamKeepers = await prisma_1.default.player.findMany({
+            where: {
+                active: true,
+                teamId: proposal.toTeamId,
+                id: { notIn: incoming },
+            },
+            select: { jerseyCode: true },
+        });
+        const normalizeJersey = (value) => {
+            const v = String(value ?? "").trim();
+            return v.length > 0 ? v : null;
+        };
+        const reserveJerseys = (preferredByPlayer, existing) => {
+            const used = new Set(existing.map((v) => String(v)));
+            const assignments = new Map();
+            const nextFree = () => {
+                const candidates = ["0", "00", ...Array.from({ length: 99 }, (_, i) => String(i + 1))];
+                for (const c of candidates) {
+                    if (!used.has(c))
+                        return c;
+                }
+                return null;
+            };
+            for (const row of preferredByPlayer) {
+                const preferred = normalizeJersey(row.preferred);
+                if (preferred && !used.has(preferred)) {
+                    used.add(preferred);
+                    assignments.set(row.playerId, preferred);
+                    continue;
+                }
+                const fallback = nextFree();
+                if (fallback) {
+                    used.add(fallback);
+                    assignments.set(row.playerId, fallback);
+                }
+                else {
+                    assignments.set(row.playerId, null);
+                }
+            }
+            return assignments;
+        };
+        const toTeamAssignments = reserveJerseys(outgoing.map((playerId) => ({ playerId, preferred: jerseyByPlayerId.get(playerId) ?? null })), toTeamKeepers.map((p) => normalizeJersey(p.jerseyCode)).filter(Boolean));
+        const fromTeamAssignments = reserveJerseys(incoming.map((playerId) => ({ playerId, preferred: jerseyByPlayerId.get(playerId) ?? null })), fromTeamKeepers.map((p) => normalizeJersey(p.jerseyCode)).filter(Boolean));
+        await prisma_1.default.$transaction([
+            ...outgoing.map((playerId) => prisma_1.default.player.update({
+                where: { id: playerId },
+                data: { teamId: proposal.toTeamId, jerseyCode: toTeamAssignments.get(playerId) ?? null },
+            })),
+            ...incoming.map((playerId) => prisma_1.default.player.update({
+                where: { id: playerId },
+                data: { teamId: proposal.fromTeamId, jerseyCode: fromTeamAssignments.get(playerId) ?? null },
+            })),
+            prisma_1.default.transactionHistory.create({
+                data: {
+                    saveId,
+                    teamId: proposal.fromTeamId,
+                    category: "TRADE",
+                    status: "COMPLETED",
+                    referenceType: "TRADE_PROPOSAL",
+                    referenceId: proposal.id,
+                    day,
+                    title: "Trade completed",
+                    body: `${proposal.fromTeam.shortName} and ${proposal.toTeam.shortName} completed a trade.`,
+                    payload: { outgoingPlayerIds: outgoing, incomingPlayerIds: incoming },
+                },
+            }),
+        ]);
+    }
+    computeTradeFitBonus(outgoing, incoming) {
+        const count = (arr) => arr.reduce((acc, p) => {
+            const b = parsePosBucket(p.position);
+            acc[b] += 1;
+            return acc;
+        }, { G: 0, W: 0, B: 0 });
+        const out = count(outgoing);
+        const inn = count(incoming);
+        return (inn.G - out.G) * 0.6 + (inn.W - out.W) * 0.8 + (inn.B - out.B) * 1.0;
     }
     async evaluateOffer(offer) {
         const players = await prisma_1.default.player.findMany({

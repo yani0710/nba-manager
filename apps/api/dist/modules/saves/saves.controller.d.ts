@@ -17,6 +17,7 @@ export declare class SavesController {
     saveRotation(req: Request, res: Response, next: NextFunction): Promise<void>;
     saveTactics(req: Request, res: Response, next: NextFunction): Promise<void>;
     saveTraining(req: Request, res: Response, next: NextFunction): Promise<void>;
+    saveRosterManagement(req: Request, res: Response, next: NextFunction): Promise<void>;
     getTraining(req: Request, res: Response, next: NextFunction): Promise<void>;
     getPlayerTrainingPlans(req: Request, res: Response, next: NextFunction): Promise<void>;
     upsertPlayerTrainingPlan(req: Request, res: Response, next: NextFunction): Promise<void>;

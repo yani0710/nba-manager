@@ -303,7 +303,7 @@ export function TrainingPlayers() {
                     <div className="pt-avatar big">{getInitials(selectedPlayer.name)}</div>
                     <div>
                       <h2>{selectedPlayer.name}</h2>
-                      <p>#{selectedPlayer.jerseyNumber ?? selectedPlayer.number ?? '--'} | {selectedPlayer.position || 'N/A'} | {selectedPlayer.age ?? '--'} years old</p>
+                      <p>#{selectedPlayer.jerseyCode ?? selectedPlayer.jerseyNumber ?? selectedPlayer.number ?? '--'} | {selectedPlayer.position || 'N/A'} | {selectedPlayer.age ?? '--'} years old</p>
                     </div>
                   </div>
                   <div className="pt-overall">

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test:match-sim": "node --test src/pages/MatchCenter/__tests__/matchSimulationEngine.test.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

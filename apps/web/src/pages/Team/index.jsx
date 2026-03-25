@@ -58,7 +58,7 @@ export function Team() {
             <tbody>
               {selectedTeam.players?.map((player) => (
                 <tr key={player.id}>
-                  <td>{player.number}</td>
+                  <td>{player.jerseyCode ?? player.jerseyNumber ?? player.number ?? '-'}</td>
                   <td>{player.name}</td>
                   <td>{player.position}</td>
                   <td>${(player.salary / 1000000).toFixed(1)}M</td>

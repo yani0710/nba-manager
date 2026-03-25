@@ -2,9 +2,9 @@ export declare class GamesService {
     getAllGames(): Promise<({
         gameStats: {
             id: number;
+            teamId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            teamId: number | null;
             playerId: number;
             points: number;
             gameId: number;
@@ -32,7 +32,10 @@ export declare class GamesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -40,16 +43,16 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
         homeTeam: {
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -57,9 +60,6 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
     } & {
         id: number;
@@ -79,15 +79,14 @@ export declare class GamesService {
                 number: number | null;
                 id: number;
                 name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                teamId: number;
-                form: number;
-                morale: number;
                 externalRef: string | null;
                 jerseyNumber: number | null;
+                jerseyCode: string | null;
                 position: string;
                 salary: number | null;
+                teamId: number;
+                createdAt: Date;
+                updatedAt: Date;
                 firstName: string | null;
                 birthDate: Date | null;
                 age: number | null;
@@ -117,6 +116,8 @@ export declare class GamesService {
                 defensiveRating: number;
                 physicalRating: number;
                 iqRating: number;
+                form: number;
+                morale: number;
                 fatigue: number;
                 formTrendDays: number;
                 lastFormSnapshot: number;
@@ -131,9 +132,9 @@ export declare class GamesService {
             };
         } & {
             id: number;
+            teamId: number | null;
             createdAt: Date;
             updatedAt: Date;
-            teamId: number | null;
             playerId: number;
             points: number;
             gameId: number;
@@ -161,7 +162,10 @@ export declare class GamesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -169,16 +173,16 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
         homeTeam: {
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -186,9 +190,6 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
     } & {
         id: number;
@@ -208,7 +209,10 @@ export declare class GamesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -216,16 +220,16 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
         homeTeam: {
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -233,9 +237,6 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
     } & {
         id: number;
@@ -255,7 +256,10 @@ export declare class GamesService {
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -263,16 +267,16 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
         homeTeam: {
             id: number;
             name: string;
             createdAt: Date;
             updatedAt: Date;
+            form: number;
+            morale: number;
             shortName: string;
+            nbaTeamId: number | null;
             city: string;
             conference: string | null;
             division: string | null;
@@ -280,9 +284,6 @@ export declare class GamesService {
             secondaryColor: string | null;
             logoKey: string | null;
             logoPath: string | null;
-            form: number;
-            morale: number;
-            nbaTeamId: number | null;
         };
     } & {
         id: number;

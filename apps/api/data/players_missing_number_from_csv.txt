@@ -1,0 +1,4 @@
+Active players missing jersey number in app but present in players_cleaned_with_first_page.csv: 0
+Generated at: 2026-03-24T19:38:26.453Z
+
+id | player | teamCode | team | appNumber | appJersey | csvNumber

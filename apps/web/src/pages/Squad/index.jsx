@@ -1,76 +1,105 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useGameStore } from '../../state/gameStore';
 import { EmptyState, SkeletonTable } from '../../components/ui';
+import { useGameStore } from '../../state/gameStore';
+import {
+  getContractMeta,
+  getPlayerSalary,
+  getPosTokens,
+  normalizeName,
+  parseAge,
+  parseOverall,
+  parsePotential,
+  parseStat,
+  toMoneyMillions,
+} from './rosterUtils';
 import './squad.css';
 
-const FILTERS = ['ALL', 'PG', 'SG', 'SF', 'PF', 'C'];
-const SALARY_CAP = 145_000_000;
-
-function initials(value) {
-  return String(value || '')
-    .split(' ')
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() || 'TM';
-}
-
-function toMoneyMillions(value) {
+function normalizePct(value) {
   const n = Number(value);
-  if (!Number.isFinite(n)) return '$0.0M';
-  return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (!Number.isFinite(n)) return 0;
+  if (n <= 1) return n * 100;
+  return n;
 }
 
-function getPlayerSalary(player) {
-  const direct = Number(player?.salary);
-  if (Number.isFinite(direct) && direct > 0) return direct;
-
-  const contract = player?.contracts;
-  const currentYear = Number(contract?.currentYearSalary);
-  if (Number.isFinite(currentYear) && currentYear > 0) return currentYear;
-
-  const base = Number(contract?.salary);
-  if (Number.isFinite(base) && base > 0) return base;
-
-  const aav = Number(contract?.averageAnnualValue);
-  if (Number.isFinite(aav) && aav > 0) return aav;
-
-  const contractYears = Array.isArray(contract?.contractYears) ? contract.contractYears : [];
-  const yearSalary = contractYears
-    .map((row) => Number(row?.salary))
-    .find((n) => Number.isFinite(n) && n > 0);
-  if (Number.isFinite(yearSalary) && yearSalary > 0) return yearSalary;
-
-  return 0;
+function getMoodEmoji(morale) {
+  if (morale >= 90) return '😁';
+  if (morale >= 75) return '🙂';
+  if (morale >= 60) return '😐';
+  return '😟';
 }
 
-function getPosTokens(position) {
-  return String(position || '')
-    .toUpperCase()
-    .split(/[^A-Z]+/)
-    .filter(Boolean);
+function getOvrTierClass(ovr) {
+  if (ovr >= 90) return 'elite';
+  if (ovr >= 84) return 'great';
+  if (ovr >= 78) return 'good';
+  return 'solid';
 }
 
-function moodEmoji(morale) {
-  const m = Number(morale ?? 60);
-  if (m >= 80) return '😁';
-  if (m >= 65) return '🙂';
-  if (m >= 50) return '😐';
-  return '🙁';
+function initials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'PL';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function statusForPlayer(player, injuries) {
-  const name = String(player?.name || '').toLowerCase().trim();
-  const injury = (injuries || []).find((i) => String(i.playerName || '').toLowerCase().trim() === name);
-  if (injury) return `Injured (${injury.expectedReturnWeeks || 1}w)`;
-  return 'Healthy';
+function toPlayerVm({ player, season, startersSet, injuriesByName }) {
+  const overall = parseOverall(player);
+  const potential = parsePotential(player);
+  const age = parseAge(player);
+  const salary = getPlayerSalary(player);
+  const contractMeta = getContractMeta(player, season);
+  const lowerName = normalizeName(player.name);
+  const injury = injuriesByName.get(lowerName);
+  const injuryStatus = injury ? `Out (${Number(injury.expectedReturnWeeks ?? 1)}w)` : 'Active';
+  const morale = Number(player.morale ?? 72);
+  const fitness = Math.max(0, 100 - Number(player.fatigue ?? 8));
+  const shooting = Math.round((Number(player?.offensiveRating ?? 60) + Number(player?.attributes?.att ?? 60)) / 2);
+  const defense = Number(player?.defensiveRating ?? 60);
+  const passing = Number(player?.attributes?.play ?? 60);
+  const dribbling = Math.round((passing + Number(player?.attributes?.att ?? 60)) / 2);
+  const athleticism = Math.round((fitness + Number(player?.attributes?.stam ?? 70)) / 2);
+  const iq = Math.round((overall + potential) / 2);
+  const fgPct = normalizePct(player?.fgCareer ?? player?.fgPct ?? player?.fieldGoalPct ?? 0);
+
+  return {
+    ...player,
+    jersey: player.jerseyCode ?? player.jerseyNumber ?? player.number ?? '-',
+    overall,
+    potential,
+    age,
+    salary,
+    contractYears: contractMeta.yearsRemaining,
+    injuryStatus,
+    ppg: parseStat(player.ptsCareer),
+    rpg: parseStat(player.trbCareer),
+    apg: parseStat(player.astCareer),
+    fgPct,
+    morale,
+    mood: getMoodEmoji(morale),
+    fitness,
+    shooting,
+    defense,
+    passing,
+    dribbling,
+    athleticism,
+    iq,
+    isStarter: startersSet.has(player.id),
+  };
 }
 
-function statBarWidth(value, max) {
-  const n = Number(value);
-  if (!Number.isFinite(n) || max <= 0) return 0;
-  return Math.max(4, Math.min(100, (n / max) * 100));
+function AttributeBar({ label, value }) {
+  const safe = Math.max(0, Math.min(99, Number(value) || 0));
+  return (
+    <div className="sq-attr-row">
+      <div className="sq-attr-head">
+        <span>{label}</span>
+        <strong>{safe}</strong>
+      </div>
+      <div className="sq-attr-track">
+        <span style={{ width: `${safe}%` }} />
+      </div>
+    </div>
+  );
 }
 
 export function Squad() {
@@ -82,15 +111,14 @@ export function Squad() {
     fetchDashboard,
     loading,
   } = useGameStore();
-  const [activeFilter, setActiveFilter] = useState('ALL');
+
+  const [activePos, setActivePos] = useState('ALL');
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
 
   const teamShortName = currentSave?.data?.career?.teamShortName ?? currentSave?.team?.shortName ?? null;
+  const season = currentSave?.season ?? '2025-26';
   const teamName = currentSave?.team?.name || teamShortName || 'Team';
-  const teamCity = currentSave?.team?.city || 'Los Angeles';
-  const teamDivision = currentSave?.team?.division || 'Division';
-  const managedTeamId = currentSave?.managedTeamId || currentSave?.teamId || null;
-  const teamState = managedTeamId ? currentSave?.data?.teamState?.[String(managedTeamId)] : null;
-  const injuries = currentSave?.data?.injuries || [];
+  const injuries = currentSave?.data?.injuries ?? [];
 
   useEffect(() => {
     if (!teamShortName) return;
@@ -98,184 +126,156 @@ export function Squad() {
     fetchDashboard();
   }, [fetchSquad, fetchDashboard, currentSave?.id, teamShortName]);
 
-  const players = useMemo(() => {
-    const all = Array.isArray(squadPlayers) ? squadPlayers : [];
-    if (activeFilter === 'ALL') return all;
-    return all.filter((player) => {
-      const tokens = getPosTokens(player.position);
-      return tokens.includes(activeFilter);
-    });
-  }, [squadPlayers, activeFilter]);
+  const startersSet = useMemo(() => {
+    const slots = currentSave?.data?.rotation ?? {};
+    return new Set(Object.values(slots).map((id) => Number(id)).filter(Number.isFinite));
+  }, [currentSave?.data?.rotation]);
 
-  const maxPts = Math.max(1, ...players.map((p) => Number(p.ptsCareer ?? 0)));
-  const maxReb = Math.max(1, ...players.map((p) => Number(p.trbCareer ?? 0)));
-  const maxAst = Math.max(1, ...players.map((p) => Number(p.astCareer ?? 0)));
-  const payroll = (squadPlayers || []).reduce((sum, p) => sum + getPlayerSalary(p), 0);
-  const capSpace = SALARY_CAP - payroll;
-  const streakValue = Number(teamState?.streak || 0);
-  const streakLabel = streakValue > 0 ? `W${streakValue}` : streakValue < 0 ? `L${Math.abs(streakValue)}` : '-';
-  const wins = dashboard?.overview?.wins ?? 0;
-  const losses = dashboard?.overview?.losses ?? 0;
+  const injuriesByName = useMemo(() => {
+    const map = new Map();
+    for (const injury of injuries) map.set(normalizeName(injury.playerName), injury);
+    return map;
+  }, [injuries]);
+
+  const managedRoster = useMemo(
+    () => (Array.isArray(squadPlayers) ? squadPlayers : [])
+      .map((player) => toPlayerVm({
+        player,
+        season,
+        startersSet,
+        injuriesByName,
+      }))
+      .sort((a, b) => b.overall - a.overall),
+    [squadPlayers, season, startersSet, injuriesByName],
+  );
+
+  const shownPlayers = useMemo(() => {
+    if (activePos === 'ALL') return managedRoster;
+    return managedRoster.filter((player) => getPosTokens(player.position).includes(activePos));
+  }, [managedRoster, activePos]);
+
+  const selectedPlayer = useMemo(
+    () => managedRoster.find((player) => player.id === selectedPlayerId) ?? null,
+    [managedRoster, selectedPlayerId],
+  );
 
   if (!teamShortName) {
-    return (
-      <div>
-        <EmptyState title="No managed team" description="Start or load a career with a team to view your roster." />
-      </div>
-    );
+    return <EmptyState title="No managed team" description="Start or load a career with a team to view your squad." />;
   }
 
   if (loading && (!squadPlayers || squadPlayers.length === 0)) {
-    return <SkeletonTable rows={10} cols={8} />;
+    return <SkeletonTable rows={10} cols={10} />;
   }
 
   return (
-    <div className="squad-page-v2">
-      <section className="sq-top-strip">
-        <div className="sq-team-head">
-          <div className="sq-team-badge">{teamShortName}</div>
-          <div>
-            <h1>{String(teamName).toUpperCase()}</h1>
-            <p>{teamCity}, California • {teamDivision}</p>
-          </div>
-        </div>
-        <div className="sq-top-stats">
-          <div>
-            <span>Record</span>
-            <strong>{wins}-{losses}</strong>
-          </div>
-          <div>
-            <span>Streak</span>
-            <strong className="streak">{streakLabel}</strong>
-          </div>
-          <div>
-            <span>Cap</span>
-            <strong>${Math.round(SALARY_CAP / 1_000_000)}M</strong>
-          </div>
-          <div>
-            <span>Payroll</span>
-            <strong className="payroll">{toMoneyMillions(payroll)}</strong>
-            <small>{((payroll / SALARY_CAP) * 100).toFixed(1)}% of cap</small>
-          </div>
-        </div>
-      </section>
-
-      <section className="sq-filter-tabs">
-        {FILTERS.map((key) => (
+    <div className="squad-premium">
+      <nav className="sq-pos-tabs">
+        {['ALL', 'PG', 'SG', 'SF', 'PF', 'C'].map((pos) => (
           <button
-            key={key}
+            key={pos}
             type="button"
-            className={`sq-tab ${activeFilter === key ? 'is-active' : ''}`}
-            onClick={() => setActiveFilter(key)}
+            className={activePos === pos ? 'is-active' : ''}
+            onClick={() => setActivePos(pos)}
           >
-            {key}
+            {pos}
           </button>
         ))}
+      </nav>
+
+      <header className="sq-header">
+        <h1>Squad Roster</h1>
+        <p>{teamName} ({teamShortName}) | Record {dashboard?.overview?.wins ?? 0}-{dashboard?.overview?.losses ?? 0}</p>
+        <small>Showing {shownPlayers.length} of {managedRoster.length} players</small>
+      </header>
+
+      <section className="sq-table-shell">
+        <table className="sq-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>Pos</th>
+              <th>Age</th>
+              <th>OVR</th>
+              <th>PTS</th>
+              <th>REB</th>
+              <th>AST</th>
+              <th>FG%</th>
+              <th>Status</th>
+              <th>Mood</th>
+              <th>Contract</th>
+            </tr>
+          </thead>
+          <tbody>
+            {shownPlayers.map((player) => (
+              <tr key={player.id} onClick={() => setSelectedPlayerId(player.id)}>
+                <td>{player.jersey}</td>
+                <td>
+                  <div className="sq-player-cell">
+                    <span className="sq-avatar">{initials(player.name)}</span>
+                    <div>
+                      <strong>{player.name}</strong>
+                      <small>{player.nationality || 'N/A'}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{player.position || '-'}</td>
+                <td>{player.age ?? '--'}</td>
+                <td>
+                  <span className={`sq-ovr ${getOvrTierClass(player.overall)}`}>{player.overall}</span>
+                  <small className="sq-pot">↗ {player.potential}</small>
+                </td>
+                <td>{player.ppg.toFixed(1)}</td>
+                <td>{player.rpg.toFixed(1)}</td>
+                <td>{player.apg.toFixed(1)}</td>
+                <td>{player.fgPct.toFixed(1)}%</td>
+                <td>{player.injuryStatus}</td>
+                <td>{player.mood}</td>
+                <td>{toMoneyMillions(player.salary)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
-      <section className="sq-card">
-        <h3>SQUAD ROSTER</h3>
-        <p>Showing {players.length} of {(squadPlayers || []).length} players</p>
+      {selectedPlayer ? (
+        <div className="sq-modal-backdrop" onClick={() => setSelectedPlayerId(null)} role="presentation">
+          <section className="sq-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <button type="button" className="sq-close" onClick={() => setSelectedPlayerId(null)}>×</button>
 
-        {(squadPlayers || []).length === 0 ? (
-          <EmptyState title="No squad players" description="Roster data is empty for this managed team." />
-        ) : (
-          <div className="sq-table-wrap">
-            <table className="sq-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>PLAYER</th>
-                  <th>POS</th>
-                  <th>AGE</th>
-                  <th>OVR</th>
-                  <th>PTS</th>
-                  <th>REB</th>
-                  <th>AST</th>
-                  <th>FG%</th>
-                  <th>STATUS</th>
-                  <th>MOOD</th>
-                  <th>CONTRACT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {players.map((player) => {
-                  const points = Number(player.ptsCareer ?? 0);
-                  const rebounds = Number(player.trbCareer ?? 0);
-                  const assists = Number(player.astCareer ?? 0);
-                  const fgPct = Number(player.fgPct ?? 0) * 100;
-                  const overall = Number(player.overallCurrent ?? player.overall ?? 60);
-                  const potential = Number(player.potential ?? overall);
-                  const morale = Number(player.morale ?? 60);
-                  return (
-                    <tr key={player.id}>
-                      <td>{player.jerseyNumber ?? player.number ?? '-'}</td>
-                      <td>
-                        <div className="sq-player-cell">
-                          <span className="sq-avatar">{initials(player.name)}</span>
-                          <div>
-                            <strong>{player.name}</strong>
-                            <small>{player.nationality || 'USA'}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{player.position || '-'}</td>
-                      <td>{player.age ?? '--'}</td>
-                      <td>
-                        <div className="sq-ovr">
-                          <span>{overall}</span>
-                          <small>↗ {potential}</small>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="sq-stat-cell">
-                          <span>{points.toFixed(1)}</span>
-                          <i style={{ width: `${statBarWidth(points, maxPts)}%` }} />
-                        </div>
-                      </td>
-                      <td>
-                        <div className="sq-stat-cell">
-                          <span>{rebounds.toFixed(1)}</span>
-                          <i style={{ width: `${statBarWidth(rebounds, maxReb)}%` }} />
-                        </div>
-                      </td>
-                      <td>
-                        <div className="sq-stat-cell">
-                          <span>{assists.toFixed(1)}</span>
-                          <i style={{ width: `${statBarWidth(assists, maxAst)}%` }} />
-                        </div>
-                      </td>
-                      <td>{Number.isFinite(fgPct) ? `${fgPct.toFixed(1)}%` : '--'}</td>
-                      <td>{statusForPlayer(player, injuries)}</td>
-                      <td>{moodEmoji(morale)}</td>
-                      <td>{toMoneyMillions(getPlayerSalary(player))}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+            <div className="sq-modal-head">
+              <span className="sq-avatar large">{initials(selectedPlayer.name)}</span>
+              <div>
+                <h2>{selectedPlayer.name}</h2>
+                <p>#{selectedPlayer.jersey} • <strong>{selectedPlayer.position}</strong> • {selectedPlayer.age} years old</p>
+              </div>
+            </div>
 
-      <section className="sq-bottom-stats">
-        <article>
-          <span>Average Age</span>
-          <strong>{(((squadPlayers || []).reduce((sum, p) => sum + (Number(p.age) || 0), 0) / Math.max(1, (squadPlayers || []).length)) || 0).toFixed(1)}</strong>
-        </article>
-        <article>
-          <span>Team Average</span>
-          <strong>{(((squadPlayers || []).reduce((sum, p) => sum + (Number(p.overallCurrent ?? p.overall) || 0), 0) / Math.max(1, (squadPlayers || []).length)) || 0).toFixed(1)}</strong>
-        </article>
-        <article>
-          <span>Healthy Players</span>
-          <strong>{(squadPlayers || []).filter((p) => statusForPlayer(p, injuries) === 'Healthy').length}/{(squadPlayers || []).length}</strong>
-        </article>
-        <article>
-          <span>Cap Space</span>
-          <strong>{toMoneyMillions(capSpace)}</strong>
-        </article>
-      </section>
+            <div className="sq-modal-grid">
+              <article>
+                <h3>Season Statistics</h3>
+                <div className="sq-stat-list">
+                  <p><span>Points Per Game</span><strong>{selectedPlayer.ppg.toFixed(1)}</strong></p>
+                  <p><span>Rebounds</span><strong>{selectedPlayer.rpg.toFixed(1)}</strong></p>
+                  <p><span>Assists</span><strong>{selectedPlayer.apg.toFixed(1)}</strong></p>
+                  <p><span>FG%</span><strong>{selectedPlayer.fgPct.toFixed(1)}%</strong></p>
+                </div>
+              </article>
+
+              <article>
+                <h3>Attributes</h3>
+                <AttributeBar label="Shooting" value={selectedPlayer.shooting} />
+                <AttributeBar label="Defense" value={selectedPlayer.defense} />
+                <AttributeBar label="Passing" value={selectedPlayer.passing} />
+                <AttributeBar label="Dribbling" value={selectedPlayer.dribbling} />
+                <AttributeBar label="Athleticism" value={selectedPlayer.athleticism} />
+                <AttributeBar label="IQ" value={selectedPlayer.iq} />
+              </article>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 }
+
