@@ -171,6 +171,15 @@ class SavesController {
             next(err);
         }
     }
+    async finalizeMatchSimulation(req, res, next) {
+        try {
+            const data = await savesService.finalizeMatchSimulation(Number(req.params.id), Number(req.params.gameId), req.body ?? {});
+            res.json(data);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async saveRosterManagement(req, res, next) {
         try {
             const data = await savesService.saveRosterManagement(Number(req.params.id), {

@@ -39,6 +39,7 @@ export const api = {
     getPlayerTrainingPlans: (id) => client.get(`/saves/${id}/training/players`),
     savePlayerTrainingPlan: (id, data) => client.post(`/saves/${id}/training/players`, data),
     deletePlayerTrainingPlan: (id, playerId) => client.delete(`/saves/${id}/training/players/${playerId}`),
+    finalizeMatchSimulation: (id, gameId, data) => client.post(`/saves/${id}/matches/${gameId}/finalize-sim`, data),
     create: (data) => client.post('/saves', data),
     advance: (id, data = {}) => client.post(`/saves/${id}/advance`, data),
     delete: (id) => client.delete(`/saves/${id}`),

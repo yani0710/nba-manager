@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../../state/gameStore';
+import { api } from '../../api/client';
 import { getFixtureDateKeyEt, isFixtureCompleted, isFixtureSimulatable } from '../../domain/fixtures';
 import { buildAdvice, formatClock, getLineupByPosition, quarterLabel } from './matchSimUtils';
 import {
@@ -10,6 +11,7 @@ import {
   getConsistencySnapshot,
   playOnePossession,
   playUntilQuarterEnd,
+  quickSimToEndLocal,
 } from './matchSimulationEngine';
 import './match-center.css';
 
@@ -45,8 +47,10 @@ export function MatchCenter() {
     fetchTeams,
     fetchPlayers,
     fetchSchedule,
+    fetchResults,
+    fetchStandings,
+    fetchDashboard,
     fetchResultDetails,
-    advanceSave,
   } = useGameStore();
 
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -54,9 +58,11 @@ export function MatchCenter() {
   const [speed, setSpeed] = useState(1);
   const [running, setRunning] = useState(false);
   const [officialResultLocked, setOfficialResultLocked] = useState(false);
+  const [persistingResult, setPersistingResult] = useState(false);
   const [simError, setSimError] = useState('');
   const [simState, setSimState] = useState(null);
   const tickerRef = useRef(null);
+  const autoPersistRef = useRef(false);
 
   const managedCode = currentSave?.data?.career?.teamShortName;
   const currentDate = String(currentSave?.data?.currentDate || '').slice(0, 10);
@@ -139,6 +145,8 @@ export function MatchCenter() {
     setSimState(st);
     setRunning(false);
     setOfficialResultLocked(false);
+    setPersistingResult(false);
+    autoPersistRef.current = false;
   }, [selectedGame?.id]);
 
   const pushMatchdayWarning = () => {
@@ -177,7 +185,8 @@ export function MatchCenter() {
 
   useEffect(() => {
     if (!running || !simState) return undefined;
-    const ms = Math.max(80, Math.round(1000 / (speed * 3)));
+    // Tune pacing for smoother but noticeably faster simulation.
+    const ms = Math.max(24, Math.round(1000 / (speed * 12)));
     tickerRef.current = window.setInterval(() => {
       safeSetSim((prev) => {
         if (!prev || prev.isFinal || officialResultLocked || !canLiveSim) return prev;
@@ -215,17 +224,53 @@ export function MatchCenter() {
     if (!currentSave?.id || !selectedGame || officialResultLocked) return;
     if (!canOfficialSim) return pushMatchdayWarning();
     setRunning(false);
-    await advanceSave(currentSave.id);
-    const details = await fetchResultDetails(selectedGame.id);
-    if (!details) return;
-    safeSetSim((prev) => {
-      if (!prev) return prev;
-      const next = cloneState(prev);
-      applyOfficialResultToState(next, details);
-      return next;
-    });
-    setOfficialResultLocked(true);
+    setPersistingResult(true);
+    try {
+      let finalState = simState;
+      if (finalState && !finalState.isFinal) {
+        finalState = cloneState(finalState);
+        quickSimToEndLocal(finalState, ctx);
+        setSimState(finalState);
+      }
+      if (!finalState?.isFinal) return;
+
+      await api.saves.finalizeMatchSimulation(currentSave.id, selectedGame.id, {
+        homeScore: finalState.homeScore,
+        awayScore: finalState.awayScore,
+        homePlayers: Object.values(finalState.homePlayers || {}),
+        awayPlayers: Object.values(finalState.awayPlayers || {}),
+      });
+
+      await Promise.all([
+        fetchSchedule(),
+        fetchResults(),
+        fetchStandings(),
+        fetchDashboard(),
+      ]);
+
+      const details = await fetchResultDetails(selectedGame.id);
+      if (details) {
+        safeSetSim((prev) => {
+          if (!prev) return prev;
+          const next = cloneState(prev);
+          applyOfficialResultToState(next, details);
+          return next;
+        });
+      }
+      setOfficialResultLocked(true);
+    } finally {
+      setPersistingResult(false);
+    }
   };
+
+  useEffect(() => {
+    if (!simState?.isFinal) return;
+    if (officialResultLocked || persistingResult) return;
+    if (!canOfficialSim) return;
+    if (autoPersistRef.current) return;
+    autoPersistRef.current = true;
+    void runOfficialSimToEnd();
+  }, [simState?.isFinal, officialResultLocked, persistingResult, canOfficialSim]);
 
   const state = simState;
   const performers = useMemo(() => (state ? deriveTopPerformers(state) : { home: null, away: null, leader: null }), [state]);
@@ -334,7 +379,7 @@ export function MatchCenter() {
             <button
               className="ui-btn"
               type="button"
-              disabled={!canLiveSim || officialResultLocked}
+              disabled={!canLiveSim || officialResultLocked || persistingResult}
               onClick={() => {
                 if (!canLiveSim) return pushMatchdayWarning();
                 setRunning((prev) => !prev);
@@ -342,13 +387,13 @@ export function MatchCenter() {
             >
               {running ? 'Pause' : 'Start'}
             </button>
-            <button className="ui-btn" type="button" onClick={() => setSpeed((prev) => (prev === 1 ? 2 : (prev === 2 ? 3 : 1)))}>{speed}x</button>
+            <button className="ui-btn" type="button" onClick={() => setSpeed((prev) => (prev === 1 ? 2 : (prev === 2 ? 4 : (prev === 4 ? 8 : 1))))}>{speed}x</button>
           </div>
           <button className="ui-btn ui-btn-primary mc-full" type="button" onClick={() => { setSimMode('watch'); setRunning(false); }}>Play Game - Jump In</button>
-          <button className="ui-btn mc-full" type="button" disabled={!canOfficialSim || officialResultLocked} onClick={runOfficialSimToEnd}>Quick Sim to End</button>
+          <button className="ui-btn mc-full" type="button" disabled={!canOfficialSim || officialResultLocked || persistingResult} onClick={runOfficialSimToEnd}>{persistingResult ? 'Saving result...' : 'Quick Sim to End'}</button>
           <div className="mc-controls-row">
-            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked} onClick={onPlayPossession}>Play Possession</button>
-            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked} onClick={onPlayQuarter}>Play Quarter</button>
+            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked || persistingResult} onClick={onPlayPossession}>Play Possession</button>
+            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked || persistingResult} onClick={onPlayQuarter}>Play Quarter</button>
           </div>
           <div className="mc-status-row">
             <span className="mc-tag">{matchState}</span>

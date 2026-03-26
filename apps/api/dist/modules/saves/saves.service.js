@@ -1113,6 +1113,116 @@ class SavesService {
             training: updated.data.training ?? data.training,
         };
     }
+    async finalizeMatchSimulation(saveId, gameId, payload) {
+        const save = await this.getSaveById(saveId);
+        const game = await prisma_1.default.game.findFirst({
+            where: {
+                id: gameId,
+                saveId: save.id,
+            },
+            include: {
+                homeTeam: true,
+                awayTeam: true,
+            },
+        });
+        if (!game) {
+            throw new AppError_1.NotFoundError("Game");
+        }
+        const homeScore = Math.max(0, Math.round(Number(payload.homeScore ?? 0)));
+        const awayScore = Math.max(0, Math.round(Number(payload.awayScore ?? 0)));
+        if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore)) {
+            throw new AppError_1.BadRequestError("Invalid score payload");
+        }
+        const toRows = (input) => {
+            if (Array.isArray(input))
+                return input;
+            if (input && typeof input === "object")
+                return Object.values(input);
+            return [];
+        };
+        const homeRows = toRows(payload.homePlayers);
+        const awayRows = toRows(payload.awayPlayers);
+        const allPlayerIds = [...homeRows, ...awayRows]
+            .map((row) => Number((row?.playerId ?? row?.id)))
+            .filter(Number.isFinite);
+        const playersById = new Map((allPlayerIds.length > 0
+            ? await prisma_1.default.player.findMany({
+                where: { id: { in: allPlayerIds } },
+                select: { id: true, teamId: true },
+            })
+            : []).map((row) => [row.id, row]));
+        const toGameStats = (rows, teamId) => rows.flatMap((row) => {
+            const playerId = Number((row?.playerId ?? row?.id));
+            if (!Number.isFinite(playerId))
+                return [];
+            const playerMeta = playersById.get(playerId);
+            if (!playerMeta || playerMeta.teamId !== teamId)
+                return [];
+            const points = Math.max(0, Math.round(Number(row?.points ?? 0)));
+            const fgm = Math.max(0, Math.round(Number(row?.fgm ?? 0)));
+            const fga = Math.max(0, Math.round(Number(row?.fga ?? 0)));
+            const tpm = Math.max(0, Math.round(Number(row?.tpm ?? row?.threePtMade ?? 0)));
+            const tpa = Math.max(0, Math.round(Number(row?.tpa ?? row?.threePtAtt ?? 0)));
+            const ftm = Math.max(0, Math.round(Number(row?.ftm ?? row?.ftMade ?? 0)));
+            const fta = Math.max(0, Math.round(Number(row?.fta ?? row?.ftAtt ?? 0)));
+            const rebounds = Math.max(0, Math.round(Number(row?.rebounds ?? row?.reb ?? 0)));
+            const oreb = Math.max(0, Math.round(Number(row?.oreb ?? 0)));
+            const dreb = Math.max(0, Math.round(Number(row?.dreb ?? Math.max(0, rebounds - oreb))));
+            return [{
+                    gameId,
+                    playerId,
+                    teamId,
+                    minutes: Math.max(0, Math.round(Number(row?.minutes ?? 0))),
+                    points,
+                    twoPtMade: Math.max(0, fgm - tpm),
+                    twoPtAtt: Math.max(0, fga - tpa),
+                    threePtMade: tpm,
+                    threePtAtt: tpa,
+                    ftMade: ftm,
+                    ftAtt: fta,
+                    dunks: Math.max(0, Math.round(Number(row?.dunks ?? 0))),
+                    oreb,
+                    dreb,
+                    rebounds,
+                    assists: Math.max(0, Math.round(Number(row?.assists ?? row?.ast ?? 0))),
+                    steals: Math.max(0, Math.round(Number(row?.steals ?? row?.stl ?? 0))),
+                    blocks: Math.max(0, Math.round(Number(row?.blocks ?? row?.blk ?? 0))),
+                    turnovers: Math.max(0, Math.round(Number(row?.turnovers ?? row?.tov ?? 0))),
+                    fouls: Math.max(0, Math.round(Number(row?.fouls ?? 0))),
+                    plusMinus: Math.round(Number(row?.plusMinus ?? 0)) || 0,
+                    performanceRating: Number(row?.performanceRating ?? 0) || 0,
+                }];
+        });
+        const gameStatsPayload = [
+            ...toGameStats(homeRows, game.homeTeamId),
+            ...toGameStats(awayRows, game.awayTeamId),
+        ];
+        await prisma_1.default.$transaction(async (tx) => {
+            await tx.game.update({
+                where: { id: game.id },
+                data: {
+                    status: "simulated",
+                    homeScore,
+                    awayScore,
+                },
+            });
+            await tx.gameStat.deleteMany({ where: { gameId: game.id } });
+            if (gameStatsPayload.length > 0) {
+                await tx.gameStat.createMany({
+                    data: gameStatsPayload,
+                });
+            }
+        });
+        return {
+            success: true,
+            game: (0, fixtureModel_1.toFixtureModel)({
+                ...game,
+                status: "simulated",
+                homeScore,
+                awayScore,
+            }),
+        };
+    }
     async saveRosterManagement(saveId, payload) {
         const save = await this.getSaveById(saveId);
         const data = (save.data ?? {});

@@ -821,6 +821,15 @@ export declare class SavesService {
             }>;
         };
     }>;
+    finalizeMatchSimulation(saveId: number, gameId: number, payload: {
+        homeScore?: number;
+        awayScore?: number;
+        homePlayers?: unknown;
+        awayPlayers?: unknown;
+    }): Promise<{
+        success: boolean;
+        game: import("../fixtures/fixtureModel").FixtureModel;
+    }>;
     saveRosterManagement(saveId: number, payload: {
         tradeBlockPlayerIds?: number[];
         developmentLeaguePlayerIds?: number[];

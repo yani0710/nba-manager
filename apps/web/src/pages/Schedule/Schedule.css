@@ -1,428 +1,156 @@
-.calendar-page {
-  width: 100%;
-  color: #e8f1ff;
-}
-
-.calendar-cinematic {
-  background:
-    radial-gradient(circle at 18% 12%, rgba(255, 41, 75, 0.24), transparent 38%),
-    radial-gradient(circle at 84% 10%, rgba(40, 112, 255, 0.2), transparent 32%),
-    linear-gradient(105deg, #250010 0%, #130018 48%, #020d30 100%);
-  border: 1px solid rgba(98, 143, 255, 0.16);
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 28px 44px rgba(0, 0, 0, 0.34);
-}
-
-.calendar-hero {
+﻿.season-hub { display: grid; gap: 14px; color: #e8f2ff; }
+.season-head {
+  border: 1px solid #21416a;
+  border-radius: 12px;
+  background: #0d2248;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
 }
+.season-head h1 { margin: 0; font-size: 56px; text-transform: uppercase; color: #fff; letter-spacing: .02em; }
+.season-head p { margin: 6px 0 0; color: #9cb6dc; }
+.season-context { text-align: right; }
+.season-date { font-size: 44px; font-weight: 900; color: #fff; line-height: .95; }
+.season-team { margin-top: 6px; color: #b5c7e9; }
+.season-tabs { display: flex; gap: 10px; border: 1px solid #23426b; border-radius: 10px; padding: 8px; background: #10264d; width: fit-content; }
+.season-tabs button { border: 1px solid #365682; border-radius: 8px; background: #15345f; color: #a7c2e8; padding: 9px 16px; font-weight: 700; }
+.season-tabs button.active { border-color: #de7d11; background: #f08517; color: #fff; }
+.season-progress { border: 1px solid #2f5585; border-radius: 10px; padding: 8px 10px; background: #132b53; }
+.season-progress strong { color: #d8e9ff; font-size: 13px; }
+.season-progress div { margin-top: 6px; height: 8px; border-radius: 999px; background: #214169; overflow: hidden; }
+.season-progress span { display: block; height: 100%; background: linear-gradient(90deg, #55d7ff, #45e89f); }
 
-.calendar-hero h1 {
-  margin: 0;
-  font-size: clamp(36px, 5vw, 50px);
-  line-height: 0.95;
-  text-transform: uppercase;
-  color: #ffffff;
-  letter-spacing: 0.03em;
+.season-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; }
+.season-card { border: 1px solid #26466f; border-radius: 10px; background: #132b53; padding: 12px; }
+.season-main { min-width: 0; }
+.season-side { display: grid; gap: 12px; align-content: start; }
+
+.season-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+.season-toolbar h3 { margin: 0; color: #fff; }
+.season-toolbar select, .season-toolbar button, .season-toolbar input, .filters select, .filters button, .filters input { border: 1px solid #3b5e8d; border-radius: 8px; background: #16345f; color: #e8f2ff; padding: 7px 9px; }
+
+.segmented { display: flex; gap: 6px; }
+.segmented button { border: 1px solid #355988; background: #173961; color: #a8c0e5; padding: 7px 10px; border-radius: 8px; text-transform: capitalize; }
+.segmented button.active { border-color: #f38f1f; color: #fff; background: #f38f1f; }
+.filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+.month-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.month-head h3 { margin: 0; color: #fff; font-size: 42px; text-transform: uppercase; }
+.month-head button { border: 1px solid #406595; border-radius: 8px; background: #193e6a; color: #fff; padding: 8px 12px; }
+.month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.day-cell { min-height: 118px; border: 1px solid #365a88; border-radius: 8px; background: #173760; color: #fff; padding: 8px; text-align: left; display: grid; gap: 8px; }
+.day-cell.today { border-color: #43c7ff; box-shadow: inset 0 0 0 1px rgba(68, 190, 255, .42); }
+.day-cell.selected { border-color: #f38f1f; box-shadow: inset 0 0 0 1px rgba(243, 143, 31, .5); }
+.day-cell.has-game {
+  border-color: color-mix(in oklab, var(--opp-accent, #4aa3ff) 55%, #365a88);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--opp-accent, #4aa3ff) 16%, #173760) 0%,
+    #173760 78%
+  );
 }
-
-.calendar-hero p {
-  margin: 10px 0 0;
-  font-size: 22px;
-  color: #ffb1c4;
+.day-cell.has-game .day-top strong {
+  color: color-mix(in oklab, var(--opp-accent, #4aa3ff) 55%, #ffffff);
 }
-
-.calendar-hero-meta {
-  text-align: right;
-}
-
-.calendar-hero-date {
-  font-size: clamp(30px, 4.2vw, 58px);
-  line-height: 0.95;
-  text-transform: uppercase;
-  font-weight: 900;
-  color: #f8fbff;
-  letter-spacing: 0.04em;
-}
-
-.calendar-hero-team {
-  margin-top: 8px;
-  color: #ffb1c4;
-  font-size: 18px;
-}
-
-.calendar-tabbar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
-
-.calendar-tab {
-  border: 1px solid rgba(103, 139, 207, 0.2);
-  background: rgba(20, 31, 64, 0.58);
-  border-radius: 12px 12px 0 0;
-  color: #89a6d7;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  font-size: 12px;
-  padding: 10px 22px;
-}
-
-.calendar-tab.is-active {
-  color: #ffffff;
-  border-bottom: 3px solid #ff223f;
-}
-
-.calendar-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 16px;
-}
-
-.calendar-main {
-  min-width: 0;
-}
-
-.calendar-month-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.calendar-month-header h2 {
-  margin: 0;
-  text-transform: uppercase;
-  font-size: 42px;
-  letter-spacing: 0.03em;
-  color: #ffffff;
-}
-
-.calendar-nav {
-  border: 1px solid rgba(113, 155, 255, 0.28);
-  background: rgba(28, 50, 93, 0.72);
-  color: #f6f7ff;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 15px;
-  padding: 10px 18px;
-  cursor: pointer;
+.day-top { display: flex; justify-content: space-between; align-items: baseline; }
+.day-top span { font-size: 12px; color: #a9c2e5; }
+.day-top strong { font-size: 20px; }
+.opp {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-.calendar-nav:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.calendar-cell {
-  min-height: 120px;
-  text-align: left;
-  border: 1px solid rgba(112, 157, 232, 0.36);
-  border-radius: 12px;
-  padding: 10px;
-  background: rgba(6, 12, 38, 0.7);
-  color: #ffffff;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.calendar-cell:hover {
-  border-color: rgba(129, 170, 246, 0.7);
-  transform: translateY(-1px);
-}
-
-.calendar-cell.today {
-  border-color: #ff0037;
-  box-shadow: inset 0 0 0 1px rgba(255, 0, 55, 0.45);
-  background: linear-gradient(180deg, rgba(80, 8, 26, 0.56), rgba(20, 5, 15, 0.8));
-}
-
-.calendar-cell.selected {
-  border-color: #ffc517;
-  box-shadow: 0 0 0 1px rgba(255, 197, 23, 0.45);
-  background: linear-gradient(180deg, rgba(104, 68, 13, 0.64), rgba(20, 5, 15, 0.84));
-}
-
-.calendar-cell.scheduled:not(.today):not(.selected) {
-  background: linear-gradient(180deg, rgba(52, 10, 23, 0.58), rgba(15, 6, 27, 0.82));
-  border-color: rgba(255, 32, 59, 0.55);
-}
-
-.calendar-day-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-weight: 900;
-  letter-spacing: 0.03em;
-}
-
-.calendar-day-heading span:first-child {
-  font-size: 14px;
-}
-
-.calendar-day-heading span:last-child {
-  font-size: 20px;
-}
-
-.calendar-opponent-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  gap: 6px;
   border-radius: 999px;
-  background: rgba(8, 45, 90, 0.9);
-  padding: 7px 12px;
+  padding: 5px 10px;
   width: fit-content;
+  background: color-mix(in oklab, var(--opp-accent, #4aa3ff) 26%, #1f4677);
+  border: 1px solid color-mix(in oklab, var(--opp-accent, #4aa3ff) 50%, #2f5886);
 }
+.opp img { width: 20px; height: 20px; object-fit: contain; }
+.none { color: #90abd5; font-size: 12px; }
+.markers { display: flex; gap: 5px; flex-wrap: wrap; }
+.badge { border: 1px solid #3a5d8f; border-radius: 999px; padding: 2px 7px; font-size: 11px; text-transform: uppercase; }
+.badge.is-info { border-color: #2d7bdd; color: #78b6ff; }
+.badge.is-warning { border-color: #dc9b2f; color: #ffd270; }
+.badge.is-danger { border-color: #dc4e5e; color: #ff8f9b; }
+.badge.is-accent { border-color: #bd41ff; color: #d2a1ff; }
 
-.calendar-opponent-badge img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
+.week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.week-day { border: 1px solid #365987; border-radius: 10px; background: #17375f; padding: 8px; display: grid; gap: 6px; }
+.week-day h4 { margin: 0; font-size: 13px; color: #fff; }
+.event-row { border: 1px solid #3a5f8d; border-radius: 8px; background: #1a3d69; color: #eaf3ff; text-align: left; padding: 7px; display: grid; gap: 3px; }
+.event-row small { color: #95add5; }
+.agenda-list { display: grid; gap: 8px; max-height: 610px; overflow: auto; }
+.agenda-row { border: 1px solid #39608d; border-radius: 10px; background: #1a3c68; color: #e7f2ff; padding: 8px; display: flex; justify-content: space-between; gap: 8px; text-align: left; }
+.agenda-row small { color: #8da7d4; display: block; }
+.timeline-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.timeline-card { border: 1px solid #39608f; border-radius: 10px; background: #1a3d69; padding: 10px; display: grid; gap: 6px; }
+.timeline-card b { color: #fff; }
+.timeline-card span { color: #8fa9d6; }
+
+.event-date { margin: 0; font-size: 12px; color: #9cb4da; }
+.tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.quick-actions button, .quick-row button, .trade-foot button { border: 1px solid #3c6292; border-radius: 8px; background: #1a3d69; color: #e8f3ff; padding: 8px; font-size: 12px; }
+.insights p { display: flex; justify-content: space-between; gap: 8px; margin: 7px 0; color: #d8e9ff; }
+.insights p span { color: #99b3de; }
+.next5 { display: grid; gap: 5px; margin: 8px 0; }
+.next5 small { color: #9bb4dd; }
+.quick-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.social-grid .feed-list { display: grid; gap: 9px; }
+.post-card { border: 1px solid #3c6291; border-radius: 10px; background: #1a3c68; padding: 10px; }
+.post-head { display: flex; gap: 9px; align-items: center; margin-bottom: 8px; }
+.avatar { width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center; background: linear-gradient(180deg, #8534ff, #5d20c5); color: #fff; font-weight: 800; }
+.post-head b { color: #fff; }
+.post-head small { color: #8fa8d4; display: block; }
+.post-card p { margin: 0 0 8px; color: #d8e7ff; }
+.post-metrics { display: flex; gap: 14px; color: #96afdb; font-size: 12px; }
+.sentiment { display: grid; gap: 4px; margin-bottom: 10px; }
+.sentiment span { color: #9db6dc; }
+.sentiment b { color: #fff; }
+.sentiment div { height: 7px; border-radius: 999px; background: rgba(42, 67, 107, .72); overflow: hidden; }
+.sentiment i { display: block; height: 100%; background: linear-gradient(90deg, #19e08a, #3ca4ff); }
+
+.trade-list { display: grid; gap: 10px; }
+.trade-card { border: 1px solid #3a608f; border-radius: 10px; background: #1a3d69; padding: 10px; }
+.trade-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.trade-head > div:nth-child(2) { flex: 1; }
+.trade-head small { color: #8fa9d7; display: block; }
+.trade-cols { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.trade-cols h5 { margin: 0 0 6px; color: #fff; }
+.trade-cols p { margin: 0 0 4px; color: #c8defd; }
+.trade-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 10px; }
+.trade-foot span { color: #9ab3dc; }
+.trade-foot b { color: #fff; }
+.trade-foot div { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.status-list { display: grid; gap: 8px; }
+.status-row { border: 1px solid #3a6090; border-radius: 10px; background: #1a3d69; padding: 8px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.status-left { display: flex; gap: 9px; align-items: center; }
+.status-left b { color: #fff; }
+.status-left small { color: #8ea8d3; display: block; }
+.status-right { min-width: 220px; display: grid; gap: 6px; }
+.fitness { height: 8px; border-radius: 999px; background: rgba(40, 65, 104, .75); overflow: hidden; }
+.fitness span { display: block; height: 100%; background: linear-gradient(90deg, #18de83, #39b9ff); }
+.chemistry-grid { margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.chemistry-grid .season-card { background: #1a3d69; }
+.chemistry-grid h4 { margin: 0 0 6px; color: #9cb4d8; }
+.chemistry-grid b { color: #fff; font-size: 24px; }
+.activity-item { border: 1px solid #3a5f8e; border-radius: 9px; background: #1a3d69; padding: 8px; margin-bottom: 7px; }
+.activity-item b { color: #fff; display: block; }
+.activity-item small { color: #90a8d1; }
+.season-empty { border: 1px solid #2e4b77; border-radius: 12px; background: rgba(18, 37, 67, .8); padding: 24px; color: #d3e5ff; }
+
+@media (max-width: 1350px) {
+  .season-grid { grid-template-columns: 1fr; }
+  .month-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
-
-.calendar-opponent-badge strong {
-  font-size: 15px;
-  letter-spacing: 0.02em;
-}
-
-.calendar-empty-slot {
-  color: #95a6d6;
-  font-size: 13px;
-}
-
-.calendar-day-footer {
-  font-size: 13px;
-  color: #9ab2de;
-}
-
-.calendar-side {
-  display: grid;
-  gap: 16px;
-  align-content: start;
-}
-
-.calendar-side-card {
-  border: 1px solid rgba(117, 157, 226, 0.3);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(12, 27, 61, 0.86), rgba(7, 18, 43, 0.92));
-  padding: 16px;
-}
-
-.calendar-side-card h3,
-.calendar-side-card h4 {
-  margin: 0 0 12px;
-  color: #ffffff;
-  font-size: 34px;
-  line-height: 1.05;
-}
-
-.calendar-side-card h4 {
-  font-size: 34px;
-}
-
-.calendar-side-subtitle {
-  margin: 8px 0 14px;
-  color: #91abd9;
-  font-size: 14px;
-}
-
-.calendar-matchup-box {
-  border-radius: 12px;
-  border: 1px solid rgba(109, 150, 224, 0.18);
-  background: rgba(255, 255, 255, 0.03);
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.team-dot {
-  border-radius: 999px;
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
-  font-size: 17px;
-  font-weight: 800;
-  justify-self: center;
-  text-transform: uppercase;
-}
-
-.team-dot.is-home {
-  background: linear-gradient(180deg, #ad1dff, #6f18f2);
-}
-
-.team-dot.is-away {
-  background: linear-gradient(180deg, #0e3f93, #06265c);
-}
-
-.calendar-matchup-box span {
-  font-size: 30px;
-  color: #9db3da;
-}
-
-.calendar-play-btn {
-  width: 100%;
-  border: 0;
-  border-radius: 12px;
-  padding: 13px 16px;
-  color: #fff;
-  font-size: 28px;
-  font-weight: 800;
-  cursor: pointer;
-  background: linear-gradient(180deg, #ff1e34, #cf0920);
-}
-
-.calendar-play-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.calendar-quick {
-  width: 100%;
-  margin-top: 10px;
-  border: 1px solid rgba(114, 149, 214, 0.32);
-  border-radius: 12px;
-  padding: 13px;
-  background: rgba(29, 50, 88, 0.68);
-  color: #fff;
-  font-size: 22px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.calendar-quick.primary {
-  border: 0;
-  background: linear-gradient(180deg, #b52aff, #7b13e9);
-}
-
-.calendar-quick:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.calendar-progress {
-  margin: 10px 0 14px;
-  background: rgba(10, 20, 50, 0.75);
-  border: 1px solid rgba(111, 147, 214, 0.34);
-  border-radius: 10px;
-  padding: 8px 10px;
-}
-
-.calendar-progress-label {
-  color: #d9e4ff;
-  font-size: 13px;
-  margin-bottom: 6px;
-}
-
-.calendar-progress-bar {
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(31, 61, 110, 0.65);
-  overflow: hidden;
-}
-
-.calendar-progress-bar span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #74b9ff, #29dbb4);
-  transition: width 220ms ease;
-}
-
-@media (max-width: 1400px) {
-  .calendar-hero h1 {
-    font-size: 40px;
-  }
-
-  .calendar-hero p {
-    font-size: 18px;
-  }
-
-  .calendar-month-header h2 {
-    font-size: 34px;
-  }
-
-  .calendar-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .calendar-side-card h3,
-  .calendar-side-card h4 {
-    font-size: 26px;
-  }
-
-  .calendar-play-btn,
-  .calendar-quick {
-    font-size: 18px;
-  }
-}
-
-@media (max-width: 1080px) {
-  .calendar-cinematic {
-    padding: 14px;
-  }
-
-  .calendar-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .calendar-hero {
-    flex-direction: column;
-  }
-
-  .calendar-hero-meta {
-    text-align: left;
-  }
-
-  .calendar-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 680px) {
-  .calendar-month-header {
-    flex-wrap: wrap;
-  }
-
-  .calendar-month-header h2 {
-    width: 100%;
-    order: -1;
-    font-size: 28px;
-    text-align: center;
-  }
-
-  .calendar-nav {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .calendar-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .calendar-cell {
-    min-height: 104px;
-  }
+@media (max-width: 980px) {
+  .season-head { flex-direction: column; }
+  .season-context { text-align: left; }
+  .season-date { font-size: 32px; }
+  .season-head h1 { font-size: 38px; }
+  .month-grid, .week-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .timeline-grid, .trade-cols, .chemistry-grid, .quick-actions { grid-template-columns: 1fr; }
 }

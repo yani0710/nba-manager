@@ -179,6 +179,19 @@ export class SavesController {
     }
   }
 
+  async finalizeMatchSimulation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await savesService.finalizeMatchSimulation(
+        Number(req.params.id),
+        Number(req.params.gameId),
+        req.body ?? {},
+      );
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async saveRosterManagement(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await savesService.saveRosterManagement(Number(req.params.id), {

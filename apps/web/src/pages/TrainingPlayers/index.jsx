@@ -1,420 +1,236 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../components/ui';
-import { useGameStore } from '../../state/gameStore';
 import { api } from '../../api/client';
+import { useGameStore } from '../../state/gameStore';
 import './training-players.css';
 
-const DAY_KEYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const DAY_LABELS = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
-
-const FOCUS_OPTIONS = [
-  { key: 'shooting', label: 'Shooting', apiFocus: 'SHOOTING', saveFocus: 'shooting' },
-  { key: 'defense', label: 'Defense', apiFocus: 'DEFENSE', saveFocus: 'defense' },
-  { key: 'passing', label: 'Passing', apiFocus: 'PLAYMAKING', saveFocus: 'playmaking' },
-  { key: 'dribbling', label: 'Dribbling', apiFocus: 'PLAYMAKING', saveFocus: 'playmaking' },
-  { key: 'athleticism', label: 'Athleticism', apiFocus: 'CONDITIONING', saveFocus: 'fitness' },
-  { key: 'bbiq', label: 'BBIQ', apiFocus: 'BALANCED', saveFocus: 'balanced' },
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_NAMES = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+const TABS = ['individual', 'schedule', 'reports'];
+const INTENSITY = { very_light: 28, light: 42, medium: 58, high: 76, very_high: 90 };
+const ROLES = [
+  ['Primary Ball Handler', 'PLAYMAKING'], ['Shot Creator', 'SHOOTING'], ['3-and-D Wing', 'DEFENSE'], ['Defensive Anchor', 'DEFENSE'],
+  ['Stretch Four', 'SHOOTING'], ['Bench Playmaker', 'PLAYMAKING'], ['Two-Way Star', 'BALANCED'],
+];
+const EXTRA = [
+  ['Shooting', 'SHOOTING'], ['Finishing', 'SHOOTING'], ['Passing', 'PLAYMAKING'], ['Ball Handling', 'PLAYMAKING'],
+  ['Perimeter Defense', 'DEFENSE'], ['Interior Defense', 'DEFENSE'], ['Rebounding', 'DEFENSE'],
+  ['Conditioning', 'CONDITIONING'], ['Strength', 'CONDITIONING'], ['Basketball IQ', 'BALANCED'],
+];
+const TYPES = [
+  ['Shooting', 'SHOOTING', [2, 0, 0, 0, 1, 0]], ['Passing / Playmaking', 'PLAYMAKING', [0, 2, 0, 0, 1, 0]],
+  ['Perimeter Defense', 'DEFENSE', [0, 0, 2, 1, 1, 0]], ['Conditioning', 'CONDITIONING', [0, 0, 0, 2, 2, 1]],
+  ['Film Study', 'BALANCED', [0, 1, 1, 0, -1, -1]], ['Recovery', 'CONDITIONING', [0, 0, 0, 1, -2, -2]], ['Rest Day', 'BALANCED', [0, 0, 0, 0, -3, -2]],
 ];
 
-function toApiIntensity(percent) {
-  if (percent <= 45) return 'LOW';
-  if (percent >= 75) return 'HIGH';
-  return 'BALANCED';
-}
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
+const initials = (name) => String(name || '').split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'NA';
+const pos = (p) => { const u = String(p || '').toUpperCase(); if (u.includes('PG')) return 'PG'; if (u.includes('SG')) return 'SG'; if (u.includes('SF')) return 'SF'; if (u.includes('PF')) return 'PF'; if (u.includes('C')) return 'C'; return 'N/A'; };
+const group = (p) => (['PG', 'SG'].includes(p) ? 'guards' : ['SF', 'PF'].includes(p) ? 'wings' : p === 'C' ? 'bigs' : 'all');
+const intensityTier = (p) => (p <= 45 ? 'LOW' : p >= 75 ? 'HIGH' : 'BALANCED');
+const saveFocus = (bucket) => ({ SHOOTING: 'shooting', DEFENSE: 'defense', PLAYMAKING: 'playmaking', CONDITIONING: 'fitness', BALANCED: 'balanced' }[bucket] || 'balanced');
+const focusKey = (bucket) => ({ DEFENSE: 'defense', PLAYMAKING: 'passing', CONDITIONING: 'athleticism', BALANCED: 'bbiq', SHOOTING: 'shooting' }[bucket] || 'shooting');
+const defaultDayPlan = () => Object.fromEntries(DAYS.map((d, i) => [d, { trainingType: i === 3 || i === 6 ? 'Recovery' : 'Shooting', intensityPercent: i === 3 || i === 6 ? 38 : 62 }]));
 
-function toSaveIntensity(percent) {
-  if (percent <= 45) return 'low';
-  if (percent >= 75) return 'high';
-  return 'balanced';
-}
-
-function fromStoredIntensityWithPercent(value, percentValue, fallback = 60) {
-  const pct = Number(percentValue);
-  if (Number.isFinite(pct)) return Math.max(20, Math.min(100, pct));
-  if (typeof value === 'number' && Number.isFinite(value)) return Math.max(20, Math.min(100, value));
-  if (value === 'low' || value === 'LOW') return 35;
-  if (value === 'high' || value === 'HIGH') return 80;
-  if (value === 'balanced' || value === 'BALANCED') return 60;
-  return fallback;
-}
-
-function getInitials(name) {
-  return String(name || '').split(' ').map((part) => part[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'NA';
-}
-
-function toSafeNumber(value, fallback = 70) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function pickAttr(attrs, keys, fallback) {
-  for (const key of keys) {
-    const raw = attrs?.[key];
-    const n = Number(raw);
-    if (Number.isFinite(n)) return n;
-  }
-  return fallback;
-}
-
-function deriveMetrics(player) {
-  const attrs = (player?.attributes && typeof player.attributes === 'object') ? player.attributes : {};
-  const shooting3 = pickAttr(attrs, ['shooting3', 'shooting', 'att'], toSafeNumber(player?.fg3Pct, 0) * 100 || 70);
-  const shootingMid = pickAttr(attrs, ['shootingMid', 'shooting', 'att'], toSafeNumber(player?.fgPct, 0) * 100 || 70);
-  const offense = toSafeNumber(player?.offensiveRating, 70);
-  const shooting = Math.round((shooting3 + shootingMid + offense) / 3);
-  const defense = pickAttr(attrs, ['defense', 'def'], toSafeNumber(player?.defensiveRating, 70));
-  const passing = pickAttr(attrs, ['playmaking', 'play'], toSafeNumber(player?.iqRating, 70));
-  const athleticism = pickAttr(attrs, ['athleticism', 'phy'], toSafeNumber(player?.physicalRating, 70));
-  const dribbling = Math.round((passing * 0.9) + (athleticism * 0.1));
-  const bbiq = pickAttr(attrs, ['iq', 'bbiq'], toSafeNumber(player?.iqRating, 70));
-  const clamp = (value) => Math.min(99, Math.max(40, Math.round(value)));
+function attrs(player) {
+  if (!player) return { shooting: 70, passing: 70, defense: 70, stamina: 70, potential: 75, three: 70, finish: 70, iq: 70 };
+  const a = player.attributes && typeof player.attributes === 'object' ? player.attributes : {};
+  const shooting = clamp(Math.round(((num(a.shooting3, num(player.fg3Pct, 0.35) * 100) + num(a.shootingMid, num(player.fgPct, 0.47) * 100) + num(player.offensiveRating, 70)) / 3)), 40, 99);
   return {
-    shooting: clamp(shooting),
-    defense: clamp(defense),
-    passing: clamp(passing),
-    dribbling: clamp(dribbling),
-    athleticism: clamp(athleticism),
-    bbiq: clamp(bbiq),
+    shooting,
+    three: clamp(Math.round(num(a.shooting3, num(player.fg3Pct, 0.35) * 100)), 40, 99),
+    finish: clamp(Math.round(num(a.finishing, num(player.offensiveRating, 70))), 40, 99),
+    passing: clamp(Math.round(num(a.playmaking, num(player.iqRating, 70))), 40, 99),
+    defense: clamp(Math.round(num(a.defense, num(player.defensiveRating, 70))), 40, 99),
+    stamina: clamp(Math.round(num(a.stamina, 78 - num(player.fatigue, 10) / 2)), 40, 99),
+    iq: clamp(Math.round(num(a.iq, num(player.iqRating, 70))), 40, 99),
+    potential: clamp(Math.round(num(player.potential, 75)), 40, 99),
   };
 }
 
 export function TrainingPlayers() {
-  const {
-    currentSave,
-    squadPlayers,
-    playerTrainingPlans,
-    saveTrainingConfig,
-    fetchSquad,
-    fetchPlayerTrainingPlans,
-    upsertPlayerTrainingPlan,
-  } = useGameStore();
-
-  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
-  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState(null);
-  const [focusKey, setFocusKey] = useState('shooting');
-  const [intensity, setIntensity] = useState(60);
-  const [dayPlan, setDayPlan] = useState(() => Object.fromEntries(
-    DAY_KEYS.map((day) => [day, { intensity: 60, focusKey: 'shooting' }]),
-  ));
+  const { currentSave, squadPlayers, scheduleGames, playerTrainingPlans, fetchSquad, fetchSchedule, fetchPlayerTrainingPlans, saveTrainingConfig, upsertPlayerTrainingPlan } = useGameStore();
+  const [tab, setTab] = useState('individual');
+  const [playerId, setPlayerId] = useState(null);
+  const [details, setDetails] = useState(null);
+  const [q, setQ] = useState('');
+  const [gFilter, setGFilter] = useState('all');
+  const [role, setRole] = useState('Primary Ball Handler');
+  const [extra, setExtra] = useState('Shooting');
+  const [trainPos, setTrainPos] = useState('PG');
+  const [level, setLevel] = useState('medium');
+  const [days, setDays] = useState(defaultDayPlan);
   const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => { if (currentSave?.id) { fetchSquad(); fetchSchedule(); fetchPlayerTrainingPlans(); } }, [currentSave?.id, fetchSquad, fetchSchedule, fetchPlayerTrainingPlans]);
+  useEffect(() => { if (!playerId && squadPlayers?.length) setPlayerId(squadPlayers[0].id); }, [playerId, squadPlayers]);
+
+  const players = useMemo(() => (squadPlayers || []).map((p) => {
+    const st = currentSave?.data?.playerState?.[String(p.id)] || {};
+    const fatigue = num(st.fatigue, p.fatigue ?? 10);
+    const pPos = pos(p.position || p.primaryPosition);
+    return { ...p, pPos, g: group(pPos), ovr: num(p.overallCurrent ?? p.overall, 65), pot: num(p.potential, 75), fatigue, age: num(p.age, 25) };
+  }), [currentSave?.data?.playerState, squadPlayers]);
+
+  const filtered = useMemo(() => players.filter((p) => (gFilter === 'all' || p.g === gFilter) && String(p.name || '').toLowerCase().includes(q.toLowerCase())).sort((a, b) => b.ovr - a.ovr), [players, gFilter, q]);
+  const player = useMemo(() => filtered.find((p) => Number(p.id) === Number(playerId)) || players.find((p) => Number(p.id) === Number(playerId)) || null, [filtered, playerId, players]);
 
   useEffect(() => {
-    (async () => {
-      await fetchSquad();
-      await fetchPlayerTrainingPlans();
-    })();
-  }, [fetchSquad, fetchPlayerTrainingPlans, currentSave?.id]);
-
-  useEffect(() => {
-    if (!selectedPlayerId && squadPlayers?.length) {
-      setSelectedPlayerId(squadPlayers[0].id);
+    if (!player) return;
+    const fromJson = currentSave?.data?.training?.playerPlans?.[String(player.id)] || {};
+    const fromDb = (playerTrainingPlans || []).find((p) => Number(p.playerId) === Number(player.id));
+    setTrainPos(fromJson.trainingPosition || player.pPos || 'PG');
+    setRole(fromJson.roleFocus || 'Primary Ball Handler');
+    setExtra(fromJson.additionalFocus || 'Shooting');
+    setLevel(Object.entries(INTENSITY).sort((a, b) => Math.abs((fromJson.intensityPercent ?? 58) - a[1]) - Math.abs((fromJson.intensityPercent ?? 58) - b[1]))[0][0]);
+    const next = defaultDayPlan();
+    const incoming = fromJson.dayPlan || fromDb?.dayPlan || {};
+    for (const d of DAYS) {
+      const row = incoming[d] || {};
+      next[d] = { trainingType: row.trainingType || next[d].trainingType, intensityPercent: clamp(num(row.intensityPercent ?? row.intensity, next[d].intensityPercent), 20, 100) };
     }
-  }, [selectedPlayerId, squadPlayers]);
-
-  const selectedPlayer = useMemo(
-    () => (squadPlayers || []).find((player) => player.id === selectedPlayerId) || null,
-    [squadPlayers, selectedPlayerId],
-  );
+    setDays(next);
+  }, [player, currentSave?.data?.training?.playerPlans, playerTrainingPlans]);
 
   useEffect(() => {
     let active = true;
-    if (!selectedPlayerId) {
-      setSelectedPlayerDetails(null);
-      return () => { active = false; };
-    }
-    (async () => {
-      try {
-        const saveParams = currentSave?.id ? { saveId: currentSave.id } : {};
-        const { data } = await api.players.getById(selectedPlayerId, saveParams);
-        if (active) setSelectedPlayerDetails(data);
-      } catch {
-        if (active) setSelectedPlayerDetails(null);
-      }
-    })();
+    if (!playerId) return undefined;
+    (async () => { try { const { data } = await api.players.getById(playerId, currentSave?.id ? { saveId: currentSave.id } : {}); if (active) setDetails(data); } catch { if (active) setDetails(null); } })();
     return () => { active = false; };
-  }, [selectedPlayerId, currentSave?.id]);
+  }, [playerId, currentSave?.id]);
 
-  useEffect(() => {
-    if (!selectedPlayer) return;
-    const existing = (playerTrainingPlans || []).find((plan) => Number(plan.playerId) === Number(selectedPlayer.id));
-    const savedFromJson = currentSave?.data?.training?.playerPlans?.[String(selectedPlayer.id)];
-    if (existing) {
-      if (existing.focus === 'SHOOTING') setFocusKey('shooting');
-      else if (existing.focus === 'DEFENSE') setFocusKey('defense');
-      else if (existing.focus === 'PLAYMAKING') setFocusKey('passing');
-      else if (existing.focus === 'CONDITIONING') setFocusKey('athleticism');
-      else setFocusKey('bbiq');
-      setIntensity(fromStoredIntensityWithPercent(existing.intensity, savedFromJson?.intensityPercent, 60));
-    } else {
-      setFocusKey('shooting');
-      setIntensity(60);
-    }
-    const storedPlan = existing?.dayPlan
-      ? { dayPlan: existing.dayPlan }
-      : currentSave?.data?.training?.playerPlans?.[String(selectedPlayer.id)];
-    const mappedDefaultFocus = existing?.focus === 'DEFENSE' ? 'defense' : existing?.focus === 'PLAYMAKING' ? 'passing' : existing?.focus === 'CONDITIONING' ? 'athleticism' : 'shooting';
-    const nextDayPlan = Object.fromEntries(
-      DAY_KEYS.map((day) => [day, { intensity: 60, focusKey: mappedDefaultFocus }]),
-    );
-    if (storedPlan?.dayPlan && typeof storedPlan.dayPlan === 'object') {
-      for (const day of DAY_KEYS) {
-        const row = storedPlan.dayPlan[day];
-        if (!row) continue;
-        const mappedFocus = typeof row.focusKey === 'string'
-          ? row.focusKey
-          : row.focus === 'defense'
-            ? 'defense'
-            : row.focus === 'fitness'
-              ? 'athleticism'
-              : row.focus === 'playmaking'
-                ? 'passing'
-                : row.focus === 'balanced'
-                  ? 'bbiq'
-                  : 'shooting';
-        nextDayPlan[day] = {
-          intensity: fromStoredIntensityWithPercent(row.intensity, row.intensityPercent, 60),
-          focusKey: mappedFocus,
-        };
-      }
-    }
-    setDayPlan(nextDayPlan);
-  }, [selectedPlayer, playerTrainingPlans, currentSave?.data?.training?.playerPlans]);
+  const metric = useMemo(() => attrs(details || player), [details, player]);
+  const roleBucket = ROLES.find((r) => r[0] === role)?.[1] || 'BALANCED';
+  const extraBucket = EXTRA.find((e) => e[0] === extra)?.[1] || roleBucket;
+  const focusBucket = extraBucket || roleBucket;
+  const avgIntensity = useMemo(() => Math.round(DAYS.reduce((s, d) => s + num(days[d]?.intensityPercent, INTENSITY[level]), 0) / 7), [days, level]);
+  const workload = avgIntensity < 45 ? 'Light' : avgIntensity < 72 ? 'Medium' : 'Heavy';
 
-  const metrics = deriveMetrics(selectedPlayerDetails || selectedPlayer);
-  const selectedFocus = FOCUS_OPTIONS.find((item) => item.key === focusKey) || FOCUS_OPTIONS[0];
+  const gameDays = useMemo(() => {
+    const out = {};
+    const teamId = currentSave?.teamId;
+    if (!teamId || !currentSave?.data?.currentDate) return out;
+    const start = new Date(`${currentSave.data.currentDate}T00:00:00.000Z`);
+    const keys = new Set((scheduleGames || []).filter((g) => ['scheduled', 'ready', 'live'].includes(String(g.status || '').toLowerCase()) && (Number(g.homeTeamId) === Number(teamId) || Number(g.awayTeamId) === Number(teamId))).map((g) => {
+      const dt = new Date(g.gameDate); return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+    }));
+    DAYS.forEach((d, i) => { const dt = new Date(start); dt.setUTCDate(start.getUTCDate() + i); const key = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`; out[d] = keys.has(key); });
+    return out;
+  }, [currentSave?.data?.currentDate, currentSave?.teamId, scheduleGames]);
 
-  const realStats = useMemo(() => {
-    const player = selectedPlayerDetails || selectedPlayer;
-    if (!player) return [];
-    const pairs = [
-      ['Career Games', player.gamesCareer],
-      ['Career PTS', player.ptsCareer],
-      ['Career REB', player.trbCareer],
-      ['Career AST', player.astCareer],
-      ['FG%', player.fgPct],
-      ['3P%', player.fg3Pct],
-      ['FT%', player.ftPct],
-      ['PER', player.per],
-      ['WS', player.ws],
-      ['eFG%', player.efgPct],
-      ['Salary', player.salary ? `$${Math.round(player.salary / 1_000_000)}M` : '--'],
-    ];
-    return pairs
-      .filter(([, value]) => value !== null && value !== undefined && value !== '')
-      .map(([label, value]) => {
-        if (typeof value === 'number') {
-          const formatted = Number.isInteger(value) ? String(value) : value.toFixed(1);
-          return { label, value: formatted };
-        }
-        return { label, value: String(value) };
-      });
-  }, [selectedPlayer, selectedPlayerDetails]);
+  const totals = useMemo(() => DAYS.reduce((acc, d) => {
+    const row = days[d] || {};
+    const type = TYPES.find((t) => t[0] === row.trainingType) || TYPES[0];
+    const mul = clamp(num(row.intensityPercent, 58), 20, 100) / 60;
+    acc.s += type[2][0] * mul; acc.p += type[2][1] * mul; acc.d += type[2][2] * mul; acc.c += type[2][3] * mul; acc.f += type[2][4] * mul; acc.r += type[2][5] * mul;
+    return acc;
+  }, { s: 0, p: 0, d: 0, c: 0, f: 0, r: 0 }), [days]);
 
-  const dayImpact = (focusValue, intensityValue) => {
-    const i = Number(intensityValue ?? intensity);
-    const attack = focusValue === 'shooting' ? 2 : focusValue === 'passing' || focusValue === 'dribbling' ? 1 : 0;
-    const defense = focusValue === 'defense' ? 2 : 0;
-    const physicality = focusValue === 'athleticism' ? 2 : i > 75 ? 1 : 0;
-    const stamina = focusValue === 'athleticism' ? 2 : i <= 45 ? 1 : -1;
-    const health = i > 82 ? -2 : i > 70 ? -1 : i <= 45 ? 1 : 0;
-    const morale = i > 85 ? -1 : i <= 50 ? 1 : 0;
-    return { attack, defense, physicality, stamina, health, morale };
-  };
-
-  const savePlan = async () => {
-    if (!selectedPlayer) return;
+  const save = async () => {
+    if (!player) return;
     setSaving(true);
     try {
-      await upsertPlayerTrainingPlan({
-        playerId: selectedPlayer.id,
-        focus: selectedFocus.apiFocus,
-        intensity: toApiIntensity(intensity),
-        dayPlan: Object.fromEntries(
-          DAY_KEYS.map((day) => [day, {
-            intensity: toSaveIntensity(dayPlan[day]?.intensity ?? intensity),
-            intensityPercent: Number(dayPlan[day]?.intensity ?? intensity),
-            focus: Object.fromEntries(FOCUS_OPTIONS.map((option) => [option.key, option.saveFocus]))[dayPlan[day]?.focusKey] || selectedFocus.saveFocus,
-            focusKey: dayPlan[day]?.focusKey || focusKey,
-          }]),
-        ),
-      });
-
-      const focusMap = Object.fromEntries(FOCUS_OPTIONS.map((option) => [option.key, option.saveFocus]));
-      const dayPlanPayload = Object.fromEntries(
-        DAY_KEYS.map((day) => [day, {
-          intensity: toSaveIntensity(dayPlan[day]?.intensity ?? intensity),
-          intensityPercent: Number(dayPlan[day]?.intensity ?? intensity),
-          focus: focusMap[dayPlan[day]?.focusKey] || selectedFocus.saveFocus,
-          focusKey: dayPlan[day]?.focusKey || focusKey,
-        }]),
-      );
-
-      await saveTrainingConfig({
-        playerPlans: {
-          [String(selectedPlayer.id)]: {
-            intensity: toSaveIntensity(intensity),
-            intensityPercent: intensity,
-            focus: selectedFocus.saveFocus,
-            dayPlan: dayPlanPayload,
-          },
-        },
-      });
+      const p = INTENSITY[level] || 58;
+      const dayPayload = Object.fromEntries(DAYS.map((d) => {
+        const row = days[d] || {}; const type = TYPES.find((t) => t[0] === row.trainingType) || TYPES[0]; const ip = clamp(num(row.intensityPercent, p), 20, 100);
+        return [d, { trainingType: type[0], focus: saveFocus(type[1]), focusKey: focusKey(type[1]), intensity: intensityTier(ip).toLowerCase(), intensityPercent: ip, durationMinutes: 90 }];
+      }));
+      await upsertPlayerTrainingPlan({ playerId: player.id, focus: focusBucket, intensity: intensityTier(p), dayPlan: dayPayload });
+      await saveTrainingConfig({ playerPlans: { [String(player.id)]: { trainingPosition: trainPos, roleFocus: role, additionalFocus: extra, focus: saveFocus(focusBucket), intensity: intensityTier(p).toLowerCase(), intensityPercent: p, dayPlan: dayPayload } } });
       await fetchPlayerTrainingPlans();
-    } finally {
-      setSaving(false);
-    }
+      setMsg('Training plan saved.');
+    } finally { setSaving(false); }
   };
 
+  const autoCoach = () => {
+    if (!player) return;
+    const map = { PG: ['Primary Ball Handler', 'Passing', 'PG'], SG: ['Shot Creator', 'Shooting', 'SG'], SF: ['3-and-D Wing', 'Perimeter Defense', 'Wing'], PF: ['Stretch Four', 'Rebounding', 'PF'], C: ['Defensive Anchor', 'Interior Defense', 'C'] };
+    const rec = map[player.pPos] || ['Two-Way Star', 'Basketball IQ', 'Wing'];
+    setRole(rec[0]); setExtra(rec[1]); setTrainPos(rec[2]); setMsg('Auto-assigned by development coach.');
+  };
+
+  const reset = () => { if (!player) return; setRole('Primary Ball Handler'); setExtra('Shooting'); setTrainPos(player.pPos || 'PG'); setLevel('medium'); setDays(defaultDayPlan()); setMsg('Plan reset to default.'); };
+  const copyMon = () => { const m = days.Mon || { trainingType: 'Shooting', intensityPercent: 58 }; setDays(Object.fromEntries(DAYS.map((d) => [d, { ...m }]))); };
+  const syncGames = () => setDays((prev) => Object.fromEntries(DAYS.map((d) => [d, gameDays[d] ? { trainingType: 'Recovery', intensityPercent: 34 } : prev[d] || { trainingType: 'Shooting', intensityPercent: 58 }])));
+
+  const report = useMemo(() => {
+    if (!player) return null;
+    const st = currentSave?.data?.playerState?.[String(player.id)] || {};
+    const hist = Array.isArray(st.formHistory) ? st.formHistory : [];
+    const avg7 = hist.slice(-7).reduce((s, v) => s + v, 0) / Math.max(1, hist.slice(-7).length || 1);
+    const avg30 = hist.slice(-30).reduce((s, v) => s + v, 0) / Math.max(1, hist.slice(-30).length || 1);
+    return { fatigue: num(st.fatigue, player.fatigue), morale: num(st.morale, 60), form: num(st.form, 65), avg7: Number(avg7 || num(st.form, 65)).toFixed(1), avg30: Number(avg30 || num(st.form, 65)).toFixed(1) };
+  }, [currentSave?.data?.playerState, player]);
+
   return (
-    <div className="player-training-page">
-      <PageHeader title="Player Training" subtitle="Customize individual training programs for each player" />
-      <div className="pt-grid">
-        <aside className="pt-sidebar">
-          <section className="pt-card">
-            <h3>Select Player</h3>
-            <div className="pt-player-list">
-              {(squadPlayers || []).map((player) => {
-                const isActive = player.id === selectedPlayerId;
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    className={`pt-player-item ${isActive ? 'is-active' : ''}`}
-                    onClick={() => setSelectedPlayerId(player.id)}
-                  >
-                    <div className="pt-avatar">{getInitials(player.name)}</div>
-                    <div>
-                      <div className="pt-player-name">{player.name}</div>
-                      <small>{player.position || 'N/A'} | OVR {player.overallCurrent ?? player.overall ?? '--'} | POT {player.potential ?? '--'}</small>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+    <div className='ptv2-page'>
+      <PageHeader title='Player Training' subtitle='Basketball player development and load management' />
+      <section className='ptv2-top'><div><h1>Training Command Center</h1><p>{player ? `${player.name} | #${player.jerseyCode ?? player.jerseyNumber ?? player.number ?? '--'} | ${player.pPos}` : 'Select a player'}</p></div><div className='ptv2-rating'><span>Training Rating</span><strong>{num(currentSave?.data?.training?.rating, 74).toFixed(2)}</strong></div></section>
+      <div className='ptv2-tabs'>{TABS.map((t) => <button key={t} type='button' className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>{t[0].toUpperCase() + t.slice(1)}</button>)}</div>
+
+      <div className='ptv2-grid'>
+        <aside className='ptv2-card'>
+          <h3>Training Squad</h3>
+          <div className='ptv2-filters'>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder='Search player' />
+            <select value={gFilter} onChange={(e) => setGFilter(e.target.value)}><option value='all'>All Groups</option><option value='guards'>Guards</option><option value='wings'>Wings</option><option value='bigs'>Bigs</option></select>
+          </div>
+          <div className='ptv2-list'>{filtered.map((p) => <button key={p.id} type='button' className={Number(playerId) === Number(p.id) ? 'row active' : 'row'} onClick={() => setPlayerId(p.id)}><span>#{p.jerseyCode ?? p.jerseyNumber ?? p.number ?? '--'}</span><div><strong>{p.name}</strong><small>{p.pPos} | OVR {p.ovr} | POT {p.pot}</small></div></button>)}</div>
         </aside>
 
-        <main className="pt-main">
-          {!selectedPlayer ? null : (
-            <>
-              <section className="pt-card">
-                <div className="pt-header-row">
-                  <div className="pt-header-player">
-                    <div className="pt-avatar big">{getInitials(selectedPlayer.name)}</div>
-                    <div>
-                      <h2>{selectedPlayer.name}</h2>
-                      <p>#{selectedPlayer.jerseyCode ?? selectedPlayer.jerseyNumber ?? selectedPlayer.number ?? '--'} | {selectedPlayer.position || 'N/A'} | {selectedPlayer.age ?? '--'} years old</p>
-                    </div>
-                  </div>
-                  <div className="pt-overall">
-                    <div>{selectedPlayer.overallCurrent ?? selectedPlayer.overall ?? '--'}</div>
-                    <small>Overall Rating</small>
-                    <strong>Potential: {selectedPlayer.potential ?? '--'}</strong>
-                  </div>
-                </div>
-                <div className="pt-metrics-grid">
-                  {[
-                    ['Shooting', metrics.shooting],
-                    ['Defense', metrics.defense],
-                    ['Passing', metrics.passing],
-                    ['Dribbling', metrics.dribbling],
-                    ['Athleticism', metrics.athleticism],
-                    ['Bbiq', metrics.bbiq],
-                  ].map(([label, value]) => (
-                    <div key={label} className="pt-metric-card">
-                      <span>{label}</span>
-                      <div className="pt-metric-bar"><span style={{ width: `${value}%` }} /></div>
-                      <strong>{value}</strong>
-                    </div>
-                  ))}
-                </div>
-                <div className="pt-real-stats-grid">
-                  {realStats.map((stat) => (
-                    <div key={stat.label} className="pt-real-stat">
-                      <span>{stat.label}</span>
-                      <strong>{stat.value}</strong>
-                    </div>
-                  ))}
-                </div>
-              </section>
+        <main className='ptv2-main'>
+          {!player ? <section className='ptv2-card'><p>Select a player to begin.</p></section> : null}
+          {player && tab === 'individual' ? (
+            <section className='ptv2-card'>
+              <div className='ptv2-header'><div className='av'>{initials(player.name)}</div><div><h2>{player.name}</h2><p>#{player.jerseyCode ?? player.jerseyNumber ?? player.number ?? '--'} | Age {player.age} | {player.pPos}</p></div></div>
+              <div className='ptv2-form'>
+                <label><span>Training Position</span><select value={trainPos} onChange={(e) => setTrainPos(e.target.value)}>{['PG', 'SG', 'SF', 'PF', 'C', 'Combo Guard', 'Wing', 'Forward', 'Big', 'Point Forward', 'Stretch Big', 'Small Ball 5'].map((v) => <option key={v} value={v}>{v}</option>)}</select></label>
+                <label><span>Role Focus</span><select value={role} onChange={(e) => setRole(e.target.value)}>{ROLES.map((r) => <option key={r[0]} value={r[0]}>{r[0]}</option>)}</select></label>
+                <label><span>Additional Focus</span><select value={extra} onChange={(e) => setExtra(e.target.value)}>{EXTRA.map((r) => <option key={r[0]} value={r[0]}>{r[0]}</option>)}</select></label>
+                <label><span>Intensity Level</span><select value={level} onChange={(e) => { setLevel(e.target.value); DAYS.forEach((d) => setDays((prev) => ({ ...prev, [d]: { ...(prev[d] || {}), intensityPercent: INTENSITY[e.target.value] || 58 } }))); }}>{Object.keys(INTENSITY).map((k) => <option key={k} value={k}>{k.replace('_', ' ')}</option>)}</select></label>
+              </div>
+              <div className='ptv2-work'><div><span>Workload</span><strong>{workload}</strong></div><div><span>Average Intensity</span><strong>{avgIntensity}%</strong></div><div><span>Projected Growth</span><strong>+{Math.max(0, ((player.pot - player.ovr) / 20) * (avgIntensity / 60)).toFixed(2)}</strong></div></div>
+              <div className='ptv2-court'><div className='marker'>{trainPos}</div></div>
+              <div className='ptv2-actions'><button type='button' className='primary' onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Training Plan'}</button><button type='button' onClick={reset}>Reset to Default</button><button type='button' onClick={autoCoach}>Auto-Assign by Coach</button></div>
+            </section>
+          ) : null}
 
-              <section className="pt-card">
-                <h3>Training Focus</h3>
-                <div className="pt-focus-grid">
-                  {FOCUS_OPTIONS.map((option) => (
-                    <button
-                      key={option.key}
-                      type="button"
-                      className={`pt-focus-card ${focusKey === option.key ? 'is-active' : ''}`}
-                      onClick={() => setFocusKey(option.key)}
-                    >
-                      <div>{option.label}</div>
-                      <strong>{metrics[option.key]}</strong>
-                    </button>
-                  ))}
-                </div>
+          {player && tab === 'schedule' ? (
+            <section className='ptv2-card'>
+              <h3>Weekly Training Planner</h3>
+              <div className='ptv2-actions'><button type='button' onClick={copyMon}>Copy Monday to All Days</button><button type='button' onClick={syncGames}>Sync With Team Schedule</button><button type='button' onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Player Plan'}</button></div>
+              <div className='week'>{DAYS.map((d) => {
+                const row = days[d] || { trainingType: 'Shooting', intensityPercent: 58 };
+                const type = TYPES.find((t) => t[0] === row.trainingType) || TYPES[0];
+                return <article key={d} className={gameDays[d] ? 'day gameday' : 'day'}><div><strong>{DAY_NAMES[d]}</strong><small>{gameDays[d] ? 'Game day detected' : 'No game conflict'}</small></div><select value={row.trainingType} onChange={(e) => setDays((prev) => ({ ...prev, [d]: { ...(prev[d] || {}), trainingType: e.target.value } }))}>{TYPES.map((t) => <option key={`${d}-${t[0]}`} value={t[0]}>{t[0]}</option>)}</select><input type='range' min='20' max='100' value={num(row.intensityPercent, 58)} onChange={(e) => setDays((prev) => ({ ...prev, [d]: { ...(prev[d] || {}), intensityPercent: clamp(num(e.target.value, 58), 20, 100) } }))} /><small>SHO {type[2][0]} | PASS {type[2][1]} | DEF {type[2][2]} | COND {type[2][3]} | FAT {type[2][4]} | RISK {type[2][5]}</small></article>;
+              })}</div>
+              <div className='sum'><div><span>Shooting</span><strong>{totals.s.toFixed(1)}</strong></div><div><span>Playmaking</span><strong>{totals.p.toFixed(1)}</strong></div><div><span>Defense</span><strong>{totals.d.toFixed(1)}</strong></div><div><span>Conditioning</span><strong>{totals.c.toFixed(1)}</strong></div><div><span>Fatigue</span><strong>{totals.f.toFixed(1)}</strong></div><div><span>Injury Risk</span><strong>{totals.r.toFixed(1)}</strong></div></div>
+            </section>
+          ) : null}
 
-                <div className="pt-slider-wrap">
-                  <div className="pt-slider-head"><span>Training Intensity</span><strong>{intensity}%</strong></div>
-                  <input type="range" min="20" max="100" value={intensity} onChange={(e) => setIntensity(Number(e.target.value))} />
-                  <div className="pt-slider-scale"><span>Light</span><span>Moderate</span><span>Intense</span></div>
-                </div>
-
-                <div className="pt-impact-box">
-                  <div className="pt-impact-title">Expected Weekly Improvement</div>
-                  <ul>
-                    <li>{selectedFocus.label} will improve by approximately {Math.max(0, Math.round((intensity - 55) / 8))} points per week</li>
-                    <li>Fitness impact: {intensity > 80 ? '-1%' : '0%'}</li>
-                    <li>Morale: Excellent</li>
-                  </ul>
-                  <strong>+{Math.max(0, Math.round((intensity - 50) / 10))}</strong>
-                </div>
-              </section>
-
-              <section className="pt-card">
-                <h3>Weekly Training Schedule (Per Player)</h3>
-                <div className="pt-week-list">
-                  {DAY_KEYS.map((day) => (
-                    <label key={day} className="pt-week-row">
-                      <div className="pt-week-meta">
-                        <strong>{DAY_LABELS[day]}</strong>
-                        <small>{(FOCUS_OPTIONS.find((option) => option.key === (dayPlan[day]?.focusKey || focusKey)) || selectedFocus).label} Training</small>
-                      </div>
-                      <div className="pt-week-controls">
-                        <select
-                          className="pt-week-select"
-                          value={dayPlan[day]?.focusKey || focusKey}
-                          onChange={(e) => setDayPlan((prev) => ({ ...prev, [day]: { ...(prev[day] || {}), focusKey: e.target.value } }))}
-                        >
-                          {FOCUS_OPTIONS.map((option) => <option key={`${day}-${option.key}`} value={option.key}>{option.label}</option>)}
-                        </select>
-                        <input
-                          className="pt-week-range"
-                          type="range"
-                          min="20"
-                          max="100"
-                          value={dayPlan[day]?.intensity ?? intensity}
-                          onChange={(e) => setDayPlan((prev) => ({ ...prev, [day]: { ...(prev[day] || {}), intensity: Number(e.target.value) } }))}
-                        />
-                        <span>{dayPlan[day]?.intensity ?? intensity}%</span>
-                        <small className="pt-week-impact">
-                          {(() => {
-                            const eff = dayImpact(dayPlan[day]?.focusKey || focusKey, dayPlan[day]?.intensity ?? intensity);
-                            return `ATT ${eff.attack >= 0 ? '+' : ''}${eff.attack} | DEF ${eff.defense >= 0 ? '+' : ''}${eff.defense} | PHY ${eff.physicality >= 0 ? '+' : ''}${eff.physicality} | STA ${eff.stamina >= 0 ? '+' : ''}${eff.stamina} | HLT ${eff.health >= 0 ? '+' : ''}${eff.health} | MOR ${eff.morale >= 0 ? '+' : ''}${eff.morale}`;
-                          })()}
-                        </small>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-                <button className="pt-primary-btn" type="button" onClick={savePlan} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Player Plan'}
-                </button>
-              </section>
-            </>
-          )}
+          {player && tab === 'reports' ? (
+            <section className='ptv2-card'>
+              <h3>Training Reports</h3>
+              {!report ? null : <div className='report'><article><h4>Progress Highlights</h4><ul><li>7-day form average: {report.avg7}</li><li>30-day form average: {report.avg30}</li><li>Current focus: {extra}</li></ul></article><article><h4>Coach Notes</h4><p>{player.name} is in a {role} development track with {workload.toLowerCase()} workload.</p><p>Recommendation: {avgIntensity > 76 ? 'Reduce one high-intensity day and add Recovery.' : 'Maintain current plan and reassess in one week.'}</p></article></div>}
+            </section>
+          ) : null}
         </main>
+
+        <aside className='ptv2-card'>
+          <h3>Attributes</h3>
+          <div className='attr'>
+            {[['Shooting', metric.shooting], ['3PT Shooting', metric.three], ['Finishing', metric.finish], ['Passing', metric.passing], ['Perimeter Defense', metric.defense], ['Stamina', metric.stamina], ['Basketball IQ', metric.iq], ['Potential', metric.potential]].map(([k, v]) => <div key={k}><span>{k}</span><strong>{v}</strong></div>)}
+          </div>
+          <h3>Coach Report</h3>
+          <ul><li>Pick-and-roll reads are {focusBucket === 'PLAYMAKING' ? 'improving' : 'stable'}.</li><li>Perimeter shooting is {metric.three >= 76 ? 'reliable' : 'inconsistent'}.</li><li>Defensive focus is {focusBucket === 'DEFENSE' ? 'active this cycle' : 'available next cycle'}.</li></ul>
+          <h3>Physical and Medical</h3>
+          <div className='attr'><div><span>Conditioning</span><strong>{metric.stamina}</strong></div><div><span>Fatigue</span><strong>{player ? player.fatigue : '--'}</strong></div><div><span>Injury Risk</span><strong>{player && player.fatigue > 65 ? 'High' : 'Managed'}</strong></div><div><span>Load Management</span><strong>{workload}</strong></div></div>
+        </aside>
       </div>
+
+      {msg ? <p className='ptv2-msg'>{msg}</p> : null}
     </div>
   );
 }
