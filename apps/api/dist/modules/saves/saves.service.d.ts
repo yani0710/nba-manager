@@ -1085,6 +1085,7 @@ export declare class SavesService {
     private pushLast5;
     private nextStreak;
     private computePlayerPerformanceScore;
+    private applyGameweekPerformanceAdjustments;
     private applyOverallDrift;
     private deriveInitialPerfBonus;
     private deterministicNoise;

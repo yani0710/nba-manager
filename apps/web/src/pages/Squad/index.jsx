@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState, SkeletonTable } from '../../components/ui';
 import { useGameStore } from '../../state/gameStore';
+import { api } from '../../api/client';
 import {
   getContractMeta,
   getPlayerSalary,
@@ -114,6 +115,7 @@ export function Squad() {
 
   const [activePos, setActivePos] = useState('ALL');
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
+  const [selectedPlayerStats, setSelectedPlayerStats] = useState(null);
 
   const teamShortName = currentSave?.data?.career?.teamShortName ?? currentSave?.team?.shortName ?? null;
   const season = currentSave?.season ?? '2025-26';
@@ -158,6 +160,26 @@ export function Squad() {
     () => managedRoster.find((player) => player.id === selectedPlayerId) ?? null,
     [managedRoster, selectedPlayerId],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      if (!selectedPlayerId || !currentSave?.id) {
+        setSelectedPlayerStats(null);
+        return;
+      }
+      try {
+        const { data } = await api.players.getStats(selectedPlayerId, { saveId: currentSave.id });
+        if (!cancelled) setSelectedPlayerStats(data);
+      } catch {
+        if (!cancelled) setSelectedPlayerStats(null);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPlayerId, currentSave?.id, currentSave?.currentDate]);
 
   if (!teamShortName) {
     return <EmptyState title="No managed team" description="Start or load a career with a team to view your squad." />;
@@ -208,7 +230,7 @@ export function Squad() {
           </thead>
           <tbody>
             {shownPlayers.map((player) => (
-              <tr key={player.id} onClick={() => setSelectedPlayerId(player.id)}>
+              <tr key={player.id} onClick={() => { setSelectedPlayerId(player.id); setSelectedPlayerStats(null); }}>
                 <td>{player.jersey}</td>
                 <td>
                   <div className="sq-player-cell">
@@ -255,10 +277,11 @@ export function Squad() {
               <article>
                 <h3>Season Statistics</h3>
                 <div className="sq-stat-list">
-                  <p><span>Points Per Game</span><strong>{selectedPlayer.ppg.toFixed(1)}</strong></p>
-                  <p><span>Rebounds</span><strong>{selectedPlayer.rpg.toFixed(1)}</strong></p>
-                  <p><span>Assists</span><strong>{selectedPlayer.apg.toFixed(1)}</strong></p>
-                  <p><span>FG%</span><strong>{selectedPlayer.fgPct.toFixed(1)}%</strong></p>
+                  <p><span>Points Per Game</span><strong>{Number(selectedPlayerStats?.averages?.points ?? selectedPlayer.ppg).toFixed(1)}</strong></p>
+                  <p><span>Rebounds</span><strong>{Number(selectedPlayerStats?.averages?.rebounds ?? selectedPlayer.rpg).toFixed(1)}</strong></p>
+                  <p><span>Assists</span><strong>{Number(selectedPlayerStats?.averages?.assists ?? selectedPlayer.apg).toFixed(1)}</strong></p>
+                  <p><span>Minutes Per Game</span><strong>{Number(selectedPlayerStats?.averages?.minutes ?? 0).toFixed(1)}</strong></p>
+                  <p><span>FG%</span><strong>{Number(selectedPlayerStats?.averages?.fgPct ?? selectedPlayer.fgPct).toFixed(1)}%</strong></p>
                 </div>
               </article>
 
@@ -278,4 +301,3 @@ export function Squad() {
     </div>
   );
 }
-

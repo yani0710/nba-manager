@@ -7,21 +7,30 @@ export declare class PlayersService {
     getPlayerStats(playerId: number, saveId?: number): Promise<{
         gamesPlayed: number;
         totals: {
+            minutes: number;
             points: number;
             rebounds: number;
             assists: number;
+            fgMade: number;
+            fgAtt: number;
+            fgPct: number;
         };
         averages: {
+            minutes: number;
             points: number;
             rebounds: number;
             assists: number;
+            fgPct: number;
         };
         lastFive: {
             gameId: number;
             date: Date;
+            minutes: number;
             points: number;
             rebounds: number;
             assists: number;
+            fgMade: number;
+            fgAtt: number;
         }[];
     }>;
     private attachSaveState;

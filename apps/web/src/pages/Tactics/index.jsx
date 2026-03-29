@@ -71,6 +71,15 @@ function clamp01(value) {
   return Math.max(0, Math.min(100, Number(value) || 0));
 }
 
+function normalizePositionTags(player) {
+  const raw = `${String(player?.position || '').toUpperCase()} ${String(player?.primaryPosition || '').toUpperCase()}`;
+  const tags = new Set();
+  POSITION_ORDER.forEach((slot) => {
+    if (raw.includes(slot)) tags.add(slot);
+  });
+  return tags;
+}
+
 function detectFormation(board) {
   const b = board || {};
   if (Math.abs((b.SF?.x ?? 0.5) - 0.5) < 0.04) return 'spread';
@@ -201,19 +210,32 @@ export function Tactics() {
 
   const playersByPosition = useMemo(() => {
     const byPos = { PG: [], SG: [], SF: [], PF: [], C: [] };
-    const all = squadPlayers || [];
-    for (const player of all) {
-      const pos = String(player.position || '').toUpperCase();
+    for (const player of (squadPlayers || [])) {
+      const tags = normalizePositionTags(player);
       for (const slot of POSITION_ORDER) {
-        if (pos.includes(slot)) byPos[slot].push(player);
+        if (tags.has(slot)) byPos[slot].push(player);
       }
     }
     for (const slot of POSITION_ORDER) {
       byPos[slot].sort((a, b) => (b.overallCurrent ?? b.overall ?? 0) - (a.overallCurrent ?? a.overall ?? 0));
-      if (byPos[slot].length === 0) byPos[slot] = all;
     }
     return byPos;
   }, [squadPlayers]);
+
+  useEffect(() => {
+    setRotation((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      POSITION_ORDER.forEach((slot) => {
+        const pool = playersByPosition[slot] || [];
+        if (next[slot] && !pool.some((p) => Number(p.id) === Number(next[slot]))) {
+          next[slot] = null;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [playersByPosition]);
 
   const applyFormation = (formationKey) => {
     const base = FORMATIONS[formationKey]?.board || FORMATIONS.traditional.board;
@@ -291,6 +313,7 @@ export function Tactics() {
 
           <CourtBoard
             players={squadPlayers}
+            playersByPosition={playersByPosition}
             view={activePhase}
             board={tactics.boards?.[activePhase] || tactics.board}
             onBoardChange={(nextBoard) => setTactics((prev) => ({

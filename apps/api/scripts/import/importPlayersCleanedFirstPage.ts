@@ -55,6 +55,28 @@ function freeAgentBaseOverall(name: string): number {
   return 60 + (deterministic(name) % 6); // 60..65
 }
 
+function nonFreeAgentBaseOverall(name: string, salary: number | null): number {
+  const s = Number(salary ?? 0);
+  if (Number.isFinite(s) && s > 0) {
+    const m = s / 1_000_000;
+    const bySalary =
+      m >= 50 ? 92 :
+      m >= 45 ? 90 :
+      m >= 40 ? 88 :
+      m >= 35 ? 86 :
+      m >= 30 ? 84 :
+      m >= 25 ? 82 :
+      m >= 20 ? 79 :
+      m >= 15 ? 76 :
+      m >= 10 ? 73 :
+      m >= 7 ? 70 :
+      m >= 4 ? 67 :
+      64;
+    return bySalary;
+  }
+  return 66 + (deterministic(name) % 8); // 66..73 fallback if salary missing
+}
+
 async function ensureFreeAgentTeam() {
   const existing = await prisma.team.findUnique({
     where: { shortName: FREE_AGENT_TEAM_SHORT },
@@ -193,6 +215,7 @@ async function main() {
         }
         updated += 1;
       } else {
+        const nonFaOverall = nonFreeAgentBaseOverall(name, salary);
         await prisma.player.create({
           data: {
             name,
@@ -209,10 +232,10 @@ async function main() {
             nationality: nationality ?? undefined,
             school: school ?? undefined,
             salary: (salary && salary > 0) ? salary : (isFreeAgent ? 1_500_000 : null),
-            overallBase: isFreeAgent ? faOverall : 60,
-            overallCurrent: isFreeAgent ? faOverall : 60,
-            overall: isFreeAgent ? faOverall : 60,
-            potential: isFreeAgent ? Math.max(65, faOverall + 8) : 72,
+            overallBase: isFreeAgent ? faOverall : nonFaOverall,
+            overallCurrent: isFreeAgent ? faOverall : nonFaOverall,
+            overall: isFreeAgent ? faOverall : nonFaOverall,
+            potential: isFreeAgent ? Math.max(65, faOverall + 8) : Math.max(74, nonFaOverall + 6),
           },
         });
         created += 1;
@@ -238,6 +261,7 @@ async function main() {
           }
           updated += 1;
         } else {
+          const nonFaOverall = nonFreeAgentBaseOverall(name, salary);
           await prisma.player.create({
             data: {
               name,
@@ -251,10 +275,10 @@ async function main() {
               nationality: nationality ?? undefined,
               school: school ?? undefined,
               salary: (salary && salary > 0) ? salary : (isFreeAgent ? 1_500_000 : null),
-              overallBase: isFreeAgent ? faOverall : 60,
-              overallCurrent: isFreeAgent ? faOverall : 60,
-              overall: isFreeAgent ? faOverall : 60,
-              potential: isFreeAgent ? Math.max(65, faOverall + 8) : 72,
+              overallBase: isFreeAgent ? faOverall : nonFaOverall,
+              overallCurrent: isFreeAgent ? faOverall : nonFaOverall,
+              overall: isFreeAgent ? faOverall : nonFaOverall,
+              potential: isFreeAgent ? Math.max(65, faOverall + 8) : Math.max(74, nonFaOverall + 6),
             },
           });
           created += 1;

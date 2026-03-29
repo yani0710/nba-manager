@@ -470,6 +470,15 @@ class SavesService {
             playerMetaById,
             playedToday,
         });
+        if (rolledWeek) {
+            await this.applyGameweekPerformanceAdjustments({
+                saveId: save.id,
+                managedTeamId: save.teamId ?? null,
+                season: save.season,
+                completedWeek: previousWeek,
+                currentData,
+            });
+        }
         const nextSeasonDay = this.getSeasonDay(save.season, nextDate);
         await this.tradesService.resolvePendingOffersForDay(save.id, nextSeasonDay, nextDate);
         await this.tradesService.resolvePendingPlayerProposalResponsesForDay(save.id, nextSeasonDay, nextDate);
@@ -2487,6 +2496,192 @@ class SavesService {
             blkZ * weights.blk +
             tovZ * weights.tov;
         return this.clamp(Math.round(50 + performanceIndex * 10), 0, 100);
+    }
+    async applyGameweekPerformanceAdjustments(params) {
+        const ranges = (0, gameweekCalendar_1.getGameweekRanges)(params.season);
+        const range = ranges.find((r) => r.week === params.completedWeek);
+        if (!range)
+            return;
+        const weekStart = new Date(`${range.start}T00:00:00.000Z`);
+        const weekEnd = new Date(`${range.end}T23:59:59.999Z`);
+        const weekRows = await prisma_1.default.gameStat.findMany({
+            where: {
+                game: {
+                    saveId: params.saveId,
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
+                    gameDate: { gte: weekStart, lte: weekEnd },
+                },
+            },
+            select: {
+                playerId: true,
+                gameId: true,
+                minutes: true,
+                performanceRating: true,
+                points: true,
+                rebounds: true,
+                assists: true,
+                teamId: true,
+            },
+        });
+        if (weekRows.length === 0)
+            return;
+        const playerIds = [...new Set(weekRows.map((r) => r.playerId))];
+        const players = await prisma_1.default.player.findMany({
+            where: { id: { in: playerIds }, active: true },
+            select: {
+                id: true,
+                name: true,
+                teamId: true,
+                age: true,
+                overallBase: true,
+                overallCurrent: true,
+                overall: true,
+                potential: true,
+                morale: true,
+            },
+        });
+        const playerById = new Map(players.map((p) => [p.id, p]));
+        const prevRows = await prisma_1.default.gameStat.findMany({
+            where: {
+                playerId: { in: playerIds },
+                game: {
+                    saveId: params.saveId,
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
+                    gameDate: { lt: weekStart },
+                },
+            },
+            orderBy: { game: { gameDate: "desc" } },
+            select: {
+                playerId: true,
+                performanceRating: true,
+            },
+        });
+        const prevScoresByPlayer = new Map();
+        for (const row of prevRows) {
+            const arr = prevScoresByPlayer.get(row.playerId) ?? [];
+            if (arr.length < 6)
+                arr.push(Number(row.performanceRating ?? 50));
+            prevScoresByPlayer.set(row.playerId, arr);
+        }
+        const weekByPlayer = new Map();
+        for (const row of weekRows) {
+            const arr = weekByPlayer.get(row.playerId) ?? [];
+            arr.push(row);
+            weekByPlayer.set(row.playerId, arr);
+        }
+        params.currentData.playerState = params.currentData.playerState ?? {};
+        const pendingUpdates = new Map();
+        const complaintCandidates = [];
+        for (const [playerId, rows] of weekByPlayer.entries()) {
+            const player = playerById.get(playerId);
+            if (!player)
+                continue;
+            const currentOverall = Number(player.overallCurrent ?? player.overall ?? 60);
+            const baseOverall = Number(player.overallBase ?? player.overall ?? currentOverall);
+            const potential = Number(player.potential ?? 75);
+            const age = Number(player.age ?? 27);
+            const key = String(playerId);
+            const state = params.currentData.playerState[key] ?? { fatigue: 10, morale: 65, form: 60 };
+            const weekAvgPerf = rows.reduce((sum, r) => sum + Number(r.performanceRating ?? 50), 0) / Math.max(1, rows.length);
+            const prevScores = prevScoresByPlayer.get(playerId) ?? [];
+            const baselinePerf = prevScores.length > 0
+                ? prevScores.reduce((sum, v) => sum + v, 0) / prevScores.length
+                : Number(state.form ?? 60);
+            let delta = 0;
+            const perfDiff = weekAvgPerf - baselinePerf;
+            if (perfDiff >= 6)
+                delta = 1;
+            else if (perfDiff <= -6)
+                delta = -1;
+            const lower = Math.max(40, baseOverall - 8, age >= 35 ? 52 : 45);
+            const upper = Math.min(99, potential + (age <= 24 ? 2 : 0));
+            const nextOverall = this.clamp(currentOverall + delta, lower, upper);
+            const nextMorale = this.clamp(Math.round(Number(state.morale ?? player.morale ?? 65) + (delta > 0 ? 1 : delta < 0 ? -1 : 0)), 0, 100);
+            params.currentData.playerState[key] = {
+                ...state,
+                morale: nextMorale,
+                effectiveOverall: nextOverall,
+                form: this.clamp(Math.round((Number(state.form ?? 60) * 0.8) + (weekAvgPerf * 0.2)), 0, 100),
+            };
+            pendingUpdates.set(playerId, {
+                morale: nextMorale,
+                overallCurrent: nextOverall,
+                overall: nextOverall,
+            });
+        }
+        if (params.managedTeamId) {
+            const teamGamesThisWeek = await prisma_1.default.game.count({
+                where: {
+                    saveId: params.saveId,
+                    status: { in: fixtureStatus_1.COMPLETED_GAME_STATUSES },
+                    gameDate: { gte: weekStart, lte: weekEnd },
+                    OR: [{ homeTeamId: params.managedTeamId }, { awayTeamId: params.managedTeamId }],
+                },
+            });
+            if (teamGamesThisWeek > 0) {
+                const managedRoster = await prisma_1.default.player.findMany({
+                    where: { active: true, teamId: params.managedTeamId },
+                    select: { id: true, name: true, morale: true, overallCurrent: true, overall: true },
+                });
+                const minutesByPlayer = new Map();
+                for (const row of weekRows) {
+                    if (row.teamId !== params.managedTeamId)
+                        continue;
+                    minutesByPlayer.set(row.playerId, (minutesByPlayer.get(row.playerId) ?? 0) + Number(row.minutes ?? 0));
+                }
+                for (const player of managedRoster) {
+                    const key = String(player.id);
+                    const state = params.currentData.playerState[key] ?? { fatigue: 10, morale: 65, form: 60 };
+                    const avgMinutes = (minutesByPlayer.get(player.id) ?? 0) / teamGamesThisWeek;
+                    if (avgMinutes >= 10)
+                        continue;
+                    const moralePenalty = avgMinutes < 6 ? -3 : -2;
+                    const baseMorale = pendingUpdates.get(player.id)?.morale ?? Number(state.morale ?? player.morale ?? 65);
+                    const nextMorale = this.clamp(Math.round(baseMorale + moralePenalty), 0, 100);
+                    params.currentData.playerState[key] = {
+                        ...state,
+                        morale: nextMorale,
+                    };
+                    const currentOverall = pendingUpdates.get(player.id)?.overallCurrent
+                        ?? Number(player.overallCurrent ?? player.overall ?? 60);
+                    pendingUpdates.set(player.id, {
+                        morale: nextMorale,
+                        overallCurrent: currentOverall,
+                        overall: currentOverall,
+                    });
+                    complaintCandidates.push({
+                        playerId: player.id,
+                        playerName: player.name,
+                        avgMinutes,
+                    });
+                }
+            }
+        }
+        const updateOps = [];
+        for (const [playerId, payload] of pendingUpdates.entries()) {
+            updateOps.push(prisma_1.default.player.update({
+                where: { id: playerId },
+                data: payload,
+            }));
+        }
+        if (updateOps.length > 0) {
+            await prisma_1.default.$transaction(updateOps);
+        }
+        if (params.managedTeamId && complaintCandidates.length > 0) {
+            const toNotify = complaintCandidates
+                .sort((a, b) => a.avgMinutes - b.avgMinutes)
+                .slice(0, 3);
+            for (const item of toNotify) {
+                await this.createInboxMessage({
+                    saveId: params.saveId,
+                    date: weekEnd,
+                    type: "player",
+                    title: "Playing Time Concern",
+                    body: `Coach, I only averaged ${item.avgMinutes.toFixed(1)} minutes this gameweek. Will I get a bigger role?`,
+                    fromName: item.playerName,
+                });
+            }
+        }
     }
     applyOverallDrift(params) {
         const rolling30 = params.formHistory.slice(-30);

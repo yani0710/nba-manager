@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '../../components/ui';
 import { api } from '../../api/client';
 import { useGameStore } from '../../state/gameStore';
 import './transfers.css';
 
-const TABS = ['Free Agents', 'Trade Targets', 'My Offers', 'Trade Proposals', 'Negotiations', 'Transaction History'];
+const TABS = ['Your Squad', 'Scout Targets', 'My Offers', 'Team Proposals', 'Negotiations', 'Transaction History'];
 
 function money(v) {
   const n = Number(v);
@@ -243,6 +243,9 @@ export function Transfers() {
     }
   };
 
+  const myOffersPendingCount = contractOffers.filter((o) => String(o.status || '').toUpperCase() === 'PENDING').length;
+  const teamProposalsPendingCount = tradeProposals.filter((p) => String(p.status || '').toUpperCase() === 'PENDING').length;
+
   return (
     <div className="transfer-page">
       <header className="transfer-section-head">
@@ -283,14 +286,16 @@ export function Transfers() {
       <div className="transfer-pos-tabs" style={{ marginBottom: 12 }}>
         {TABS.map((name) => (
           <button key={name} type="button" className={`transfer-pos-tab ${tab === name ? 'is-active' : ''}`} onClick={() => setTab(name)}>
-            {name}
+            <span>{name}</span>
+            {name === 'My Offers' && myOffersPendingCount > 0 ? <em className="transfer-tab-count">{myOffersPendingCount}</em> : null}
+            {name === 'Team Proposals' && teamProposalsPendingCount > 0 ? <em className="transfer-tab-count is-warn">{teamProposalsPendingCount}</em> : null}
           </button>
         ))}
       </div>
 
       {loading ? <div className="ui-card">Loading transfer data...</div> : null}
 
-      {!loading && tab === 'Free Agents' ? (
+      {!loading && tab === 'Scout Targets' ? (
         <section className="transfer-layout">
           <div className="transfer-left">
             <article className="transfer-filter-card">
@@ -381,7 +386,7 @@ export function Transfers() {
                   <div><span>Transfer Fee</span><b>{money(transferFee)}</b></div>
                   <div><span>Agent Fee (5%)</span><b>{money(transferFee * 0.05)}</b></div>
                   <div><span>Signing Bonus</span><b>{money(signingBonus)}</b></div>
-                  <div><span>Annual Salary</span><b>{money(offerSalary)} × {offerYears}y</b></div>
+                  <div><span>Annual Salary</span><b>{money(offerSalary)} x {offerYears}y</b></div>
                   <div><span>Performance Bonus</span><b>{money(performanceBonus)} / yr</b></div>
                   <div><span>Total Package</span><b>{money(dealTotal)}</b></div>
                   <div><span>Budget After</span><b className={(Number(capSummary?.capSpace || 0) - dealTotal) >= 0 ? 'is-good' : 'is-bad'}>{money(Number(capSummary?.capSpace || 0) - dealTotal)}</b></div>
@@ -404,126 +409,104 @@ export function Transfers() {
         </section>
       ) : null}
 
-      {!loading && tab === 'Trade Targets' ? (
-        <section className="ui-card">
-          <h3>Trade Targets</h3>
-          <div style={{ marginBottom: 10 }}>
-            <label>Target Team
-              <select value={targetTeamId} onChange={(e) => { setTargetTeamId(e.target.value); setSelectedIncomingIds([]); }}>
-                <option value="">Select team</option>
-                {teams.filter((t) => t.id !== managedTeam?.id && t.shortName !== 'FA').map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </label>
+      {!loading && tab === 'Your Squad' ? (
+        <section className="transfer-market-card">
+          <div className="transfer-section-head">
+            <h3>Current Squad</h3>
+            <div className="transfer-stat-label">Total Value: <b style={{ color: 'var(--tr-green)' }}>{money(myRoster.reduce((sum, p) => sum + Number(p.salary || 0), 0))}</b></div>
           </div>
-          {!targetTeamId ? <EmptyState title="Choose target team" description="Select team to build incoming pieces." /> : (
-            <div className="ui-card-grid">
-              <div className="ui-col-6">
-                <h4>Incoming Players</h4>
-                <div className="ui-table-shell">
-                  <table className="ui-table">
-                    <thead><tr><th>Pick</th><th>Name</th><th>Pos</th><th>Salary</th></tr></thead>
-                    <tbody>
-                      {targetTeamPlayers.map((p) => (
-                        <tr key={p.id}>
-                          <td><input type="checkbox" checked={selectedIncomingIds.includes(p.id)} onChange={() => toggleId(setSelectedIncomingIds, p.id)} /></td>
-                          <td>{p.name}</td><td>{p.position || '-'}</td><td>{money(p.salary)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="ui-col-6">
-                <h4>Outgoing Players</h4>
-                <div className="ui-table-shell">
-                  <table className="ui-table">
-                    <thead><tr><th>Pick</th><th>Name</th><th>Pos</th><th>Salary</th></tr></thead>
-                    <tbody>
-                      {myRoster.map((p) => (
-                        <tr key={p.id}>
-                          <td><input type="checkbox" checked={selectedOutgoingIds.includes(p.id)} onChange={() => toggleId(setSelectedOutgoingIds, p.id)} /></td>
-                          <td>{p.name}</td><td>{p.position || '-'}</td><td>{money(p.salary)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+          {myRoster.length === 0 ? <EmptyState title="No players in squad" description="Load squad data to manage outgoing players." /> : (
+            <div className="transfer-offers-list">
+              {myRoster.map((p) => (
+                <article key={p.id} className="transfer-offer-item">
+                  <div className="transfer-offer-top">
+                    <div className="transfer-player-card-mini">
+                      <div className="transfer-avatar">{initials(p.name)}</div>
+                      <div>
+                        <strong>{p.name}</strong>
+                        <div className="transfer-offer-sub">{p.position || '-'} • #{p.jerseyCode ?? p.jerseyNumber ?? p.number ?? '--'}</div>
+                      </div>
+                    </div>
+                    <button type="button" className="ui-btn" onClick={() => setToast(`${p.name} listed on internal trade block`)}>
+                      List for Sale
+                    </button>
+                  </div>
+                  <div className="transfer-summary-box">
+                    <div><span>Market Value</span><b>{money(p.salary)}</b></div>
+                    <div><span>Weekly Wage</span><b>{money(Number(p.salary || 0) / 52)}</b></div>
+                    <div><span>Contract</span><b>{Math.max(1, Number(p.contractYears || 2))} years</b></div>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
-          {tradeCapImpact ? (
-            <div className="ui-list-item" style={{ marginTop: 12 }}>
-              <div>Incoming Salary: <b>{money(tradeCapImpact.incomingSalary)}</b></div>
-              <div>Outgoing Salary: <b>{money(tradeCapImpact.outgoingSalary)}</b></div>
-              <div>Payroll After Move: <b>{money(tradeCapImpact.nextPayroll)}</b></div>
-              <div>Cap Room After Move: <b>{money(tradeCapImpact.nextCapSpace)}</b></div>
-            </div>
-          ) : null}
-          <div style={{ marginTop: 12 }}>
-            <button type="button" className="ui-btn ui-btn-primary" disabled={saving || !targetTeamId || selectedIncomingIds.length === 0 || selectedOutgoingIds.length === 0} onClick={submitTradeProposal}>Submit Trade</button>
-          </div>
         </section>
       ) : null}
 
       {!loading && tab === 'My Offers' ? (
-        <section className="ui-card">
-          <h3>My Offers</h3>
+        <section className="transfer-market-card">
+          <div className="transfer-section-head"><h3>My Offers</h3></div>
           {contractOffers.length === 0 ? <EmptyState title="No contract offers" description="Submit offers to free agents." /> : (
-            <div className="ui-table-shell">
-              <table className="ui-table">
-                <thead><tr><th>Player</th><th>Terms</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody>
-                  {contractOffers.map((o) => (
-                    <tr key={o.id}>
-                      <td>{o.player?.name}</td>
-                      <td>{money(o.salaryPerYear)} × {o.years} • {o.rolePromise}</td>
-                      <td><span className={badge(o.status)}>{o.status}</span></td>
-                      <td>{o.status === 'PENDING' ? <button type="button" className="ui-btn" onClick={() => withdrawContractOffer(o.id)}>Withdraw</button> : null}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="transfer-offers-list">
+              {contractOffers.map((o) => (
+                <article key={o.id} className="transfer-offer-item">
+                  <div className="transfer-offer-top">
+                    <div>
+                      <strong>{o.player?.name || 'Unknown Player'}</strong>
+                      <div className="transfer-offer-sub">{money(o.salaryPerYear)} x {o.years} • {o.rolePromise || 'role'}</div>
+                    </div>
+                    <span className={badge(o.status)}>{o.status}</span>
+                  </div>
+                  {o.status === 'PENDING' ? <button type="button" className="ui-btn" onClick={() => withdrawContractOffer(o.id)}>Withdraw Offer</button> : null}
+                </article>
+              ))}
             </div>
           )}
         </section>
       ) : null}
 
-      {!loading && tab === 'Trade Proposals' ? (
-        <section className="ui-card">
-          <h3>Trade Proposals</h3>
+      {!loading && tab === 'Team Proposals' ? (
+        <section className="transfer-market-card">
+          <div className="transfer-section-head"><h3>Incoming Transfer Proposals</h3></div>
           {tradeProposals.length === 0 ? <EmptyState title="No trade proposals" description="Create trade package from Trade Targets." /> : (
-            <div className="ui-table-shell">
-              <table className="ui-table">
-                <thead><tr><th>Teams</th><th>Status</th><th>Reason</th><th>Action</th></tr></thead>
-                <tbody>
-                  {tradeProposals.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.fromTeam?.shortName} → {p.toTeam?.shortName}</td>
-                      <td><span className={badge(p.status)}>{p.status}</span></td>
-                      <td>{p.decisionReason || '-'}</td>
-                      <td>{['PENDING', 'COUNTERED'].includes(String(p.status)) ? <button type="button" className="ui-btn" onClick={() => withdrawTradeProposal(p.id)}>Withdraw</button> : null}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="transfer-proposals">
+              {tradeProposals.map((p) => (
+                <article key={p.id} className="transfer-proposal-row">
+                  <div className="transfer-offer-top">
+                    <strong>Offer from {p.fromTeam?.name || p.fromTeam?.shortName}</strong>
+                    <span className={badge(p.status)}>{p.status}</span>
+                  </div>
+                  <div className="transfer-summary-box">
+                    <div><span>For Team</span><b>{p.toTeam?.shortName || '-'}</b></div>
+                    <div><span>Offer Amount</span><b>{money((p.items || []).reduce((s, item) => s + Number(item?.player?.salary || 0), 0))}</b></div>
+                    <div><span>Expires</span><b>{Math.max(1, Number(p.expiresDay || 0) - Number(p.submittedDay || 0))} day(s)</b></div>
+                  </div>
+                  <div className="transfer-offer-sub">{p.decisionReason || 'Review and respond to this proposal.'}</div>
+                  <div className="transfer-proposal-actions">
+                    <button type="button" className="ui-btn ui-btn-positive" onClick={() => setToast('Accept flow for team proposals will be wired in the next patch.')}>Accept Offer</button>
+                    <button type="button" className="ui-btn ui-btn-primary" onClick={() => setToast('Counter flow for team proposals will be wired in the next patch.')}>Counter Offer</button>
+                    {['PENDING', 'COUNTERED'].includes(String(p.status)) ? <button type="button" className="ui-btn ui-btn-danger" onClick={() => withdrawTradeProposal(p.id)}>Reject</button> : null}
+                  </div>
+                </article>
+              ))}
             </div>
           )}
         </section>
       ) : null}
 
       {!loading && tab === 'Negotiations' ? (
-        <section className="ui-card">
-          <h3>Negotiations</h3>
+        <section className="transfer-market-card">
+          <div className="transfer-section-head"><h3>Negotiations</h3></div>
           {negotiations.length === 0 ? <EmptyState title="No negotiation events" description="Events appear when offers/proposals update." /> : (
-            <div className="ui-list-stack">
+            <div className="transfer-offers-list">
               {negotiations.map((e) => (
-                <div key={e.id} className="ui-list-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <article key={e.id} className="transfer-offer-item">
+                  <div className="transfer-offer-top">
                     <b>{e.title}</b>
                     <span className={badge(e.eventType)}>{e.eventType}</span>
                   </div>
-                  <div>{e.body || '-'}</div>
-                </div>
+                  <div className="transfer-offer-sub">{e.body || '-'}</div>
+                </article>
               ))}
             </div>
           )}
@@ -531,18 +514,18 @@ export function Transfers() {
       ) : null}
 
       {!loading && tab === 'Transaction History' ? (
-        <section className="ui-card">
-          <h3>Transaction History</h3>
+        <section className="transfer-market-card">
+          <div className="transfer-section-head"><h3>Transaction History</h3></div>
           {history.length === 0 ? <EmptyState title="No transaction history" description="Completed transactions appear here." /> : (
-            <div className="ui-list-stack">
+            <div className="transfer-offers-list">
               {history.map((h) => (
-                <div key={h.id} className="ui-list-item">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <article key={h.id} className="transfer-offer-item">
+                  <div className="transfer-offer-top">
                     <b>{h.title}</b>
                     <span className={badge(h.status)}>{h.status}</span>
                   </div>
-                  <div>{h.body || '-'}</div>
-                </div>
+                  <div className="transfer-offer-sub">{h.body || '-'}</div>
+                </article>
               ))}
             </div>
           )}

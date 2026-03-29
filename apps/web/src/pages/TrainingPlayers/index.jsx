@@ -27,6 +27,25 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
 const initials = (name) => String(name || '').split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'NA';
 const pos = (p) => { const u = String(p || '').toUpperCase(); if (u.includes('PG')) return 'PG'; if (u.includes('SG')) return 'SG'; if (u.includes('SF')) return 'SF'; if (u.includes('PF')) return 'PF'; if (u.includes('C')) return 'C'; return 'N/A'; };
+const COURT_SPOTS = {
+  PG: { x: 50, y: 78 },
+  SG: { x: 30, y: 62 },
+  SF: { x: 70, y: 62 },
+  PF: { x: 38, y: 40 },
+  C: { x: 62, y: 33 },
+};
+
+function highlightedTrainingSlots(trainingPosition) {
+  const key = String(trainingPosition || '').toUpperCase();
+  if (key === 'COMBO GUARD') return ['PG', 'SG'];
+  if (key === 'WING') return ['SG', 'SF'];
+  if (key === 'FORWARD') return ['SF', 'PF'];
+  if (key === 'BIG' || key === 'STRETCH BIG') return ['PF', 'C'];
+  if (key === 'POINT FORWARD') return ['SF', 'PF'];
+  if (key === 'SMALL BALL 5') return ['C'];
+  return ['PG', 'SG', 'SF', 'PF', 'C'].includes(key) ? [key] : [];
+}
+
 const group = (p) => (['PG', 'SG'].includes(p) ? 'guards' : ['SF', 'PF'].includes(p) ? 'wings' : p === 'C' ? 'bigs' : 'all');
 const intensityTier = (p) => (p <= 45 ? 'LOW' : p >= 75 ? 'HIGH' : 'BALANCED');
 const saveFocus = (bucket) => ({ SHOOTING: 'shooting', DEFENSE: 'defense', PLAYMAKING: 'playmaking', CONDITIONING: 'fitness', BALANCED: 'balanced' }[bucket] || 'balanced');
@@ -163,6 +182,7 @@ export function TrainingPlayers() {
     const avg30 = hist.slice(-30).reduce((s, v) => s + v, 0) / Math.max(1, hist.slice(-30).length || 1);
     return { fatigue: num(st.fatigue, player.fatigue), morale: num(st.morale, 60), form: num(st.form, 65), avg7: Number(avg7 || num(st.form, 65)).toFixed(1), avg30: Number(avg30 || num(st.form, 65)).toFixed(1) };
   }, [currentSave?.data?.playerState, player]);
+  const highlightedSlots = useMemo(() => highlightedTrainingSlots(trainPos), [trainPos]);
 
   return (
     <div className='ptv2-page'>
@@ -192,7 +212,19 @@ export function TrainingPlayers() {
                 <label><span>Intensity Level</span><select value={level} onChange={(e) => { setLevel(e.target.value); DAYS.forEach((d) => setDays((prev) => ({ ...prev, [d]: { ...(prev[d] || {}), intensityPercent: INTENSITY[e.target.value] || 58 } }))); }}>{Object.keys(INTENSITY).map((k) => <option key={k} value={k}>{k.replace('_', ' ')}</option>)}</select></label>
               </div>
               <div className='ptv2-work'><div><span>Workload</span><strong>{workload}</strong></div><div><span>Average Intensity</span><strong>{avgIntensity}%</strong></div><div><span>Projected Growth</span><strong>+{Math.max(0, ((player.pot - player.ovr) / 20) * (avgIntensity / 60)).toFixed(2)}</strong></div></div>
-              <div className='ptv2-court'><div className='marker'>{trainPos}</div></div>
+              <div className='ptv2-court'>
+                <div className='ptv2-court-key' />
+                <div className='ptv2-court-circle' />
+                {Object.entries(COURT_SPOTS).map(([slot, c]) => (
+                  <div
+                    key={slot}
+                    className={`ptv2-court-spot ${highlightedSlots.includes(slot) ? 'is-active' : ''}`}
+                    style={{ left: `${c.x}%`, top: `${c.y}%` }}
+                  >
+                    {slot}
+                  </div>
+                ))}
+              </div>
               <div className='ptv2-actions'><button type='button' className='primary' onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Training Plan'}</button><button type='button' onClick={reset}>Reset to Default</button><button type='button' onClick={autoCoach}>Auto-Assign by Coach</button></div>
             </section>
           ) : null}

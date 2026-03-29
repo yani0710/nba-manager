@@ -37,7 +37,7 @@ function toStorageCoord(view, x, y) {
   return { x, y };
 }
 
-export function CourtBoard({ players = [], board = {}, onBoardChange, view = 'attack' }) {
+export function CourtBoard({ players = [], playersByPosition = null, board = {}, onBoardChange, view = 'attack' }) {
   const rootRef = useRef(null);
   const [dragPos, setDragPos] = useState(() => ({ ...DEFAULT_BOARD, ...(board || {}) }));
   const [dragging, setDragging] = useState(null);
@@ -148,7 +148,7 @@ export function CourtBoard({ players = [], board = {}, onBoardChange, view = 'at
               onChange={(e) => assignPlayer(position, e.target.value)}
             >
               <option value="">Unassigned</option>
-              {players.map((player) => (
+              {(playersByPosition?.[position] || players).map((player) => (
                 <option key={player.id} value={player.id}>
                   {player.name} ({player.position})
                 </option>

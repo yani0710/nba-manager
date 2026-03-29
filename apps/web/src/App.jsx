@@ -10,7 +10,7 @@ import { TrainingPlayers } from './pages/TrainingPlayers';
 import { Schedule } from './pages/Schedule';
 import { League } from './pages/League';
 import { Teams } from './pages/Teams';
-import { Player } from './pages/Player';
+import { Players } from './pages/Players';
 import { Transfers } from './pages/Transfers';
 import { MatchCenter } from './pages/MatchCenter';
 import { Results } from './pages/Results';
@@ -46,7 +46,7 @@ function App() {
       case 'teams':
         return <Teams />;
       case 'players':
-        return <Player />;
+        return <Players />;
       case 'transfers':
         return <Transfers />;
       case 'matches':

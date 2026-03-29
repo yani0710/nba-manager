@@ -151,6 +151,9 @@
   font-size: 12px;
   font-weight: 700;
   transition: 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .transfer-pos-tab:hover {
@@ -160,6 +163,25 @@
 .transfer-pos-tab.is-active {
   border-color: var(--tr-accent);
   background: var(--tr-accent);
+  color: #101010;
+}
+
+.transfer-tab-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  padding: 0 4px;
+  font-size: 10px;
+  background: #ff3144;
+  color: #fff;
+  font-style: normal;
+  line-height: 1;
+}
+
+.transfer-tab-count.is-warn {
+  background: #f3b30f;
   color: #101010;
 }
 
@@ -202,13 +224,19 @@
   background: linear-gradient(180deg, rgba(30, 48, 79, 0.68), rgba(21, 36, 64, 0.74));
   padding: 10px;
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 10px;
   align-items: center;
   text-align: left;
   color: #eaf3ff;
   cursor: pointer;
   transition: 130ms ease;
+}
+
+.transfer-player-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #8d31ff;
 }
 
 .transfer-player-row:hover {
@@ -319,6 +347,12 @@
   gap: 8px;
 }
 
+.transfer-player-card-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .transfer-offer-sub {
   color: #92abd3;
   font-size: 12px;
@@ -342,6 +376,18 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.ui-btn.ui-btn-positive {
+  border-color: rgba(27, 200, 112, 0.5);
+  background: rgba(12, 132, 72, 0.4);
+  color: #d8ffe9;
+}
+
+.ui-btn.ui-btn-danger {
+  border-color: rgba(236, 66, 80, 0.55);
+  background: rgba(143, 34, 45, 0.44);
+  color: #ffd8dd;
 }
 
 .transfer-detail-head {

@@ -164,7 +164,16 @@ export class PlayersService {
       prisma.gameStat.count({ where }),
       prisma.gameStat.aggregate({
         where,
-        _sum: { points: true, rebounds: true, assists: true },
+        _sum: {
+          minutes: true,
+          points: true,
+          rebounds: true,
+          assists: true,
+          twoPtMade: true,
+          twoPtAtt: true,
+          threePtMade: true,
+          threePtAtt: true,
+        },
       }),
       prisma.gameStat.findMany({
         where,
@@ -175,24 +184,37 @@ export class PlayersService {
     ]);
 
     const safeGames = Math.max(1, games);
+    const fgMade = (grouped._sum.twoPtMade ?? 0) + (grouped._sum.threePtMade ?? 0);
+    const fgAtt = (grouped._sum.twoPtAtt ?? 0) + (grouped._sum.threePtAtt ?? 0);
+    const fgPct = fgAtt > 0 ? Number(((fgMade / fgAtt) * 100).toFixed(1)) : 0;
+
     return {
       gamesPlayed: games,
       totals: {
+        minutes: grouped._sum.minutes ?? 0,
         points: grouped._sum.points ?? 0,
         rebounds: grouped._sum.rebounds ?? 0,
         assists: grouped._sum.assists ?? 0,
+        fgMade,
+        fgAtt,
+        fgPct,
       },
       averages: {
+        minutes: Number(((grouped._sum.minutes ?? 0) / safeGames).toFixed(1)),
         points: Number(((grouped._sum.points ?? 0) / safeGames).toFixed(1)),
         rebounds: Number(((grouped._sum.rebounds ?? 0) / safeGames).toFixed(1)),
         assists: Number(((grouped._sum.assists ?? 0) / safeGames).toFixed(1)),
+        fgPct,
       },
       lastFive: lastFive.map((row) => ({
         gameId: row.gameId,
         date: row.game.gameDate,
+        minutes: row.minutes,
         points: row.points,
         rebounds: row.rebounds,
         assists: row.assists,
+        fgMade: (row.twoPtMade ?? 0) + (row.threePtMade ?? 0),
+        fgAtt: (row.twoPtAtt ?? 0) + (row.threePtAtt ?? 0),
       })),
     };
   }
@@ -209,8 +231,11 @@ export class PlayersService {
     const playerState = payload.playerState ?? {};
     return players.map((player) => {
       const state = playerState[String(player.id)];
-      const currentOverall = state?.effectiveOverall
-        ?? (player as { overallCurrent?: number }).overallCurrent
+      // Source of truth for UI should be the persisted DB value.
+      // Save-level effectiveOverall is simulation cache and can become stale after imports/repairs.
+      const dbOverall = (player as { overallCurrent?: number }).overallCurrent ?? player.overall;
+      const currentOverall = dbOverall
+        ?? state?.effectiveOverall
         ?? player.overall;
       return {
         ...player,
@@ -237,7 +262,8 @@ export class PlayersService {
     return players.map((player) => {
       if (!player.id) return player;
       const state = playerState[String(player.id)];
-      const currentOverall = state?.effectiveOverall ?? player.overallCurrent ?? player.overall ?? null;
+      // Prefer DB current overall; state effectiveOverall is only fallback.
+      const currentOverall = player.overallCurrent ?? state?.effectiveOverall ?? player.overall ?? null;
       return {
         ...player,
         form: state?.form ?? player.form ?? null,

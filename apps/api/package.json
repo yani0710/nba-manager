@@ -27,6 +27,7 @@
     "import:dedupe-squads": "ts-node scripts/import/dedupeSquadPlayers.ts",
     "import:fix-jerseys-csv": "ts-node scripts/import/fixJerseyNumbersFromPlayersCleaned.ts",
     "import:fix-salaries-csv": "ts-node scripts/import/fixMissingSalariesFromCleanCsv.ts",
+    "import:repair-overalls": "ts-node scripts/import/repairSuspiciousOveralls.ts",
     "import:jerseys": "ts-node scripts/import/syncJerseyNumbers.ts",
     "export:missing-number": "ts-node scripts/exportPlayersMissingNumberFromCsv.ts",
     "recalc:ratings": "ts-node scripts/recalcRatings.ts",
