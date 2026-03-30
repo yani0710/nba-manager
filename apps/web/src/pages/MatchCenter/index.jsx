@@ -96,9 +96,8 @@ export function MatchCenter() {
     [upcomingGames, selectedGameId],
   );
 
-  const gameDay = selectedGame?.gameDate ? getFixtureDateKeyEt(selectedGame.gameDate) : null;
   const canLiveSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate));
-  const canOfficialSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate) && gameDay === currentDate);
+  const canOfficialSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate));
 
   const homeTeamObj = useMemo(
     () => teams.find((t) => t.id === selectedGame?.homeTeamId) || selectedGame?.homeTeam || null,

@@ -13,14 +13,37 @@ export function Results() {
   const { currentSave, results, fetchResults, fetchResultDetails } = useGameStore();
   const [selected, setSelected] = useState(null);
 
+  const getMatchIdFromHash = () => {
+    const hash = String(window.location.hash || '');
+    const [, query = ''] = hash.split('?');
+    const params = new URLSearchParams(query);
+    const value = params.get('matchId');
+    return value ? String(value) : null;
+  };
+
   useEffect(() => {
     fetchResults();
   }, [fetchResults]);
 
   const openMatch = async (gameId) => {
+    window.location.hash = `results?matchId=${gameId}`;
     const details = await fetchResultDetails(gameId);
     setSelected(details);
   };
+
+  useEffect(() => {
+    const loadFromHash = async () => {
+      const hashGameId = getMatchIdFromHash();
+      if (!hashGameId) return;
+      if (String(selected?.id || '') === hashGameId) return;
+      const details = await fetchResultDetails(hashGameId);
+      if (details) setSelected(details);
+    };
+
+    loadFromHash();
+    window.addEventListener('hashchange', loadFromHash);
+    return () => window.removeEventListener('hashchange', loadFromHash);
+  }, [fetchResultDetails, selected?.id, results]);
 
   const renderTeamBoxscore = (team, rows) => (
     <div className="ui-card" style={{ marginTop: 12 }}>
@@ -96,7 +119,7 @@ export function Results() {
         <PageHeader
           title="Match Center"
           subtitle="Detailed result summary and top performers."
-          actions={<button className="ui-btn" onClick={() => setSelected(null)}>Back to Results</button>}
+          actions={<button className="ui-btn" onClick={() => { setSelected(null); window.location.hash = 'results'; }}>Back to Results</button>}
         />
         <div className="ui-card" style={{ marginBottom: 12 }}>
           <div style={{ marginBottom: 8, color: 'var(--ui-text-muted)' }}>{formatFixtureDateTime(selected.gameDate)}</div>
