@@ -124,3 +124,11 @@ npm run db:down
 - `npm --prefix apps/api run import:nba`
 - `npm --prefix apps/api run sync:nba`
 
+## Какво бих подобрил:
+`Да изчистиш ясно границата между “base DB truth” и “save-specific truth”, защото в момента доста логика зависи от merge на Player + save.data.`
+`Да намалиш зависимостта от големи JSON payload-и в save.data и да изнесеш повече save-specific неща в отделни таблици.`
+`Да добавиш по-силна migration дисциплина: при pull ти се чупеше app-ът заради schema drift.`
+`Да уеднаквиш generated dist файловете, за да не влизат често в конфликти.`
+`Да добавиш smoke tests за най-важните user flows: load save, squad, prepare, match sim, transfers.`
+`Да централизираш frontend data fetching, защото в момента има риск от stale state и тиха деградация към празни списъци.`
+`Да подобриш error surfacing в UI, за да не изглежда като “няма играчи”, когато реално API-то дава 500.`
