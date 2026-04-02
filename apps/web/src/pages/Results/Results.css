@@ -1,0 +1,447 @@
+.results-page {
+  display: grid;
+  gap: 14px;
+}
+
+.results-top-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.results-top-card,
+.results-subtop-card {
+  border: 1px solid rgba(128, 159, 233, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(13, 30, 70, 0.62), rgba(7, 19, 47, 0.72));
+  padding: 12px 14px;
+}
+
+.results-top-card h4,
+.results-subtop-card h4 {
+  margin: 0;
+  color: #8aacdc;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.results-top-card p,
+.results-subtop-card p {
+  margin: 8px 0 0;
+  color: #f7fbff;
+  font-size: 50px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.results-top-card small,
+.results-subtop-card small {
+  display: block;
+  margin-top: 8px;
+  color: #8aacdc;
+}
+
+.results-top-card .is-green,
+.results-top-card small.is-green {
+  color: #24ee96;
+}
+
+.results-top-card .is-red,
+.results-top-card small.is-red {
+  color: #ff6f8d;
+}
+
+.results-subtop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.results-subtop-card p {
+  font-size: 52px;
+}
+
+.results-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.results-filter-btn {
+  border: 1px solid rgba(147, 176, 241, 0.2);
+  background: rgba(13, 30, 70, 0.64);
+  border-radius: 11px;
+  color: #9eb8df;
+  font-weight: 700;
+  padding: 10px 18px;
+}
+
+.results-filter-btn.active {
+  color: #fff;
+}
+
+.results-filter-btn.active.is-all {
+  background: linear-gradient(100deg, #7f15f1, #a61cff);
+}
+
+.results-filter-btn.active.is-win {
+  background: #04be57;
+}
+
+.results-filter-btn.active.is-loss {
+  background: #ff2038;
+}
+
+.results-game-card {
+  border: 1px solid rgba(134, 165, 236, 0.2);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(12, 30, 72, 0.54), rgba(4, 14, 39, 0.74));
+  box-shadow: 0 10px 28px rgba(0, 5, 20, 0.3);
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.results-game-card.is-win {
+  border-color: rgba(35, 220, 122, 0.32);
+}
+
+.results-game-card.is-loss {
+  border-color: rgba(255, 67, 95, 0.35);
+}
+
+.results-game-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: #c4d7f8;
+}
+
+.results-game-head small {
+  margin-left: 6px;
+  border: 1px solid rgba(147, 176, 241, 0.24);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 11px;
+}
+
+.results-outcome-pill {
+  border-radius: 10px;
+  min-width: 86px;
+  text-align: center;
+  color: #fff;
+  font-weight: 800;
+  padding: 8px 10px;
+}
+
+.results-outcome-pill.is-win {
+  background: #05bd57;
+}
+
+.results-outcome-pill.is-loss {
+  background: #ff2038;
+}
+
+.results-game-main {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.results-team-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.results-team-side.is-opponent {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.results-team-side h3 {
+  margin: 0;
+  color: #f7fbff;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.results-team-side p {
+  margin: 4px 0 0;
+  color: #89a6d3;
+  font-size: 14px;
+}
+
+.results-team-logo-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 25%, #9a27ff 0%, #6720df 58%, #2c2a8d 100%);
+  border: 1px solid rgba(152, 181, 247, 0.2);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.results-team-logo {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+
+.results-team-fallback {
+  display: none;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #e9f4ff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.results-scoreline {
+  display: flex;
+  align-items: baseline;
+  gap: 26px;
+}
+
+.results-scoreline strong {
+  color: #556f98;
+  font-size: clamp(58px, 6vw, 92px);
+  line-height: 0.9;
+}
+
+.results-scoreline strong.is-leading {
+  color: #f7fbff;
+}
+
+.results-metric-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.results-metric {
+  border: 1px solid rgba(128, 159, 233, 0.16);
+  border-radius: 10px;
+  background: rgba(14, 30, 66, 0.62);
+  padding: 10px;
+  text-align: center;
+}
+
+.results-metric small {
+  display: block;
+  color: #87a5d4;
+  font-size: 11px;
+}
+
+.results-metric strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.results-expand-btn {
+  border: 1px solid rgba(147, 176, 241, 0.2);
+  background: rgba(13, 30, 70, 0.64);
+  border-radius: 10px;
+  color: #f2f8ff;
+  font-weight: 700;
+  padding: 11px 14px;
+}
+
+.results-full-stats {
+  border-top: 1px solid rgba(147, 176, 241, 0.16);
+  padding-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.results-full-tabs {
+  display: inline-flex;
+  background: rgba(13, 30, 70, 0.64);
+  border-radius: 11px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.results-full-tabs button {
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #89a7d6;
+  font-weight: 700;
+  padding: 9px 16px;
+}
+
+.results-full-tabs button.active {
+  background: linear-gradient(100deg, #7f15f1, #a61cff);
+  color: #fff;
+}
+
+.results-team-stats-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.results-team-stat-panel {
+  border: 1px solid rgba(128, 159, 233, 0.16);
+  border-radius: 12px;
+  background: rgba(13, 28, 62, 0.64);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.results-team-stat-panel h4 {
+  margin: 0 0 4px;
+  color: #fff;
+}
+
+.results-team-stat-panel p {
+  margin: 0;
+  color: #a8c0e6;
+}
+
+.results-boxscore-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.results-boxscore-team-switch {
+  display: inline-flex;
+  background: rgba(13, 30, 70, 0.64);
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.results-boxscore-team-switch button {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #89a7d6;
+  font-weight: 700;
+  padding: 9px 14px;
+}
+
+.results-boxscore-team-switch button.active {
+  background: linear-gradient(100deg, #7f15f1, #a61cff);
+  color: #fff;
+}
+
+.results-points-cell {
+  color: #d080ff;
+  font-weight: 800;
+}
+
+.results-boxscore-table tbody td {
+  border-bottom: 1px solid rgba(128, 159, 233, 0.07);
+}
+
+.results-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.results-player-cell strong {
+  color: #f3f8ff;
+}
+
+.results-player-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #dce9ff;
+  background: radial-gradient(circle at 30% 25%, #8f32ff 0%, #6730f1 58%, #3f52ff 100%);
+}
+
+.results-quarter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.results-quarter-card {
+  border: 1px solid rgba(128, 159, 233, 0.16);
+  border-radius: 10px;
+  background: rgba(13, 28, 62, 0.64);
+  padding: 11px;
+}
+
+.results-quarter-card span {
+  color: #87a5d4;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.results-quarter-card p {
+  margin: 6px 0 0;
+  color: #b8ccec;
+}
+
+.results-quarter-card strong {
+  color: #fff;
+}
+
+@media (max-width: 1280px) {
+  .results-top-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .results-subtop-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-game-main {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .results-team-side.is-opponent {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .results-metric-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .results-team-stats-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .results-quarter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .results-team-side h3 {
+    font-size: 28px;
+  }
+
+  .results-top-card p,
+  .results-subtop-card p {
+    font-size: 40px;
+  }
+
+  .results-scoreline strong {
+    font-size: 58px;
+  }
+
+  .results-metric-row,
+  .results-quarter-grid {
+    grid-template-columns: 1fr;
+  }
+}

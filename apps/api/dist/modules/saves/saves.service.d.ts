@@ -160,6 +160,7 @@ type StandingsRow = {
     pct: number;
     gb: number;
     streak: string;
+    l10: string;
 };
 export declare class SavesService {
     private tradesService;
@@ -1056,6 +1057,7 @@ export declare class SavesService {
     private withGamesBack;
     private normalizeConference;
     private computeStreak;
+    private computeLastNRecord;
     private getDefaultProbableStarters;
     private getManagedProbableStarters;
     private getTeamLastFive;

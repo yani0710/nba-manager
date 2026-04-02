@@ -1681,6 +1681,7 @@ class SavesService {
     async buildConferenceStandings(saveId) {
         const [teams, games] = await Promise.all([
             prisma_1.default.team.findMany({
+                where: { shortName: { not: FREE_AGENT_TEAM_SHORT } },
                 select: {
                     id: true,
                     name: true,
@@ -1717,6 +1718,7 @@ class SavesService {
                 pct: 0,
                 gb: 0,
                 streak: "-",
+                l10: "0-0",
             });
             teamGames.set(team.id, []);
         }
@@ -1741,6 +1743,7 @@ class SavesService {
             const played = row.wins + row.losses;
             row.pct = played > 0 ? Number((row.wins / played).toFixed(3)) : 0;
             row.streak = this.computeStreak(teamGames.get(row.teamId) ?? []);
+            row.l10 = this.computeLastNRecord(teamGames.get(row.teamId) ?? [], 10);
         }
         const all = [...rows.values()];
         const east = this.withGamesBack(all.filter((r) => r.conference === "East"));
@@ -1777,6 +1780,16 @@ class SavesService {
             count += 1;
         }
         return `${last}${count}`;
+    }
+    computeLastNRecord(results, n) {
+        if (results.length === 0)
+            return "0-0";
+        const recent = [...results]
+            .sort((a, b) => b.date.getTime() - a.date.getTime())
+            .slice(0, Math.max(1, n));
+        const wins = recent.filter((item) => item.result === "W").length;
+        const losses = recent.length - wins;
+        return `${wins}-${losses}`;
     }
     getDefaultProbableStarters(players) {
         const sorted = [...players].sort((a, b) => (b.overall ?? 0) - (a.overall ?? 0));
