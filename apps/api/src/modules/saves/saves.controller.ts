@@ -53,6 +53,15 @@ export class SavesController {
     }
   }
 
+  async getProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await savesService.getManagerProfile(Number(req.params.id));
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getInbox(req: Request, res: Response, next: NextFunction) {
     try {
       const take = typeof req.query.take === "string" ? Number(req.query.take) : undefined;

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 const PAGES = {
   dashboard: 'Home',
+  profile: 'Profile',
   prepare: 'Prepare',
   inbox: 'Inbox',
   squad: 'Squad',

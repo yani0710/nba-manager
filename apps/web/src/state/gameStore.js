@@ -14,6 +14,7 @@ export const useGameStore = create((set, get) => ({
   standings: { east: [], west: [] },
   nextMatchScouting: null,
   dashboard: null,
+  managerProfile: null,
   inbox: { total: 0, unread: 0, take: 30, skip: 0, messages: [] },
   selectedPlayer: null,
   playerTrainingPlans: [],
@@ -374,6 +375,19 @@ export const useGameStore = create((set, get) => ({
     await api.saves.saveTrainingPlan(save.id, { trainingPlan, weekPlan, playerPlans, teamProfiles, activeTeamProfileId });
     const { data } = await api.saves.getById(save.id);
     set({ currentSave: data });
+  },
+
+  fetchManagerProfile: async () => {
+    const save = get().currentSave;
+    if (!save) return null;
+    try {
+      const { data } = await api.saves.getProfile(save.id);
+      set({ managerProfile: data, error: null });
+      return data;
+    } catch (error) {
+      set({ error: error.message });
+      return null;
+    }
   },
 
   saveRosterManagement: async (payload) => {

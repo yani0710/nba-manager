@@ -148,6 +148,52 @@ type SavePayload = {
         comparePlayerIds?: number[];
         playerRoles?: Record<string, string>;
     };
+    ownerManagement?: {
+        jobSecurity?: number;
+        history?: Array<{
+            date: string;
+            score: number;
+            delta: number;
+            reason: string;
+            source?: "weekly" | "monthly" | "mid_season" | "season_review";
+        }>;
+        goals?: Array<{
+            id: string;
+            type: "win_target" | "playoff_goal" | "development" | "financial";
+            title: string;
+            description: string;
+            targetNumber?: number;
+            targetText?: string;
+            current?: number;
+            progress?: number;
+            weight?: number;
+            status?: "on_track" | "at_risk" | "completed" | "failed";
+            meta?: Record<string, any>;
+        }>;
+        reviews?: Array<{
+            date: string;
+            title: string;
+            verdict: "renewed" | "warning" | "hot_seat" | "fired";
+            summary: string;
+        }>;
+        lastMonthlyBoardKey?: string;
+        lastMidSeasonReviewWeek?: number;
+        lastSeasonReviewSeason?: string;
+    };
+    managerCareer?: {
+        yearsManaged?: number;
+        playoffAppearances?: number;
+        championships?: number;
+        totalWins?: number;
+        totalLosses?: number;
+        awards?: string[];
+        milestones?: Array<{
+            date: string;
+            title: string;
+            detail?: string;
+            type?: string;
+        }>;
+    };
 };
 type StandingsRow = {
     teamId: number;
@@ -173,6 +219,7 @@ export declare class SavesService {
         updatedAt: Date;
         season: string;
         description: string | null;
+        deletedAt: Date | null;
         coachProfileId: number | null;
         currentDate: Date;
         managedTeamId: number | null;
@@ -218,6 +265,7 @@ export declare class SavesService {
         updatedAt: Date;
         season: string;
         description: string | null;
+        deletedAt: Date | null;
         coachProfileId: number | null;
         currentDate: Date;
         managedTeamId: number | null;
@@ -244,6 +292,7 @@ export declare class SavesService {
         updatedAt: Date;
         season: string;
         description: string | null;
+        deletedAt: Date | null;
         coachProfileId: number | null;
         currentDate: Date;
         managedTeamId: number | null;
@@ -442,6 +491,52 @@ export declare class SavesService {
                 comparePlayerIds?: number[];
                 playerRoles?: Record<string, string>;
             };
+            ownerManagement?: {
+                jobSecurity?: number;
+                history?: Array<{
+                    date: string;
+                    score: number;
+                    delta: number;
+                    reason: string;
+                    source?: "weekly" | "monthly" | "mid_season" | "season_review";
+                }>;
+                goals?: Array<{
+                    id: string;
+                    type: "win_target" | "playoff_goal" | "development" | "financial";
+                    title: string;
+                    description: string;
+                    targetNumber?: number;
+                    targetText?: string;
+                    current?: number;
+                    progress?: number;
+                    weight?: number;
+                    status?: "on_track" | "at_risk" | "completed" | "failed";
+                    meta?: Record<string, any>;
+                }>;
+                reviews?: Array<{
+                    date: string;
+                    title: string;
+                    verdict: "renewed" | "warning" | "hot_seat" | "fired";
+                    summary: string;
+                }>;
+                lastMonthlyBoardKey?: string;
+                lastMidSeasonReviewWeek?: number;
+                lastSeasonReviewSeason?: string;
+            };
+            managerCareer?: {
+                yearsManaged?: number;
+                playoffAppearances?: number;
+                championships?: number;
+                totalWins?: number;
+                totalLosses?: number;
+                awards?: string[];
+                milestones?: Array<{
+                    date: string;
+                    title: string;
+                    detail?: string;
+                    type?: string;
+                }>;
+            };
         };
         createdAt: Date;
         updatedAt: Date;
@@ -483,6 +578,7 @@ export declare class SavesService {
         updatedAt: Date;
         season: string;
         description: string | null;
+        deletedAt: Date | null;
         coachProfileId: number | null;
         currentDate: Date;
         managedTeamId: number | null;
@@ -493,51 +589,7 @@ export declare class SavesService {
     }>;
     private getSeasonDay;
     private applyWeeklyFreeAgentOverallDecay;
-    advanceSaveToDate(id: number, targetDate: string, includeTargetDay?: boolean): Promise<{
-        team: {
-            id: number;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            form: number;
-            morale: number;
-            shortName: string;
-            nbaTeamId: number | null;
-            city: string;
-            conference: string | null;
-            division: string | null;
-            primaryColor: string | null;
-            secondaryColor: string | null;
-            logoKey: string | null;
-            logoPath: string | null;
-        } | null;
-        coachProfile: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
-            userId: number | null;
-            displayName: string;
-            avatarId: string;
-            reputation: number;
-            preferredStyle: string | null;
-        } | null;
-    } & {
-        data: import("@prisma/client/runtime/library").JsonValue;
-        id: number;
-        name: string;
-        teamId: number | null;
-        createdAt: Date;
-        updatedAt: Date;
-        season: string;
-        description: string | null;
-        coachProfileId: number | null;
-        currentDate: Date;
-        managedTeamId: number | null;
-        coachName: string | null;
-        coachAvatarId: string | null;
-        userId: number | null;
-        version: number;
-    }>;
+    advanceSaveToDate(id: number, targetDate: string, includeTargetDay?: boolean): Promise<any>;
     deleteSave(id: number): Promise<{
         data: import("@prisma/client/runtime/library").JsonValue;
         id: number;
@@ -547,6 +599,7 @@ export declare class SavesService {
         updatedAt: Date;
         season: string;
         description: string | null;
+        deletedAt: Date | null;
         coachProfileId: number | null;
         currentDate: Date;
         managedTeamId: number | null;
@@ -1052,12 +1105,153 @@ export declare class SavesService {
             offenseRating: number;
             defenseRating: number;
         }>;
+        owner: {
+            jobSecurity: number;
+            jobSecurityBand: string;
+            goals: {
+                id: string;
+                type: "win_target" | "playoff_goal" | "development" | "financial";
+                title: string;
+                description: string;
+                targetNumber?: number;
+                targetText?: string;
+                current?: number;
+                progress?: number;
+                weight?: number;
+                status?: "on_track" | "at_risk" | "completed" | "failed";
+                meta?: Record<string, any>;
+            }[];
+        };
+    }>;
+    getManagerProfile(id: number): Promise<{
+        manager: {
+            name: string;
+            avatarId: string;
+            teamName: string;
+            teamShortName: string;
+            teamLogoPath: string | null;
+            season: string;
+            yearsManaged: number;
+        };
+        careerRecord: {
+            wins: number;
+            losses: number;
+            playoffAppearances: number;
+            championships: number;
+        };
+        currentSeason: {
+            conference: string;
+            rank: number | null;
+            wins: number;
+            losses: number;
+            pct: number;
+            streak: string;
+            l10: string;
+        };
+        jobSecurity: {
+            score: number;
+            band: string;
+            history: {
+                date: string;
+                score: number;
+                delta: number;
+                reason: string;
+                source?: "weekly" | "monthly" | "mid_season" | "season_review";
+            }[];
+        };
+        ownerGoals: {
+            id: string;
+            type: "win_target" | "playoff_goal" | "development" | "financial";
+            title: string;
+            description: string;
+            targetNumber?: number;
+            targetText?: string;
+            current?: number;
+            progress?: number;
+            weight?: number;
+            status?: "on_track" | "at_risk" | "completed" | "failed";
+            meta?: Record<string, any>;
+        }[];
+        achievements: {
+            id: number;
+            season: string;
+            title: string;
+            type: string;
+            description: string;
+            awardedAt: string;
+        }[];
+        reputationBadges: {
+            id: string;
+            label: string;
+            value: string;
+        }[];
+        transferSummary: {
+            totalMoves: number;
+            completed: number;
+            failed: number;
+            bestDeal: {
+                title: string;
+                detail: string;
+                date: string;
+            } | null;
+            worstDeal: {
+                title: string;
+                detail: string;
+                date: string;
+            } | null;
+        };
+        timeline: {
+            date: string;
+            title: string;
+            detail: string;
+            type: string;
+        }[];
+        boardReviews: {
+            date: string;
+            title: string;
+            verdict: "renewed" | "warning" | "hot_seat" | "fired";
+            summary: string;
+        }[];
+        trendCharts: {
+            standings: {
+                week: number;
+                rank: number;
+                wins: number;
+                losses: number;
+                pct: number;
+                streak: string;
+            }[];
+            monthlyMetrics: {
+                monthKey: string;
+                payroll: number;
+                morale: number;
+                offenseRating: number;
+                defenseRating: number;
+                form: number;
+                wins: number;
+                losses: number;
+            }[];
+        };
     }>;
     private buildConferenceStandings;
     private withGamesBack;
     private normalizeConference;
     private computeStreak;
     private computeLastNRecord;
+    private buildInitialOwnerManagement;
+    private mapOwnerGoalRowToPayload;
+    private upsertOwnerGoals;
+    private appendJobSecurityEvents;
+    private appendBoardReviews;
+    private upsertManagerCareerSnapshot;
+    private upsertManagerAwards;
+    private persistWeeklyStandingsSnapshot;
+    private persistMonthlyTeamMetricsSnapshot;
+    private runSaveIntegrityChecks;
+    private ensureOwnerManagementState;
+    private evaluateOwnerGoalsProgress;
+    private runOwnerManagementLoop;
+    private getJobSecurityBand;
     private getDefaultProbableStarters;
     private getManagedProbableStarters;
     private getTeamLastFive;

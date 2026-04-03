@@ -141,7 +141,7 @@ export class TeamsService {
         select: { id: true, shortName: true, name: true, city: true },
       }),
       saveId
-        ? prisma.save.findUnique({ where: { id: saveId }, select: { data: true } })
+        ? prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } })
         : Promise.resolve(null),
     ]);
 
@@ -201,8 +201,8 @@ export class TeamsService {
 
   private async attachTeamState<T extends { id: number }>(teams: T[], saveId?: number) {
     if (!saveId || teams.length === 0) return teams;
-    const save = await prisma.save.findUnique({
-      where: { id: saveId },
+    const save = await prisma.save.findFirst({
+      where: { id: saveId, deletedAt: null },
       select: { data: true },
     });
     const payload = (save?.data ?? {}) as {
@@ -221,7 +221,7 @@ export class TeamsService {
 
   private async readSingleTeamState(saveId: number | undefined, teamId: number) {
     if (!saveId) return { form: 50, last5: "", streak: 0, offenseRating: 75, defenseRating: 75 };
-    const save = await prisma.save.findUnique({ where: { id: saveId }, select: { data: true } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } });
     const payload = (save?.data ?? {}) as {
       teamState?: Record<string, { form?: number; last5?: string; streak?: number; offenseRating?: number; defenseRating?: number }>;
     };

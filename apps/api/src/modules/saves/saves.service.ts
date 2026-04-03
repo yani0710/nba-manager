@@ -165,9 +165,59 @@ type SavePayload = {
     comparePlayerIds?: number[];
     playerRoles?: Record<string, string>;
   };
+  ownerManagement?: {
+    jobSecurity?: number;
+    history?: Array<{
+      date: string;
+      score: number;
+      delta: number;
+      reason: string;
+      source?: "weekly" | "monthly" | "mid_season" | "season_review";
+    }>;
+    goals?: Array<{
+      id: string;
+      type: "win_target" | "playoff_goal" | "development" | "financial";
+      title: string;
+      description: string;
+      targetNumber?: number;
+      targetText?: string;
+      current?: number;
+      progress?: number;
+      weight?: number;
+      status?: "on_track" | "at_risk" | "completed" | "failed";
+      meta?: Record<string, any>;
+    }>;
+    reviews?: Array<{
+      date: string;
+      title: string;
+      verdict: "renewed" | "warning" | "hot_seat" | "fired";
+      summary: string;
+    }>;
+    lastMonthlyBoardKey?: string;
+    lastMidSeasonReviewWeek?: number;
+    lastSeasonReviewSeason?: string;
+  };
+  managerCareer?: {
+    yearsManaged?: number;
+    playoffAppearances?: number;
+    championships?: number;
+    totalWins?: number;
+    totalLosses?: number;
+    awards?: string[];
+    milestones?: Array<{
+      date: string;
+      title: string;
+      detail?: string;
+      type?: string;
+    }>;
+  };
 };
 
 type InboxType = "board" | "media" | "scouting" | "training" | "injury" | "player" | "staff";
+type OwnerGoalState = NonNullable<NonNullable<SavePayload["ownerManagement"]>["goals"]>[number];
+type OwnerHistoryEntry = NonNullable<NonNullable<SavePayload["ownerManagement"]>["history"]>[number];
+type OwnerReviewEntry = NonNullable<NonNullable<SavePayload["ownerManagement"]>["reviews"]>[number];
+type ManagerCareerState = NonNullable<SavePayload["managerCareer"]>;
 
 type StandingsRow = {
   teamId: number;
@@ -313,6 +363,25 @@ export class SavesService {
         comparePlayerIds: [],
         playerRoles: {},
       },
+      ownerManagement: await this.buildInitialOwnerManagement({
+        managedTeamId: managedTeam?.id ?? null,
+        season: season,
+        startDate,
+      }),
+      managerCareer: {
+        yearsManaged: 1,
+        playoffAppearances: 0,
+        championships: 0,
+        totalWins: 0,
+        totalLosses: 0,
+        awards: [],
+        milestones: [{
+          date: startDate,
+          title: "Hired as Head Coach",
+          detail: `Took charge of ${managedTeam?.name ?? "the franchise"}.`,
+          type: "career",
+        }],
+      },
     };
 
     const save = await prisma.save.create({
@@ -332,14 +401,44 @@ export class SavesService {
       },
     });
 
+    await this.upsertOwnerGoals({
+      saveId: save.id,
+      season: save.season,
+      goals: payload.ownerManagement?.goals ?? [],
+    });
+    await this.appendJobSecurityEvents({
+      saveId: save.id,
+      events: payload.ownerManagement?.history ?? [],
+    });
+    await this.upsertManagerCareerSnapshot({
+      saveId: save.id,
+      season: save.season,
+      wins: 0,
+      losses: 0,
+      managerCareer: payload.managerCareer ?? {
+        yearsManaged: 1,
+        playoffAppearances: 0,
+        championships: 0,
+        totalWins: 0,
+        totalLosses: 0,
+        awards: [],
+        milestones: [],
+      },
+    });
+    await this.persistMonthlyTeamMetricsSnapshot({
+      saveId: save.id,
+      season: save.season,
+      monthKey: startDate.slice(0, 7),
+    });
+
     await this.createInitialInboxMessages(save.id, startDate);
     await this.generateScheduleForSave(save.id, season);
     return save;
   }
 
   async getSaveById(id: number) {
-    const save = await prisma.save.findUnique({
-      where: { id },
+    const save = await prisma.save.findFirst({
+      where: { id, deletedAt: null },
       include: {
         coachProfile: true,
         team: true,
@@ -355,6 +454,7 @@ export class SavesService {
 
   async getAllSaves() {
     return prisma.save.findMany({
+      where: { deletedAt: null },
       include: {
         coachProfile: {
           select: {
@@ -431,6 +531,7 @@ export class SavesService {
   async advanceSave(id: number) {
     const save = await this.getSaveById(id);
     const currentData = (save.data ?? {}) as SavePayload;
+    await this.ensureOwnerManagementState(save, currentData);
 
     const currentDate = new Date(currentData.currentDate ?? save.currentDate.toISOString().slice(0, 10));
     const currentDateEtKey = String(currentData.currentDate ?? currentDate.toISOString().slice(0, 10));
@@ -694,8 +795,8 @@ export class SavesService {
     // Transfer execution may update Save.data.transferState inside TradesService.
     // Refresh and merge it here so the final save update below does not overwrite it with stale currentData.
     {
-      const refreshed = await prisma.save.findUnique({
-        where: { id: save.id },
+      const refreshed = await prisma.save.findFirst({
+        where: { id: save.id, deletedAt: null },
         select: { data: true },
       });
       const refreshedPayload = (refreshed?.data ?? {}) as SavePayload;
@@ -705,6 +806,12 @@ export class SavesService {
     }
 
     await this.generateDailyInbox(save.id, nextDate, todaysGames.length);
+    await this.runOwnerManagementLoop({
+      save,
+      data: currentData,
+      date: nextDate,
+      rolledWeek,
+    });
 
     const unread = await prisma.inboxMessage.count({
       where: { saveId: save.id, isRead: false },
@@ -772,7 +879,7 @@ export class SavesService {
     if (Number.isNaN(parsed.getTime())) {
       throw new BadRequestError("Invalid targetDate");
     }
-    let current = await this.getSaveById(id);
+    let current: any = await this.getSaveById(id);
     let iterations = 0;
     while (iterations < 366) {
       const currentData = (current.data ?? {}) as SavePayload;
@@ -787,8 +894,9 @@ export class SavesService {
 
   async deleteSave(id: number) {
     await this.getSaveById(id);
-    return prisma.save.delete({
+    return prisma.save.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 
@@ -1093,7 +1201,7 @@ export class SavesService {
       where: { saveId, isRead: false },
     });
 
-    const save = await prisma.save.findUnique({ where: { id: saveId } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null } });
     const data = ((save?.data ?? {}) as SavePayload);
     data.inboxUnread = unread;
     if (save) {
@@ -1213,7 +1321,7 @@ export class SavesService {
       where: { saveId, isRead: false },
     });
 
-    const save = await prisma.save.findUnique({ where: { id: saveId } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null } });
     const data = ((save?.data ?? {}) as SavePayload);
     data.inboxUnread = unread;
     if (save) {
@@ -1796,6 +1904,7 @@ export class SavesService {
   async getDashboardSummary(id: number) {
     const save = await this.getSaveById(id);
     const payload = (save.data ?? {}) as SavePayload;
+    await this.ensureOwnerManagementState(save, payload);
     const managedTeamId = save.managedTeamId ?? save.teamId ?? null;
     const team = managedTeamId
       ? await prisma.team.findUnique({
@@ -2029,6 +2138,233 @@ export class SavesService {
       injuries: payload.injuries ?? [],
       training: payload.training ?? { rating: 74, trend: "steady" },
       teamState: payload.teamState ?? {},
+      owner: {
+        jobSecurity: payload.ownerManagement?.jobSecurity ?? 66,
+        jobSecurityBand: this.getJobSecurityBand(payload.ownerManagement?.jobSecurity ?? 66),
+        goals: payload.ownerManagement?.goals ?? [],
+      },
+    };
+  }
+
+  async getManagerProfile(id: number) {
+    const save = await this.getSaveById(id);
+    const data = (save.data ?? {}) as SavePayload;
+    await this.ensureOwnerManagementState(save, data);
+
+    const managedTeamId = save.managedTeamId ?? save.teamId ?? null;
+    const team = managedTeamId
+      ? await prisma.team.findUnique({
+          where: { id: managedTeamId },
+          select: { id: true, name: true, shortName: true, conference: true, logoPath: true },
+        })
+      : null;
+
+    const currentDateIso = String(data.currentDate ?? save.currentDate.toISOString().slice(0, 10));
+    const currentDate = new Date(`${currentDateIso}T00:00:00.000Z`);
+
+    const goalEval = await this.evaluateOwnerGoalsProgress({
+      save,
+      data,
+      date: currentDate,
+    });
+
+    const transactions = await prisma.transactionHistory.findMany({
+      where: {
+        saveId: save.id,
+        ...(managedTeamId ? { teamId: managedTeamId } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: 120,
+    });
+    const [weeklySnapshots, monthlySnapshots, awards] = await Promise.all([
+      managedTeamId
+        ? prisma.weeklyStandingsSnapshot.findMany({
+            where: {
+              saveId: save.id,
+              season: save.season,
+              teamId: managedTeamId,
+            },
+            orderBy: { week: "asc" },
+            take: 30,
+          })
+        : Promise.resolve([]),
+      managedTeamId
+        ? prisma.monthlyTeamMetricsSnapshot.findMany({
+            where: {
+              saveId: save.id,
+              season: save.season,
+              teamId: managedTeamId,
+            },
+            orderBy: { monthKey: "asc" },
+            take: 18,
+          })
+        : Promise.resolve([]),
+      prisma.managerAward.findMany({
+        where: { saveId: save.id },
+        orderBy: { awardedAt: "desc" },
+        take: 20,
+      }),
+    ]);
+
+    const completedDeals = transactions.filter((item) => String(item.status || "").toUpperCase() === "COMPLETED");
+    const nonCompletedDeals = transactions.filter((item) => String(item.status || "").toUpperCase() !== "COMPLETED");
+    const tradeCount = completedDeals.filter((item) => String(item.category || "").toUpperCase() === "TRADE").length;
+
+    const security = data.ownerManagement?.jobSecurity ?? 66;
+    const goals = data.ownerManagement?.goals ?? [];
+    const reviews = data.ownerManagement?.reviews ?? [];
+    const history = data.ownerManagement?.history ?? [];
+
+    const managedWins = goalEval.managedStanding?.wins ?? 0;
+    const managedLosses = goalEval.managedStanding?.losses ?? 0;
+    const reviewedThisSeason = data.ownerManagement?.lastSeasonReviewSeason === save.season;
+    const baseCareerWins = data.managerCareer?.totalWins ?? 0;
+    const baseCareerLosses = data.managerCareer?.totalLosses ?? 0;
+
+    const allTimeWins = reviewedThisSeason ? baseCareerWins : baseCareerWins + managedWins;
+    const allTimeLosses = reviewedThisSeason ? baseCareerLosses : baseCareerLosses + managedLosses;
+
+    const reputationBadges = [
+      {
+        id: "player_dev",
+        label: "Player Dev",
+        value: `${Math.round(((goals.find((g) => g.type === "development")?.progress ?? 0) * 100))}%`,
+      },
+      {
+        id: "tactician",
+        label: "Tactician",
+        value: `${Math.round((goalEval.managedStanding?.pct ?? 0) * 100)}% Win`,
+      },
+      {
+        id: "trader",
+        label: "Trader",
+        value: `${tradeCount} Deals`,
+      },
+      {
+        id: "stability",
+        label: "Stability",
+        value: this.getJobSecurityBand(security),
+      },
+      {
+        id: "achievements",
+        label: "Achievements",
+        value: `${awards.length} Awards`,
+      },
+    ];
+
+    const timeline = [
+      ...(data.managerCareer?.milestones ?? []).map((item) => ({
+        date: item.date,
+        title: item.title,
+        detail: item.detail ?? "",
+        type: item.type ?? "milestone",
+      })),
+      ...reviews.map((review) => ({
+        date: review.date,
+        title: review.title,
+        detail: review.summary,
+        type: "board_review",
+      })),
+      ...history
+        .filter((item) => Math.abs(item.delta) >= 2)
+        .slice(-12)
+        .map((item) => ({
+          date: item.date,
+          title: `Job Security ${item.delta > 0 ? "Up" : "Down"} (${item.delta > 0 ? "+" : ""}${item.delta})`,
+          detail: item.reason,
+          type: "job_security",
+        })),
+      ...transactions.slice(0, 12).map((item) => ({
+        date: item.createdAt.toISOString().slice(0, 10),
+        title: item.title,
+        detail: item.body ?? "",
+        type: "transaction",
+      })),
+    ]
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+      .slice(0, 24);
+
+    return {
+      manager: {
+        name: data.manager?.name ?? save.coachName ?? "Head Coach",
+        avatarId: data.manager?.coachAvatar ?? save.coachAvatarId ?? "spoelstra",
+        teamName: team?.name ?? "No Team",
+        teamShortName: team?.shortName ?? "-",
+        teamLogoPath: team?.logoPath ?? null,
+        season: save.season,
+        yearsManaged: data.managerCareer?.yearsManaged ?? 1,
+      },
+      careerRecord: {
+        wins: allTimeWins,
+        losses: allTimeLosses,
+        playoffAppearances: data.managerCareer?.playoffAppearances ?? 0,
+        championships: data.managerCareer?.championships ?? 0,
+      },
+      currentSeason: {
+        conference: goalEval.managedStanding?.conference ?? (team ? this.normalizeConference(team.conference) : "West"),
+        rank: goalEval.managedRank,
+        wins: managedWins,
+        losses: managedLosses,
+        pct: goalEval.managedStanding?.pct ?? 0,
+        streak: goalEval.managedStanding?.streak ?? "-",
+        l10: goalEval.managedStanding?.l10 ?? "0-0",
+      },
+      jobSecurity: {
+        score: security,
+        band: this.getJobSecurityBand(security),
+        history: history.slice(-24),
+      },
+      ownerGoals: goals,
+      achievements: awards.map((award) => ({
+        id: award.id,
+        season: award.season,
+        title: award.title,
+        type: award.awardType,
+        description: award.description ?? "",
+        awardedAt: award.awardedAt.toISOString().slice(0, 10),
+      })),
+      reputationBadges,
+      transferSummary: {
+        totalMoves: transactions.length,
+        completed: completedDeals.length,
+        failed: nonCompletedDeals.length,
+        bestDeal: completedDeals[0]
+          ? {
+              title: completedDeals[0].title,
+              detail: completedDeals[0].body ?? "",
+              date: completedDeals[0].createdAt.toISOString().slice(0, 10),
+            }
+          : null,
+        worstDeal: nonCompletedDeals[0]
+          ? {
+              title: nonCompletedDeals[0].title,
+              detail: nonCompletedDeals[0].body ?? "",
+              date: nonCompletedDeals[0].createdAt.toISOString().slice(0, 10),
+            }
+          : null,
+      },
+      timeline,
+      boardReviews: reviews,
+      trendCharts: {
+        standings: weeklySnapshots.map((item) => ({
+          week: item.week,
+          rank: item.rank,
+          wins: item.wins,
+          losses: item.losses,
+          pct: item.pct,
+          streak: item.streak,
+        })),
+        monthlyMetrics: monthlySnapshots.map((item) => ({
+          monthKey: item.monthKey,
+          payroll: item.payroll,
+          morale: item.avgMorale,
+          offenseRating: item.offenseRating,
+          defenseRating: item.defenseRating,
+          form: item.form,
+          wins: item.wins,
+          losses: item.losses,
+        })),
+      },
     };
   }
 
@@ -2149,6 +2485,1030 @@ export class SavesService {
     const wins = recent.filter((item) => item.result === "W").length;
     const losses = recent.length - wins;
     return `${wins}-${losses}`;
+  }
+
+  private async buildInitialOwnerManagement(params: {
+    managedTeamId: number | null;
+    season: string;
+    startDate: string;
+  }): Promise<NonNullable<SavePayload["ownerManagement"]>> {
+    const defaultState: NonNullable<SavePayload["ownerManagement"]> = {
+      jobSecurity: 66,
+      history: [{
+        date: params.startDate,
+        score: 66,
+        delta: 0,
+        reason: "Initial board confidence.",
+        source: "weekly",
+      }],
+      goals: [],
+      reviews: [],
+      lastMonthlyBoardKey: params.startDate.slice(0, 7),
+      lastMidSeasonReviewWeek: undefined,
+      lastSeasonReviewSeason: undefined,
+    };
+    if (!params.managedTeamId) return defaultState;
+
+    const roster = await prisma.player.findMany({
+      where: { teamId: params.managedTeamId, active: true },
+      select: { id: true, age: true, overallCurrent: true, overall: true, form: true, potential: true },
+      orderBy: [{ potential: "desc" }, { overallCurrent: "desc" }],
+      take: 15,
+    });
+
+    const averageOverall = roster.length > 0
+      ? roster.reduce((sum, player) => sum + (player.overallCurrent ?? player.overall ?? 70), 0) / roster.length
+      : 76;
+    const winTarget = averageOverall >= 83 ? 50 : averageOverall >= 79 ? 45 : averageOverall >= 75 ? 41 : 36;
+    const playoffTarget = averageOverall >= 83 ? "win_round_1" : averageOverall >= 78 ? "make_playoffs" : "play_in";
+    const developmentPlayers = roster
+      .filter((player) => Number(player.age ?? 30) <= 24)
+      .slice(0, 2);
+    const baselineOveralls: Record<string, number> = {};
+    const baselineForms: Record<string, number> = {};
+    for (const player of developmentPlayers) {
+      baselineOveralls[String(player.id)] = player.overallCurrent ?? player.overall ?? 70;
+      baselineForms[String(player.id)] = player.form ?? 60;
+    }
+
+    defaultState.goals = [
+      {
+        id: "owner-goal-win-target",
+        type: "win_target",
+        title: "Win Target",
+        description: `Finish with at least ${winTarget} regular-season wins.`,
+        targetNumber: winTarget,
+        current: 0,
+        progress: 0,
+        weight: 0.36,
+        status: "on_track",
+      },
+      {
+        id: "owner-goal-playoff",
+        type: "playoff_goal",
+        title: "Playoff Goal",
+        description: playoffTarget === "win_round_1"
+          ? "Qualify and win at least one playoff round."
+          : playoffTarget === "make_playoffs"
+            ? "Secure a playoff position."
+            : "Secure at least a play-in position.",
+        targetText: playoffTarget,
+        current: 0,
+        progress: 0,
+        weight: 0.28,
+        status: "on_track",
+      },
+      {
+        id: "owner-goal-development",
+        type: "development",
+        title: "Development Goal",
+        description: "Improve at least 2 young players by +2 overall or strong form growth.",
+        targetNumber: Math.max(1, developmentPlayers.length),
+        current: 0,
+        progress: 0,
+        weight: 0.2,
+        status: "on_track",
+        meta: {
+          playerIds: developmentPlayers.map((player) => player.id),
+          baselineOveralls,
+          baselineForms,
+          overallDeltaTarget: 2,
+          formDeltaTarget: 8,
+        },
+      },
+      {
+        id: "owner-goal-financial",
+        type: "financial",
+        title: "Financial Goal",
+        description: "Stay under the projected luxury-tax threshold.",
+        targetNumber: 185_000_000,
+        current: 0,
+        progress: 0,
+        weight: 0.16,
+        status: "on_track",
+      },
+    ];
+
+    return defaultState;
+  }
+
+  private mapOwnerGoalRowToPayload(goal: {
+    id: number;
+    type: string;
+    title: string;
+    description: string;
+    targetNumber: number | null;
+    targetText: string | null;
+    currentValue: number | null;
+    progress: number | null;
+    weight: number | null;
+    status: string;
+    meta: unknown;
+  }): OwnerGoalState {
+    const meta = (goal.meta ?? {}) as Record<string, any>;
+    const normalizedType = String(goal.type) as OwnerGoalState["type"];
+    return {
+      id: String(meta.goalId ?? `owner-goal-${goal.id}`),
+      type: normalizedType,
+      title: goal.title,
+      description: goal.description,
+      targetNumber: goal.targetNumber ?? undefined,
+      targetText: goal.targetText ?? undefined,
+      current: goal.currentValue ?? 0,
+      progress: goal.progress ?? 0,
+      weight: goal.weight ?? 0.25,
+      status: String(goal.status) as OwnerGoalState["status"],
+      meta,
+    };
+  }
+
+  private async upsertOwnerGoals(params: {
+    saveId: number;
+    season: string;
+    goals: OwnerGoalState[];
+  }) {
+    if (!params.goals.length) return;
+    await prisma.$transaction(
+      params.goals.map((goal) => {
+        const meta = {
+          ...(goal.meta ?? {}),
+          goalId: goal.id,
+        } as Record<string, any>;
+        return prisma.ownerGoal.upsert({
+          where: {
+            saveId_season_type: {
+              saveId: params.saveId,
+              season: params.season,
+              type: goal.type,
+            },
+          },
+          update: {
+            title: goal.title,
+            description: goal.description,
+            targetNumber: goal.targetNumber ?? null,
+            targetText: goal.targetText ?? null,
+            currentValue: Number(goal.current ?? 0),
+            progress: Number(goal.progress ?? 0),
+            weight: Number(goal.weight ?? 0.25),
+            status: String(goal.status ?? "on_track"),
+            meta,
+          },
+          create: {
+            saveId: params.saveId,
+            season: params.season,
+            type: goal.type,
+            title: goal.title,
+            description: goal.description,
+            targetNumber: goal.targetNumber ?? null,
+            targetText: goal.targetText ?? null,
+            currentValue: Number(goal.current ?? 0),
+            progress: Number(goal.progress ?? 0),
+            weight: Number(goal.weight ?? 0.25),
+            status: String(goal.status ?? "on_track"),
+            meta,
+          },
+        });
+      }),
+    );
+  }
+
+  private async appendJobSecurityEvents(params: {
+    saveId: number;
+    events: OwnerHistoryEntry[];
+  }) {
+    if (!params.events.length) return;
+    await prisma.jobSecurityEvent.createMany({
+      data: params.events.map((event) => ({
+        saveId: params.saveId,
+        date: new Date(`${event.date}T00:00:00.000Z`),
+        score: Math.round(event.score),
+        delta: Math.round(event.delta),
+        reason: event.reason,
+        source: String(event.source ?? "weekly"),
+      })),
+    });
+  }
+
+  private async appendBoardReviews(params: {
+    saveId: number;
+    season: string;
+    reviews: OwnerReviewEntry[];
+  }) {
+    if (!params.reviews.length) return;
+    await prisma.boardReview.createMany({
+      data: params.reviews.map((review) => ({
+        saveId: params.saveId,
+        season: params.season,
+        week: getGameweekForDate(params.season, review.date),
+        date: new Date(`${review.date}T00:00:00.000Z`),
+        title: review.title,
+        verdict: review.verdict,
+        summary: review.summary,
+      })),
+    });
+  }
+
+  private async upsertManagerCareerSnapshot(params: {
+    saveId: number;
+    season: string;
+    wins: number;
+    losses: number;
+    managerCareer: ManagerCareerState;
+  }) {
+    await prisma.managerCareerStat.upsert({
+      where: {
+        saveId_season: {
+          saveId: params.saveId,
+          season: params.season,
+        },
+      },
+      create: {
+        saveId: params.saveId,
+        season: params.season,
+        yearsManaged: Number(params.managerCareer.yearsManaged ?? 1),
+        wins: Number(params.wins ?? 0),
+        losses: Number(params.losses ?? 0),
+        playoffAppearances: Number(params.managerCareer.playoffAppearances ?? 0),
+        championships: Number(params.managerCareer.championships ?? 0),
+        metadata: {
+          totalWins: Number(params.managerCareer.totalWins ?? 0),
+          totalLosses: Number(params.managerCareer.totalLosses ?? 0),
+          awards: params.managerCareer.awards ?? [],
+          milestones: params.managerCareer.milestones ?? [],
+        },
+      },
+      update: {
+        yearsManaged: Number(params.managerCareer.yearsManaged ?? 1),
+        wins: Number(params.wins ?? 0),
+        losses: Number(params.losses ?? 0),
+        playoffAppearances: Number(params.managerCareer.playoffAppearances ?? 0),
+        championships: Number(params.managerCareer.championships ?? 0),
+        metadata: {
+          totalWins: Number(params.managerCareer.totalWins ?? 0),
+          totalLosses: Number(params.managerCareer.totalLosses ?? 0),
+          awards: params.managerCareer.awards ?? [],
+          milestones: params.managerCareer.milestones ?? [],
+        },
+      },
+    });
+  }
+
+  private async upsertManagerAwards(params: {
+    saveId: number;
+    season: string;
+    awards: Array<{ awardType: string; title: string; description?: string }>;
+  }) {
+    if (!params.awards.length) return;
+    await prisma.$transaction(
+      params.awards.map((award) => prisma.managerAward.upsert({
+        where: {
+          saveId_season_awardType_title: {
+            saveId: params.saveId,
+            season: params.season,
+            awardType: award.awardType,
+            title: award.title,
+          },
+        },
+        create: {
+          saveId: params.saveId,
+          season: params.season,
+          awardType: award.awardType,
+          title: award.title,
+          description: award.description ?? null,
+        },
+        update: {
+          description: award.description ?? null,
+        },
+      })),
+    );
+  }
+
+  private async persistWeeklyStandingsSnapshot(params: {
+    saveId: number;
+    season: string;
+    week: number;
+  }) {
+    const standings = await this.buildConferenceStandings(params.saveId);
+    const rows = [...standings.west, ...standings.east];
+    if (!rows.length) return;
+    await prisma.weeklyStandingsSnapshot.createMany({
+      data: rows.map((row) => ({
+        saveId: params.saveId,
+        season: params.season,
+        week: params.week,
+        conference: row.conference,
+        teamId: row.teamId,
+        rank: row.conference === "West"
+          ? standings.west.findIndex((item) => item.teamId === row.teamId) + 1
+          : standings.east.findIndex((item) => item.teamId === row.teamId) + 1,
+        wins: row.wins,
+        losses: row.losses,
+        pct: row.pct,
+        gb: row.gb,
+        streak: row.streak,
+        l10: row.l10,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  private async persistMonthlyTeamMetricsSnapshot(params: {
+    saveId: number;
+    season: string;
+    monthKey: string;
+  }) {
+    const teams = await prisma.team.findMany({
+      where: { shortName: { not: FREE_AGENT_TEAM_SHORT } },
+      select: { id: true },
+    });
+    if (!teams.length) return;
+
+    const standings = await this.buildConferenceStandings(params.saveId);
+    const standingsByTeamId = new Map([...standings.west, ...standings.east].map((row) => [row.teamId, row]));
+    const teamIds = teams.map((team) => team.id);
+    const roster = await prisma.player.findMany({
+      where: {
+        active: true,
+        teamId: { in: teamIds },
+      },
+      select: {
+        teamId: true,
+        salary: true,
+        morale: true,
+        offensiveRating: true,
+        defensiveRating: true,
+        form: true,
+      },
+    });
+
+    const grouped = new Map<number, typeof roster>();
+    for (const player of roster) {
+      const list = grouped.get(player.teamId) ?? [];
+      list.push(player);
+      grouped.set(player.teamId, list);
+    }
+
+    await prisma.monthlyTeamMetricsSnapshot.createMany({
+      data: teamIds.map((teamId) => {
+        const teamRoster = grouped.get(teamId) ?? [];
+        const count = Math.max(1, teamRoster.length);
+        const payroll = teamRoster.reduce((sum, player) => sum + Number(player.salary ?? 0), 0);
+        const avgMorale = teamRoster.reduce((sum, player) => sum + Number(player.morale ?? 65), 0) / count;
+        const offenseRating = teamRoster.reduce((sum, player) => sum + Number(player.offensiveRating ?? 75), 0) / count;
+        const defenseRating = teamRoster.reduce((sum, player) => sum + Number(player.defensiveRating ?? 75), 0) / count;
+        const form = teamRoster.reduce((sum, player) => sum + Number(player.form ?? 60), 0) / count;
+        const standing = standingsByTeamId.get(teamId);
+        return {
+          saveId: params.saveId,
+          season: params.season,
+          monthKey: params.monthKey,
+          teamId,
+          payroll,
+          avgMorale: Number(avgMorale.toFixed(2)),
+          offenseRating: Number(offenseRating.toFixed(2)),
+          defenseRating: Number(defenseRating.toFixed(2)),
+          form: Number(form.toFixed(2)),
+          wins: standing?.wins ?? 0,
+          losses: standing?.losses ?? 0,
+        };
+      }),
+      skipDuplicates: true,
+    });
+  }
+
+  private async runSaveIntegrityChecks(saveId: number) {
+    const [standings, completedGames] = await Promise.all([
+      this.buildConferenceStandings(saveId),
+      prisma.game.findMany({
+        where: {
+          saveId,
+          status: { in: COMPLETED_GAME_STATUSES },
+        },
+        select: {
+          homeTeamId: true,
+          awayTeamId: true,
+        },
+      }),
+    ]);
+
+    const gamesPlayedByTeam = new Map<number, number>();
+    for (const game of completedGames) {
+      gamesPlayedByTeam.set(game.homeTeamId, (gamesPlayedByTeam.get(game.homeTeamId) ?? 0) + 1);
+      gamesPlayedByTeam.set(game.awayTeamId, (gamesPlayedByTeam.get(game.awayTeamId) ?? 0) + 1);
+    }
+
+    const mismatches = [...standings.east, ...standings.west].filter((row) => {
+      const expectedPlayed = gamesPlayedByTeam.get(row.teamId) ?? 0;
+      return (row.wins + row.losses) !== expectedPlayed;
+    });
+
+    return {
+      ok: mismatches.length === 0,
+      mismatches,
+    };
+  }
+
+  private async ensureOwnerManagementState(
+    save: { id: number; season: string; teamId: number | null; managedTeamId: number | null; currentDate: Date },
+    data: SavePayload,
+  ) {
+    const currentDate = String(data.currentDate ?? save.currentDate.toISOString().slice(0, 10));
+    const managedTeamId = save.managedTeamId ?? save.teamId ?? null;
+
+    if (!data.ownerManagement) {
+      data.ownerManagement = await this.buildInitialOwnerManagement({
+        managedTeamId,
+        season: save.season,
+        startDate: currentDate,
+      });
+    }
+
+    data.ownerManagement.history = data.ownerManagement.history ?? [];
+    data.ownerManagement.goals = data.ownerManagement.goals ?? [];
+    data.ownerManagement.reviews = data.ownerManagement.reviews ?? [];
+    data.ownerManagement.jobSecurity = this.clamp(Math.round(data.ownerManagement.jobSecurity ?? 66), 0, 100);
+    data.managerCareer = data.managerCareer ?? {
+      yearsManaged: 1,
+      playoffAppearances: 0,
+      championships: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      awards: [],
+      milestones: [{
+        date: currentDate,
+        title: "Career Initialized",
+        detail: "Manager profile tracking started.",
+        type: "career",
+      }],
+    };
+
+    const [goalRows, eventRows, reviewRows, careerRow, awardRows] = await Promise.all([
+      prisma.ownerGoal.findMany({
+        where: { saveId: save.id, season: save.season },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.jobSecurityEvent.findMany({
+        where: { saveId: save.id },
+        orderBy: { date: "asc" },
+      }),
+      prisma.boardReview.findMany({
+        where: { saveId: save.id },
+        orderBy: { date: "asc" },
+      }),
+      prisma.managerCareerStat.findUnique({
+        where: {
+          saveId_season: {
+            saveId: save.id,
+            season: save.season,
+          },
+        },
+      }),
+      prisma.managerAward.findMany({
+        where: { saveId: save.id },
+        orderBy: { awardedAt: "desc" },
+      }),
+    ]);
+
+    if (goalRows.length > 0) {
+      data.ownerManagement.goals = goalRows.map((goal) => this.mapOwnerGoalRowToPayload(goal));
+    } else {
+      if (!data.ownerManagement.goals.length) {
+        const seeded = await this.buildInitialOwnerManagement({
+          managedTeamId,
+          season: save.season,
+          startDate: currentDate,
+        });
+        data.ownerManagement.goals = seeded.goals ?? [];
+      }
+      await this.upsertOwnerGoals({
+        saveId: save.id,
+        season: save.season,
+        goals: data.ownerManagement.goals ?? [],
+      });
+    }
+
+    if (eventRows.length > 0) {
+      data.ownerManagement.history = eventRows.map((event) => ({
+        date: event.date.toISOString().slice(0, 10),
+        score: event.score,
+        delta: event.delta,
+        reason: event.reason,
+        source: String(event.source) as OwnerHistoryEntry["source"],
+      }));
+      data.ownerManagement.jobSecurity = this.clamp(
+        Math.round(eventRows[eventRows.length - 1]?.score ?? data.ownerManagement.jobSecurity ?? 66),
+        0,
+        100,
+      );
+    } else {
+      if (!data.ownerManagement.history.length) {
+        data.ownerManagement.history = [{
+          date: currentDate,
+          score: data.ownerManagement.jobSecurity ?? 66,
+          delta: 0,
+          reason: "Initial board confidence.",
+          source: "weekly",
+        }];
+      }
+      await this.appendJobSecurityEvents({
+        saveId: save.id,
+        events: data.ownerManagement.history,
+      });
+    }
+
+    if (reviewRows.length > 0) {
+      data.ownerManagement.reviews = reviewRows.map((review) => ({
+        date: review.date.toISOString().slice(0, 10),
+        title: review.title,
+        verdict: String(review.verdict) as "renewed" | "warning" | "hot_seat" | "fired",
+        summary: review.summary,
+      }));
+    } else if (data.ownerManagement.reviews.length > 0) {
+      await this.appendBoardReviews({
+        saveId: save.id,
+        season: save.season,
+        reviews: data.ownerManagement.reviews,
+      });
+    }
+
+    if (careerRow) {
+      const meta = (careerRow.metadata ?? {}) as Record<string, any>;
+      data.managerCareer = {
+        yearsManaged: Number(careerRow.yearsManaged ?? data.managerCareer?.yearsManaged ?? 1),
+        playoffAppearances: Number(careerRow.playoffAppearances ?? data.managerCareer?.playoffAppearances ?? 0),
+        championships: Number(careerRow.championships ?? data.managerCareer?.championships ?? 0),
+        totalWins: Number(meta.totalWins ?? data.managerCareer?.totalWins ?? 0),
+        totalLosses: Number(meta.totalLosses ?? data.managerCareer?.totalLosses ?? 0),
+        awards: Array.isArray(meta.awards)
+          ? meta.awards.map((value: unknown) => String(value))
+          : (data.managerCareer?.awards ?? []),
+        milestones: Array.isArray(meta.milestones)
+          ? meta.milestones
+          : (data.managerCareer?.milestones ?? []),
+      };
+    } else {
+      await this.upsertManagerCareerSnapshot({
+        saveId: save.id,
+        season: save.season,
+        wins: 0,
+        losses: 0,
+        managerCareer: data.managerCareer,
+      });
+    }
+
+    const awardTitles = awardRows.map((award) => award.title);
+    data.managerCareer.awards = [...new Set([...(data.managerCareer.awards ?? []), ...awardTitles])];
+
+    if (!data.ownerManagement.lastMonthlyBoardKey) {
+      const monthlyEvent = [...data.ownerManagement.history]
+        .reverse()
+        .find((event) => event.source === "monthly");
+      data.ownerManagement.lastMonthlyBoardKey = monthlyEvent?.date?.slice(0, 7) ?? currentDate.slice(0, 7);
+    }
+    if (!data.ownerManagement.lastMidSeasonReviewWeek) {
+      const midSeason = [...data.ownerManagement.reviews]
+        .reverse()
+        .find((review) => review.title.toLowerCase().includes("mid-season"));
+      if (midSeason?.date) {
+        data.ownerManagement.lastMidSeasonReviewWeek = getGameweekForDate(save.season, midSeason.date);
+      }
+    }
+    if (!data.ownerManagement.lastSeasonReviewSeason) {
+      const seasonReview = [...data.ownerManagement.reviews]
+        .reverse()
+        .find((review) => review.title.toLowerCase().includes("end-of-season"));
+      if (seasonReview?.date) {
+        data.ownerManagement.lastSeasonReviewSeason = save.season;
+      }
+    }
+
+    data.ownerManagement.history = (data.ownerManagement.history ?? []).slice(-160);
+    data.ownerManagement.reviews = (data.ownerManagement.reviews ?? []).slice(-24);
+    data.ownerManagement.jobSecurity = this.clamp(Math.round(data.ownerManagement.jobSecurity ?? 66), 0, 100);
+  }
+
+  private async evaluateOwnerGoalsProgress(params: {
+    save: { id: number; season: string; teamId: number | null; managedTeamId: number | null };
+    data: SavePayload;
+    date: Date;
+  }) {
+    const managedTeamId = params.save.managedTeamId ?? params.save.teamId ?? null;
+    if (!managedTeamId) {
+      return {
+        goalScore: 50,
+        managedStanding: null as StandingsRow | null,
+        managedConferenceRows: [] as StandingsRow[],
+        managedRank: null as number | null,
+        payroll: 0,
+        avgMorale: 65,
+        seasonComplete: false,
+      };
+    }
+
+    const standings = await this.buildConferenceStandings(params.save.id);
+    const allRows = [...standings.east, ...standings.west];
+    const managedStanding = allRows.find((row) => row.teamId === managedTeamId) ?? null;
+    const managedConferenceRows = managedStanding
+      ? managedStanding.conference === "East" ? standings.east : standings.west
+      : [];
+    const managedRank = managedStanding
+      ? (managedConferenceRows.findIndex((row) => row.teamId === managedStanding.teamId) + 1)
+      : null;
+
+    const completedManagedGames = await prisma.game.count({
+      where: {
+        saveId: params.save.id,
+        status: { in: COMPLETED_GAME_STATUSES },
+        OR: [{ homeTeamId: managedTeamId }, { awayTeamId: managedTeamId }],
+      },
+    });
+    const seasonComplete = completedManagedGames >= 82;
+
+    const payrollAgg = await prisma.player.aggregate({
+      where: { teamId: managedTeamId, active: true },
+      _sum: { salary: true },
+    });
+    const moraleAgg = await prisma.player.aggregate({
+      where: { teamId: managedTeamId, active: true },
+      _avg: { morale: true },
+    });
+    const payroll = Number(payrollAgg._sum.salary ?? 0);
+    const avgMorale = Number(moraleAgg._avg.morale ?? 65);
+
+    const goals = params.data.ownerManagement?.goals ?? [];
+    for (const goal of goals) {
+      if (goal.type === "win_target") {
+        const target = Math.max(1, Number(goal.targetNumber ?? 45));
+        const wins = Number(managedStanding?.wins ?? 0);
+        const losses = Number(managedStanding?.losses ?? 0);
+        const games = wins + losses;
+        const projectedWins = games > 0 ? (wins / games) * 82 : target * 0.5;
+        const progress = this.clamp(projectedWins / target, 0, 1);
+        goal.current = wins;
+        goal.progress = Number(progress.toFixed(3));
+        if (wins >= target) goal.status = "completed";
+        else if (seasonComplete) goal.status = "failed";
+        else goal.status = projectedWins >= target * 0.95 ? "on_track" : "at_risk";
+      }
+
+      if (goal.type === "playoff_goal") {
+        const targetText = String(goal.targetText ?? "make_playoffs");
+        const threshold = targetText === "conference_finals" ? 4 : targetText === "win_round_1" ? 6 : 10;
+        const rank = Number(managedRank ?? 15);
+        const progress = this.clamp((threshold + 1 - rank) / threshold, 0, 1);
+        goal.current = rank;
+        goal.progress = Number(progress.toFixed(3));
+        if (rank <= threshold && seasonComplete) goal.status = "completed";
+        else if (seasonComplete) goal.status = "failed";
+        else if (rank <= threshold) goal.status = "on_track";
+        else goal.status = rank <= threshold + 2 ? "at_risk" : "failed";
+      }
+
+      if (goal.type === "development") {
+        const meta = (goal.meta ?? {}) as Record<string, unknown>;
+        const playerIds = Array.isArray(meta.playerIds)
+          ? meta.playerIds.map(Number).filter(Number.isFinite)
+          : [];
+        const baselineOveralls = ((meta.baselineOveralls ?? {}) as Record<string, number>) ?? {};
+        const baselineForms = ((meta.baselineForms ?? {}) as Record<string, number>) ?? {};
+        const overallDeltaTarget = Number(meta.overallDeltaTarget ?? 2);
+        const formDeltaTarget = Number(meta.formDeltaTarget ?? 8);
+        const target = Math.max(1, Number(goal.targetNumber ?? Math.max(1, playerIds.length || 2)));
+
+        const players = playerIds.length > 0
+          ? await prisma.player.findMany({
+              where: { id: { in: playerIds } },
+              select: { id: true, overallCurrent: true, overall: true, form: true },
+            })
+          : [];
+        let improved = 0;
+        for (const player of players) {
+          const key = String(player.id);
+          const baseOverall = Number(baselineOveralls[key] ?? player.overall ?? player.overallCurrent ?? 70);
+          const baseForm = Number(baselineForms[key] ?? 60);
+          const currentOverall = Number(player.overallCurrent ?? player.overall ?? 70);
+          const currentForm = Number(player.form ?? 60);
+          const improvedOverall = (currentOverall - baseOverall) >= overallDeltaTarget;
+          const improvedForm = (currentForm - baseForm) >= formDeltaTarget;
+          if (improvedOverall || improvedForm) improved += 1;
+        }
+        goal.current = improved;
+        goal.progress = Number(this.clamp(improved / target, 0, 1).toFixed(3));
+        if (improved >= target) goal.status = "completed";
+        else if (seasonComplete) goal.status = "failed";
+        else goal.status = improved > 0 ? "on_track" : "at_risk";
+      }
+
+      if (goal.type === "financial") {
+        const targetTaxLine = Math.max(120_000_000, Number(goal.targetNumber ?? 185_000_000));
+        goal.current = payroll;
+        const progress = payroll <= targetTaxLine
+          ? 1
+          : this.clamp(1 - ((payroll - targetTaxLine) / (targetTaxLine * 0.35)), 0, 1);
+        goal.progress = Number(progress.toFixed(3));
+        if (payroll <= targetTaxLine && seasonComplete) goal.status = "completed";
+        else if (seasonComplete && payroll > targetTaxLine) goal.status = "failed";
+        else goal.status = payroll <= targetTaxLine * 1.05 ? "on_track" : "at_risk";
+      }
+    }
+
+    const totalWeight = goals.reduce((sum, goal) => sum + Number(goal.weight ?? 0.25), 0) || 1;
+    const weightedProgress = goals.reduce(
+      (sum, goal) => sum + Number(goal.progress ?? 0) * Number(goal.weight ?? 0.25),
+      0,
+    );
+    const goalScore = this.clamp(Math.round((weightedProgress / totalWeight) * 100), 0, 100);
+
+    return {
+      goalScore,
+      managedStanding,
+      managedConferenceRows,
+      managedRank,
+      payroll,
+      avgMorale,
+      seasonComplete,
+    };
+  }
+
+  private async runOwnerManagementLoop(params: {
+    save: { id: number; season: string; teamId: number | null; managedTeamId: number | null };
+    data: SavePayload;
+    date: Date;
+    rolledWeek: boolean;
+  }) {
+    const managedTeamId = params.save.managedTeamId ?? params.save.teamId ?? null;
+    if (!managedTeamId) return;
+
+    const evaluation = await this.evaluateOwnerGoalsProgress({
+      save: params.save,
+      data: params.data,
+      date: params.date,
+    });
+
+    params.data.ownerManagement = params.data.ownerManagement ?? {};
+    params.data.ownerManagement.history = params.data.ownerManagement.history ?? [];
+    params.data.ownerManagement.reviews = params.data.ownerManagement.reviews ?? [];
+    let jobSecurity = this.clamp(Math.round(params.data.ownerManagement.jobSecurity ?? 66), 0, 100);
+    const newHistoryEvents: OwnerHistoryEntry[] = [];
+    const newBoardReviews: OwnerReviewEntry[] = [];
+    const pushHistory = (entry: OwnerHistoryEntry) => {
+      params.data.ownerManagement?.history?.push(entry);
+      newHistoryEvents.push(entry);
+    };
+    const pushReview = (review: OwnerReviewEntry) => {
+      params.data.ownerManagement?.reviews?.push(review);
+      newBoardReviews.push(review);
+    };
+    const todayKey = params.date.toISOString().slice(0, 10);
+    let monthEvaluationTriggered = false;
+
+    if (params.rolledWeek) {
+      const [l10Wins = 5, l10Losses = 5] = String(evaluation.managedStanding?.l10 ?? "5-5")
+        .split("-")
+        .map((value) => Number(value) || 0);
+      const winTrendDelta = this.clamp((l10Wins - l10Losses) * 0.6, -4.5, 4.5);
+      const goalDelta = this.clamp((evaluation.goalScore - 60) / 12, -3, 3);
+      const moraleDelta = this.clamp((evaluation.avgMorale - 65) / 20, -2, 2);
+
+      const weekAgo = new Date(params.date.getTime() - (7 * 86400000));
+      const recentTransactions = await prisma.transactionHistory.findMany({
+        where: {
+          saveId: params.save.id,
+          teamId: managedTeamId,
+          createdAt: { gte: weekAgo },
+        },
+        select: { status: true },
+      });
+      const positiveMoves = recentTransactions.filter((item) => String(item.status || "").toUpperCase() === "COMPLETED").length;
+      const negativeMoves = recentTransactions.filter((item) => String(item.status || "").toUpperCase() !== "COMPLETED").length;
+      const bigMovesDelta = this.clamp((positiveMoves * 0.8) - (negativeMoves * 0.7), -2.5, 2.5);
+
+      const delta = Math.round(winTrendDelta + goalDelta + moraleDelta + bigMovesDelta);
+      if (delta !== 0) {
+        jobSecurity = this.clamp(jobSecurity + delta, 0, 100);
+        pushHistory({
+          date: todayKey,
+          score: jobSecurity,
+          delta,
+          reason: `Weekly review: form (${l10Wins}-${l10Losses}), goals ${evaluation.goalScore}%, morale ${Math.round(evaluation.avgMorale)}.`,
+          source: "weekly",
+        });
+      }
+    }
+
+    const monthKey = params.date.toISOString().slice(0, 7);
+    if (params.data.ownerManagement.lastMonthlyBoardKey !== monthKey) {
+      monthEvaluationTriggered = true;
+      const topRiskGoal = (params.data.ownerManagement.goals ?? [])
+        .find((goal) => goal.status === "at_risk" || goal.status === "failed");
+      await this.createInboxMessage({
+        saveId: params.save.id,
+        date: params.date,
+        type: "board",
+        title: "Monthly Board Evaluation",
+        body: topRiskGoal
+          ? `Current job security: ${jobSecurity} (${this.getJobSecurityBand(jobSecurity)}). Priority concern: ${topRiskGoal.title}.`
+          : `Current job security: ${jobSecurity} (${this.getJobSecurityBand(jobSecurity)}). Keep the current trajectory.`,
+        fromName: "Board",
+      });
+      params.data.ownerManagement.lastMonthlyBoardKey = monthKey;
+      pushHistory({
+        date: todayKey,
+        score: jobSecurity,
+        delta: 0,
+        reason: "Monthly board evaluation issued.",
+        source: "monthly",
+      });
+    }
+
+    const currentWeek = Number(params.data.week ?? getGameweekForDate(params.save.season, params.date.toISOString().slice(0, 10)));
+    if (currentWeek >= 12 && !params.data.ownerManagement.lastMidSeasonReviewWeek) {
+      const verdict: "renewed" | "warning" | "hot_seat" | "fired" = jobSecurity >= 78
+        ? "renewed"
+        : jobSecurity >= 60
+          ? "warning"
+          : jobSecurity >= 45
+            ? "hot_seat"
+            : "fired";
+      await this.createInboxMessage({
+        saveId: params.save.id,
+        date: params.date,
+        type: "board",
+        title: "Mid-Season Board Checkpoint",
+        body: `Mid-season review: ${this.getJobSecurityBand(jobSecurity)}. Goal score ${evaluation.goalScore}%. Verdict: ${verdict.toUpperCase()}.`,
+        fromName: "Board",
+      });
+      pushReview({
+        date: todayKey,
+        title: "Mid-Season Checkpoint",
+        verdict,
+        summary: `Job security ${jobSecurity}. Goals at ${evaluation.goalScore}% completion.`,
+      });
+      params.data.ownerManagement.lastMidSeasonReviewWeek = currentWeek;
+      pushHistory({
+        date: todayKey,
+        score: jobSecurity,
+        delta: 0,
+        reason: "Mid-season board checkpoint completed.",
+        source: "mid_season",
+      });
+    }
+
+    if (evaluation.seasonComplete && params.data.ownerManagement.lastSeasonReviewSeason !== params.save.season) {
+      const verdict: "renewed" | "warning" | "hot_seat" | "fired" = evaluation.goalScore >= 78 && jobSecurity >= 70
+        ? "renewed"
+        : evaluation.goalScore >= 60 && jobSecurity >= 55
+          ? "warning"
+          : evaluation.goalScore >= 45
+            ? "hot_seat"
+            : "fired";
+      const finalSummary = `Season review: ${evaluation.managedStanding?.wins ?? 0}-${evaluation.managedStanding?.losses ?? 0}, goals ${evaluation.goalScore}%, verdict ${verdict.toUpperCase()}.`;
+      await this.createInboxMessage({
+        saveId: params.save.id,
+        date: params.date,
+        type: "board",
+        title: "End-of-Season Board Review",
+        body: finalSummary,
+        fromName: "Board",
+      });
+      pushReview({
+        date: todayKey,
+        title: "End-of-Season Review",
+        verdict,
+        summary: finalSummary,
+      });
+      params.data.ownerManagement.lastSeasonReviewSeason = params.save.season;
+      const seasonDelta = verdict === "renewed" ? 3 : verdict === "fired" ? -10 : -2;
+      jobSecurity = this.clamp(jobSecurity + seasonDelta, 0, 100);
+      pushHistory({
+        date: todayKey,
+        score: jobSecurity,
+        delta: seasonDelta,
+        reason: `End-of-season verdict: ${verdict}.`,
+        source: "season_review",
+      });
+
+      params.data.managerCareer = params.data.managerCareer ?? {};
+      params.data.managerCareer.totalWins = Number(params.data.managerCareer.totalWins ?? 0) + Number(evaluation.managedStanding?.wins ?? 0);
+      params.data.managerCareer.totalLosses = Number(params.data.managerCareer.totalLosses ?? 0) + Number(evaluation.managedStanding?.losses ?? 0);
+      params.data.managerCareer.playoffAppearances = Number(params.data.managerCareer.playoffAppearances ?? 0) + ((evaluation.managedRank ?? 99) <= 10 ? 1 : 0);
+      if (verdict !== "fired") {
+        params.data.managerCareer.yearsManaged = Number(params.data.managerCareer.yearsManaged ?? 1) + 1;
+      }
+      params.data.managerCareer.milestones = params.data.managerCareer.milestones ?? [];
+      params.data.managerCareer.milestones.push({
+        date: todayKey,
+        title: "Season Review Completed",
+        detail: finalSummary,
+        type: "season_review",
+      });
+      if (verdict === "fired") {
+        jobSecurity = this.clamp(Math.min(jobSecurity, 30), 0, 100);
+      }
+
+      const seasonAwards: Array<{ awardType: string; title: string; description?: string }> = [];
+      if ((evaluation.managedStanding?.wins ?? 0) >= 50) {
+        seasonAwards.push({
+          awardType: "wins",
+          title: "50-Win Club",
+          description: `Finished the season with ${evaluation.managedStanding?.wins ?? 0} wins.`,
+        });
+      }
+      if ((evaluation.managedRank ?? 99) <= 3) {
+        seasonAwards.push({
+          awardType: "seeding",
+          title: "Top 3 Seed",
+          description: `Secured conference seed #${evaluation.managedRank}.`,
+        });
+      }
+      if (evaluation.goalScore >= 85) {
+        seasonAwards.push({
+          awardType: "board",
+          title: "Board Favorite",
+          description: `Ended the season with ${evaluation.goalScore}% owner-goal completion.`,
+        });
+      }
+      if (seasonAwards.length > 0) {
+        await this.upsertManagerAwards({
+          saveId: params.save.id,
+          season: params.save.season,
+          awards: seasonAwards,
+        });
+        params.data.managerCareer.awards = [
+          ...new Set([...(params.data.managerCareer.awards ?? []), ...seasonAwards.map((award) => award.title)]),
+        ];
+      }
+    }
+
+    params.data.ownerManagement.history = (params.data.ownerManagement.history ?? []).slice(-160);
+    params.data.ownerManagement.reviews = (params.data.ownerManagement.reviews ?? []).slice(-24);
+    params.data.ownerManagement.jobSecurity = this.clamp(Math.round(jobSecurity), 0, 100);
+
+    await this.upsertOwnerGoals({
+      saveId: params.save.id,
+      season: params.save.season,
+      goals: params.data.ownerManagement.goals ?? [],
+    });
+    await this.appendJobSecurityEvents({
+      saveId: params.save.id,
+      events: newHistoryEvents,
+    });
+    await this.appendBoardReviews({
+      saveId: params.save.id,
+      season: params.save.season,
+      reviews: newBoardReviews,
+    });
+
+    params.data.managerCareer = params.data.managerCareer ?? {
+      yearsManaged: 1,
+      playoffAppearances: 0,
+      championships: 0,
+      totalWins: 0,
+      totalLosses: 0,
+      awards: [],
+      milestones: [],
+    };
+    await this.upsertManagerCareerSnapshot({
+      saveId: params.save.id,
+      season: params.save.season,
+      wins: Number(evaluation.managedStanding?.wins ?? 0),
+      losses: Number(evaluation.managedStanding?.losses ?? 0),
+      managerCareer: params.data.managerCareer,
+    });
+
+    if (params.rolledWeek) {
+      const snapshotWeek = Math.max(1, Number(params.data.week ?? 1) - 1);
+      await this.persistWeeklyStandingsSnapshot({
+        saveId: params.save.id,
+        season: params.save.season,
+        week: snapshotWeek,
+      });
+      const integrity = await this.runSaveIntegrityChecks(params.save.id);
+      if (!integrity.ok) {
+        await this.createInboxMessage({
+          saveId: params.save.id,
+          date: params.date,
+          type: "staff",
+          title: "Data Integrity Warning",
+          body: `Integrity check flagged ${integrity.mismatches.length} team(s) with games-played mismatch. Please run maintenance checks.`,
+          fromName: "Analytics Ops",
+        });
+      }
+    }
+    if (monthEvaluationTriggered) {
+      await this.persistMonthlyTeamMetricsSnapshot({
+        saveId: params.save.id,
+        season: params.save.season,
+        monthKey,
+      });
+    }
+  }
+
+  private getJobSecurityBand(score: number) {
+    if (score >= 85) return "Very Secure";
+    if (score >= 65) return "Stable";
+    if (score >= 45) return "Under Review";
+    return "Hot Seat";
   }
 
   private getDefaultProbableStarters(players: Array<{ id: number; name: string; position: string; overall: number }>) {
@@ -2580,7 +3940,7 @@ export class SavesService {
 
   private async createInitialInboxMessages(saveId: number, startDate: string) {
     const baseDate = new Date(`${startDate}T00:00:00.000Z`);
-    const save = await prisma.save.findUnique({ where: { id: saveId }, select: { teamId: true } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { teamId: true } });
     const starters = save?.teamId
       ? await prisma.player.findMany({
           where: { teamId: save.teamId, active: true },
@@ -2654,8 +4014,8 @@ export class SavesService {
   }
 
   private async generateDailyInbox(saveId: number, date: Date, gamesSimulated: number) {
-    const save = await prisma.save.findUnique({
-      where: { id: saveId },
+    const save = await prisma.save.findFirst({
+      where: { id: saveId, deletedAt: null },
       select: { teamId: true },
     });
     const roster = save?.teamId

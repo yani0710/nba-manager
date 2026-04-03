@@ -8,6 +8,7 @@ router.post("/", (req, res, next) => controller.create(req, res, next));
 router.get("/", (req, res, next) => controller.getAll(req, res, next));
 router.get("/:id", (req, res, next) => controller.getById(req, res, next));
 router.get("/:id/dashboard", (req, res, next) => controller.getDashboard(req, res, next));
+router.get("/:id/profile", (req, res, next) => controller.getProfile(req, res, next));
 router.get("/:id/schedule", (req, res, next) => controller.getSchedule(req, res, next));
 router.get("/:id/standings", (req, res, next) => controller.getStandings(req, res, next));
 router.get("/:id/next-match", (req, res, next) => controller.getNextMatch(req, res, next));

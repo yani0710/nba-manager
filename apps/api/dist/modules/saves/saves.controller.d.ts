@@ -5,6 +5,7 @@ export declare class SavesController {
     getAll(req: Request, res: Response, next: NextFunction): Promise<void>;
     advance(req: Request, res: Response, next: NextFunction): Promise<void>;
     getDashboard(req: Request, res: Response, next: NextFunction): Promise<void>;
+    getProfile(req: Request, res: Response, next: NextFunction): Promise<void>;
     getInbox(req: Request, res: Response, next: NextFunction): Promise<void>;
     getSchedule(req: Request, res: Response, next: NextFunction): Promise<void>;
     getStandings(req: Request, res: Response, next: NextFunction): Promise<void>;

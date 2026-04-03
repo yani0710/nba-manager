@@ -22,6 +22,7 @@ export const api = {
     getAll: () => client.get('/saves'),
     getById: (id) => client.get(`/saves/${id}`),
     getDashboard: (id) => client.get(`/saves/${id}/dashboard`),
+    getProfile: (id) => client.get(`/saves/${id}/profile`),
     getSchedule: (id, params = {}) => client.get(`/saves/${id}/schedule`, { params }),
     getResults: (id) => client.get(`/saves/${id}/results`),
     getResultDetails: (id, gameId) => client.get(`/saves/${id}/results/${gameId}`),

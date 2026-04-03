@@ -214,8 +214,8 @@ class PlayersService {
     async attachSaveState(players, saveId) {
         if (!saveId || players.length === 0)
             return players;
-        const save = await prisma_1.default.save.findUnique({
-            where: { id: saveId },
+        const save = await prisma_1.default.save.findFirst({
+            where: { id: saveId, deletedAt: null },
             select: { data: true },
         });
         const payload = (save?.data ?? {});
@@ -242,7 +242,7 @@ class PlayersService {
     async attachSaveStateToRoster(players, saveId) {
         if (!saveId || players.length === 0)
             return players;
-        const save = await prisma_1.default.save.findUnique({ where: { id: saveId }, select: { data: true } });
+        const save = await prisma_1.default.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } });
         const payload = (save?.data ?? {});
         const playerState = payload.playerState ?? {};
         return players.map((player) => {
@@ -283,7 +283,7 @@ class PlayersService {
         if (!saveId || players.length === 0)
             return players;
         const [save, teams] = await Promise.all([
-            prisma_1.default.save.findUnique({ where: { id: saveId }, select: { data: true } }),
+            prisma_1.default.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } }),
             prisma_1.default.team.findMany({ select: { id: true, shortName: true, name: true, city: true } }),
         ]);
         const payload = (save?.data ?? {});
@@ -314,7 +314,7 @@ class PlayersService {
     async buildRosterOverridesByTeam(saveId, teams, baseByTeam) {
         if (!saveId)
             return new Map();
-        const save = await prisma_1.default.save.findUnique({ where: { id: saveId }, select: { data: true } });
+        const save = await prisma_1.default.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } });
         const payload = (save?.data ?? {});
         const overrides = payload.transferState?.playerTeamOverrides ?? {};
         if (Object.keys(overrides).length === 0)

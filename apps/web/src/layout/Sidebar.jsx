@@ -5,6 +5,7 @@ const GROUPS = [
     label: 'Overview',
     items: [
       ['dashboard', 'Dashboard', 'D'],
+      ['profile', 'Profile', 'PF'],
       ['inbox', 'Inbox', 'I'],
       ['saves', 'Saves', 'S'],
     ],

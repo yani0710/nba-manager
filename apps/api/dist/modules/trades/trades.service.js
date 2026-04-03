@@ -536,7 +536,7 @@ class TradesService {
                     contracts: { include: { contractYears: true } },
                 },
             }),
-            prisma_1.default.save.findUnique({ where: { id: dto.saveId }, select: { data: true } }),
+            prisma_1.default.save.findFirst({ where: { id: dto.saveId, deletedAt: null }, select: { data: true } }),
         ]);
         if (!fromTeam || !toTeam)
             throw new AppError_1.NotFoundError("Team");
@@ -1293,7 +1293,7 @@ class TradesService {
         const salaryOutgoing = outgoing.reduce((s, p) => s + (p.salary ?? 0), 0) + (offer.cashOut ?? 0);
         const salaryDelta = salaryIncoming - salaryOutgoing;
         const salaryPenalty = salaryDelta > 15000000 ? -8 : salaryDelta > 5000000 ? -3 : 0;
-        const save = await prisma_1.default.save.findUnique({ where: { id: offer.saveId }, select: { season: true } });
+        const save = await prisma_1.default.save.findFirst({ where: { id: offer.saveId, deletedAt: null }, select: { season: true } });
         const seedBase = process.env.TRANSFER_TEST_SEED
             ? hashString(`${process.env.TRANSFER_TEST_SEED}:${offer.id}`)
             : hashString(`${offer.saveId}:${offer.id}:${save?.season ?? ""}`);
@@ -1401,7 +1401,7 @@ class TradesService {
         return { accepted, reason };
     }
     async ensureSave(saveId) {
-        const save = await prisma_1.default.save.findUnique({ where: { id: saveId } });
+        const save = await prisma_1.default.save.findFirst({ where: { id: saveId, deletedAt: null } });
         if (!save)
             throw new AppError_1.NotFoundError("Save");
         return save;
@@ -1425,7 +1425,7 @@ class TradesService {
     }
     async reconcileSaveTransferState(saveId) {
         const [save, completedOffers] = await Promise.all([
-            prisma_1.default.save.findUnique({ where: { id: saveId }, select: { data: true, season: true } }),
+            prisma_1.default.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true, season: true } }),
             prisma_1.default.transferOffer.findMany({
                 where: { saveId, status: "COMPLETED" },
                 select: {
@@ -1496,7 +1496,7 @@ class TradesService {
         });
     }
     async applyCompletedTransferToSaveState(params) {
-        const save = await prisma_1.default.save.findUnique({ where: { id: params.saveId }, select: { data: true, season: true } });
+        const save = await prisma_1.default.save.findFirst({ where: { id: params.saveId, deletedAt: null }, select: { data: true, season: true } });
         if (!save)
             return;
         const data = (save.data ?? {});

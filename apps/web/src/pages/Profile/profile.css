@@ -1,0 +1,288 @@
+.manager-profile-page {
+  display: grid;
+  gap: 14px;
+}
+
+.manager-head-card,
+.manager-card {
+  border: 1px solid rgba(128, 159, 233, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(12, 30, 72, 0.54), rgba(4, 14, 39, 0.74));
+  padding: 14px;
+}
+
+.manager-head-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.manager-head-card h2 {
+  margin: 0;
+  color: #f8fbff;
+}
+
+.manager-head-card p {
+  margin: 6px 0 0;
+  color: #9ab6dd;
+}
+
+.manager-head-card small {
+  color: #87a8d8;
+}
+
+.manager-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.manager-kpis > div {
+  border: 1px solid rgba(128, 159, 233, 0.14);
+  border-radius: 10px;
+  background: rgba(13, 28, 62, 0.56);
+  padding: 10px;
+}
+
+.manager-kpis span,
+.manager-lines span {
+  color: #8eaad4;
+  font-size: 12px;
+}
+
+.manager-kpis b,
+.manager-lines b {
+  display: block;
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 22px;
+}
+
+.manager-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.manager-card h3 {
+  margin: 0 0 10px;
+  color: #f8fbff;
+}
+
+.manager-security .big {
+  margin: 0;
+  font-size: 64px;
+  line-height: 1;
+  color: #1de793;
+  font-weight: 800;
+}
+
+.manager-security small {
+  color: #95b0d7;
+}
+
+.manager-progress {
+  margin-top: 8px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(34, 58, 101, 0.8);
+  overflow: hidden;
+}
+
+.manager-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(100deg, #17d474, #22e898);
+}
+
+.manager-security .delta {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.manager-security .delta.up {
+  color: #27e697;
+}
+
+.manager-security .delta.down {
+  color: #ff6f8d;
+}
+
+.mini-history {
+  margin-top: 10px;
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  height: 52px;
+}
+
+.mini-history span {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #7f15f1, #2f6cff);
+  min-height: 4px;
+}
+
+.manager-lines {
+  display: grid;
+  gap: 8px;
+}
+
+.manager-lines > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(128, 159, 233, 0.08);
+  padding-bottom: 6px;
+}
+
+.manager-lines > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.manager-lines > div b {
+  font-size: 16px;
+}
+
+.badge-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.badge-item {
+  border: 1px solid rgba(128, 159, 233, 0.14);
+  border-radius: 10px;
+  background: rgba(13, 28, 62, 0.56);
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.badge-item span {
+  color: #9ab6dd;
+}
+
+.badge-item b {
+  color: #fff;
+}
+
+.goals-list {
+  display: grid;
+  gap: 10px;
+}
+
+.goal-row {
+  border: 1px solid rgba(128, 159, 233, 0.14);
+  border-radius: 10px;
+  background: rgba(13, 28, 62, 0.56);
+  padding: 10px;
+}
+
+.goal-row strong {
+  color: #f8fbff;
+}
+
+.goal-row small {
+  display: block;
+  margin-top: 4px;
+  color: #8eaad4;
+}
+
+.goal-meta {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #b8d0ef;
+  font-size: 13px;
+}
+
+.goal-meta .status {
+  text-transform: capitalize;
+  font-weight: 700;
+}
+
+.goal-meta .status.completed {
+  color: #1de793;
+}
+
+.goal-meta .status.on_track {
+  color: #7db0ff;
+}
+
+.goal-meta .status.at_risk {
+  color: #f5b524;
+}
+
+.goal-meta .status.failed {
+  color: #ff6f8d;
+}
+
+.deal-box {
+  margin-top: 10px;
+  border: 1px solid rgba(128, 159, 233, 0.14);
+  border-radius: 10px;
+  background: rgba(13, 28, 62, 0.56);
+  padding: 10px;
+}
+
+.deal-box strong {
+  color: #f8fbff;
+}
+
+.deal-box p {
+  margin: 6px 0 0;
+  color: #dbe8fb;
+}
+
+.deal-box small {
+  color: #8eaad4;
+}
+
+.timeline-list {
+  display: grid;
+  gap: 8px;
+}
+
+.timeline-item {
+  border: 1px solid rgba(128, 159, 233, 0.14);
+  border-radius: 10px;
+  background: rgba(13, 28, 62, 0.56);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px;
+}
+
+.timeline-item > span {
+  color: #8eaad4;
+  font-size: 12px;
+}
+
+.timeline-item b {
+  color: #f8fbff;
+}
+
+.timeline-item small {
+  display: block;
+  color: #9ab6dd;
+  margin-top: 4px;
+}
+
+@media (max-width: 1180px) {
+  .manager-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-head-card {
+    flex-direction: column;
+  }
+
+  .manager-kpis {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}

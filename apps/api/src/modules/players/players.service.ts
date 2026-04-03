@@ -221,8 +221,8 @@ export class PlayersService {
 
   private async attachSaveState<T extends { id: number; overall: number }>(players: T[], saveId?: number) {
     if (!saveId || players.length === 0) return players;
-    const save = await prisma.save.findUnique({
-      where: { id: saveId },
+    const save = await prisma.save.findFirst({
+      where: { id: saveId, deletedAt: null },
       select: { data: true },
     });
     const payload = (save?.data ?? {}) as {
@@ -254,7 +254,7 @@ export class PlayersService {
     saveId?: number,
   ) {
     if (!saveId || players.length === 0) return players;
-    const save = await prisma.save.findUnique({ where: { id: saveId }, select: { data: true } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } });
     const payload = (save?.data ?? {}) as {
       playerState?: Record<string, { form?: number; fatigue?: number; morale?: number; effectiveOverall?: number }>;
     };
@@ -300,7 +300,7 @@ export class PlayersService {
   ) {
     if (!saveId || players.length === 0) return players;
     const [save, teams] = await Promise.all([
-      prisma.save.findUnique({ where: { id: saveId }, select: { data: true } }),
+      prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } }),
       prisma.team.findMany({ select: { id: true, shortName: true, name: true, city: true } }),
     ]);
     const payload = (save?.data ?? {}) as { transferState?: { playerTeamOverrides?: Record<string, number> } };
@@ -333,7 +333,7 @@ export class PlayersService {
     baseByTeam: Map<string, any[]>,
   ) {
     if (!saveId) return new Map<string, any[]>();
-    const save = await prisma.save.findUnique({ where: { id: saveId }, select: { data: true } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true } });
     const payload = (save?.data ?? {}) as { transferState?: { playerTeamOverrides?: Record<string, number> } };
     const overrides = payload.transferState?.playerTeamOverrides ?? {};
     if (Object.keys(overrides).length === 0) return new Map<string, any[]>();

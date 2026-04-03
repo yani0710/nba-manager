@@ -1,6 +1,7 @@
 import { useRouter } from './app/router';
 import { AppShell } from './layout/AppShell';
 import { Dashboard } from './pages/Dashboard';
+import { Profile } from './pages/Profile';
 import { Prepare } from './pages/Prepare';
 import { Inbox } from './pages/Inbox';
 import { Squad } from './pages/Squad';
@@ -29,6 +30,8 @@ function App() {
     switch (currentPage) {
       case 'inbox':
         return <Inbox />;
+      case 'profile':
+        return <Profile />;
       case 'prepare':
         return <Prepare />;
       case 'squad':
@@ -65,6 +68,7 @@ function App() {
   const getTitleForPage = () => {
     const titles = {
       dashboard: 'Home Dashboard',
+      profile: 'Manager Profile',
       prepare: 'Game Preparation',
       inbox: 'Inbox',
       squad: 'Squad',

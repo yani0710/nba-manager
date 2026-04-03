@@ -608,7 +608,7 @@ export class TradesService {
           contracts: { include: { contractYears: true } },
         },
       }),
-      prisma.save.findUnique({ where: { id: dto.saveId }, select: { data: true } }),
+      prisma.save.findFirst({ where: { id: dto.saveId, deletedAt: null }, select: { data: true } }),
     ]);
     if (!fromTeam || !toTeam) throw new NotFoundError("Team");
 
@@ -1425,7 +1425,7 @@ export class TradesService {
     const salaryDelta = salaryIncoming - salaryOutgoing;
     const salaryPenalty = salaryDelta > 15_000_000 ? -8 : salaryDelta > 5_000_000 ? -3 : 0;
 
-    const save = await prisma.save.findUnique({ where: { id: offer.saveId }, select: { season: true } });
+    const save = await prisma.save.findFirst({ where: { id: offer.saveId, deletedAt: null }, select: { season: true } });
     const seedBase = process.env.TRANSFER_TEST_SEED
       ? hashString(`${process.env.TRANSFER_TEST_SEED}:${offer.id}`)
       : hashString(`${offer.saveId}:${offer.id}:${save?.season ?? ""}`);
@@ -1550,7 +1550,7 @@ export class TradesService {
   }
 
   private async ensureSave(saveId: number) {
-    const save = await prisma.save.findUnique({ where: { id: saveId } });
+    const save = await prisma.save.findFirst({ where: { id: saveId, deletedAt: null } });
     if (!save) throw new NotFoundError("Save");
     return save;
   }
@@ -1584,7 +1584,7 @@ export class TradesService {
 
   private async reconcileSaveTransferState(saveId: number) {
     const [save, completedOffers] = await Promise.all([
-      prisma.save.findUnique({ where: { id: saveId }, select: { data: true, season: true } }),
+      prisma.save.findFirst({ where: { id: saveId, deletedAt: null }, select: { data: true, season: true } }),
       prisma.transferOffer.findMany({
         where: { saveId, status: "COMPLETED" },
         select: {
@@ -1668,7 +1668,7 @@ export class TradesService {
     incomingPlayerIds: number[];
     date: Date;
   }) {
-    const save = await prisma.save.findUnique({ where: { id: params.saveId }, select: { data: true, season: true } });
+    const save = await prisma.save.findFirst({ where: { id: params.saveId, deletedAt: null }, select: { data: true, season: true } });
     if (!save) return;
     const data = (save.data ?? {}) as {
       currentDate?: string;
