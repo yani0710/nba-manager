@@ -322,6 +322,41 @@
   margin-bottom: 8px;
 }
 
+.mc-style-panel {
+  border: 1px solid #2f4f82;
+  border-radius: 10px;
+  background: rgba(11, 28, 54, 0.8);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.mc-style-title {
+  color: #a5c0e7;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.mc-style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.mc-style-grid .ui-btn.is-active {
+  border-color: #2fe089;
+  background: rgba(20, 123, 77, 0.3);
+  color: #a8ffd2;
+}
+
+.mc-style-help {
+  margin-top: 8px;
+  color: #9cb7df;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .mc-full {
   width: 100%;
   margin-bottom: 8px;

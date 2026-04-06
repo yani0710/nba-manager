@@ -7,6 +7,7 @@ export declare class TradesController {
     listTradeProposals(req: Request, res: Response, next: NextFunction): Promise<void>;
     submitTradeProposal(req: Request, res: Response, next: NextFunction): Promise<void>;
     withdrawTradeProposal(req: Request, res: Response, next: NextFunction): Promise<void>;
+    respondTradeProposal(req: Request, res: Response, next: NextFunction): Promise<void>;
     listNegotiationEvents(req: Request, res: Response, next: NextFunction): Promise<void>;
     listTransactionHistory(req: Request, res: Response, next: NextFunction): Promise<void>;
     listFreeAgents(req: Request, res: Response, next: NextFunction): Promise<void>;

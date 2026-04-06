@@ -42,6 +42,8 @@ type SimOptions = {
     awayTactics?: TeamTactics;
     homeTeamForm?: number;
     awayTeamForm?: number;
+    homeTrainingRating?: number;
+    awayTrainingRating?: number;
 };
 export declare function simulateGame(homePlayers: SimPlayerInput[], awayPlayers: SimPlayerInput[], homeTeamRating: number, awayTeamRating: number, options?: SimOptions): {
     homeScore: number;

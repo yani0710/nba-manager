@@ -141,10 +141,30 @@ function presetToDefense(presetId) {
   }
 }
 
+function safeNum(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function avg(list) {
+  if (!list.length) return 0;
+  return list.reduce((sum, item) => sum + item, 0) / list.length;
+}
+
 export function Tactics() {
-  const { currentSave, squadPlayers, fetchSquad, saveTactics } = useGameStore();
+  const {
+    currentSave,
+    squadPlayers,
+    scheduleGames,
+    teams,
+    fetchSquad,
+    fetchSchedule,
+    fetchTeams,
+    saveTactics,
+  } = useGameStore();
   const [activePhase, setActivePhase] = useState('defense');
   const [saving, setSaving] = useState(false);
+  const [recommendationNote, setRecommendationNote] = useState('');
   const [formation, setFormation] = useState('traditional');
   const [rotation, setRotation] = useState({ PG: null, SG: null, SF: null, PF: null, C: null });
   const [tactics, setTactics] = useState({
@@ -170,7 +190,11 @@ export function Tactics() {
     },
   });
 
-  useEffect(() => { fetchSquad(); }, [fetchSquad]);
+  useEffect(() => {
+    fetchSquad();
+    if (!scheduleGames?.length) fetchSchedule();
+    if (!teams?.length) fetchTeams();
+  }, [fetchSquad, fetchSchedule, fetchTeams, scheduleGames?.length, teams?.length]);
 
   useEffect(() => {
     const payload = currentSave?.data || {};
@@ -265,6 +289,150 @@ export function Tactics() {
     }));
   };
 
+  const managedTeamId = currentSave?.managedTeamId || currentSave?.teamId || null;
+  const currentDate = String(currentSave?.data?.currentDate || '').slice(0, 10);
+  const upcomingGame = useMemo(() => {
+    if (!managedTeamId) return null;
+    return (scheduleGames || [])
+      .filter((game) => {
+        const day = String(game.gameDate || '').slice(0, 10);
+        const managed = Number(game.homeTeamId) === Number(managedTeamId) || Number(game.awayTeamId) === Number(managedTeamId);
+        const upcoming = day >= currentDate;
+        return managed && upcoming;
+      })
+      .sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate))[0] || null;
+  }, [scheduleGames, managedTeamId, currentDate]);
+
+  const opponentTeam = useMemo(() => {
+    if (!upcomingGame || !managedTeamId) return null;
+    const opponentId = Number(upcomingGame.homeTeamId) === Number(managedTeamId) ? upcomingGame.awayTeamId : upcomingGame.homeTeamId;
+    return teams.find((team) => Number(team.id) === Number(opponentId)) || null;
+  }, [upcomingGame, teams, managedTeamId]);
+
+  const buildRecommendedPlan = () => {
+    const pg = playersByPosition.PG || [];
+    const sg = playersByPosition.SG || [];
+    const sf = playersByPosition.SF || [];
+    const pf = playersByPosition.PF || [];
+    const c = playersByPosition.C || [];
+    const rotationRec = {
+      PG: pg[0]?.id ?? null,
+      SG: sg[0]?.id ?? null,
+      SF: sf[0]?.id ?? null,
+      PF: pf[0]?.id ?? null,
+      C: c[0]?.id ?? null,
+    };
+    const starters = [rotationRec.PG, rotationRec.SG, rotationRec.SF, rotationRec.PF, rotationRec.C]
+      .map((id) => (squadPlayers || []).find((player) => Number(player.id) === Number(id)))
+      .filter(Boolean);
+
+    const starterFatigueAvg = avg(starters.map((player) => safeNum(player.fatigue, safeNum(currentSave?.data?.playerState?.[String(player.id)]?.fatigue, 12))));
+    const starterAgeAvg = avg(starters.map((player) => safeNum(player.age, 26)));
+    const guardStrength = avg([...pg, ...sg].slice(0, 4).map((player) => safeNum(player.overallCurrent ?? player.overall, 72)));
+    const wingStrength = avg([...sf].slice(0, 2).map((player) => safeNum(player.overallCurrent ?? player.overall, 72)));
+    const bigStrength = avg([...pf, ...c].slice(0, 4).map((player) => safeNum(player.overallCurrent ?? player.overall, 72)));
+    const opponentOff = safeNum(opponentTeam?.offensiveRating ?? opponentTeam?.overallRating, 75);
+    const opponentDef = safeNum(opponentTeam?.defensiveRating ?? opponentTeam?.overallRating, 75);
+
+    let recommendedFormation = 'balanced';
+    if (guardStrength >= bigStrength + 2) recommendedFormation = 'spread';
+    if (bigStrength >= guardStrength + 2) recommendedFormation = 'traditional';
+
+    let offensePreset = 'motion';
+    if (guardStrength >= 80) offensePreset = 'pick_and_roll';
+    if (bigStrength >= 82 && bigStrength > guardStrength + 1) offensePreset = 'post_up';
+    if (starterFatigueAvg <= 35 && starterAgeAvg <= 27 && opponentDef < 78) offensePreset = 'fast_break';
+
+    let transitionStyle = 'secondary_break';
+    if (offensePreset === 'fast_break') transitionStyle = 'early_offense';
+    if (starterFatigueAvg >= 58) transitionStyle = 'control_push';
+
+    let defensePreset = 'man_to_man';
+    if (opponentOff >= 83 && guardStrength < opponentOff - 2) defensePreset = 'zone_23';
+    if (opponentOff >= 86 && bigStrength >= guardStrength + 1) defensePreset = 'switch_all';
+
+    const defenseMapped = presetToDefense(defensePreset);
+    const pace = transitionStyle === 'control_push'
+      ? 'slow'
+      : offensePreset === 'fast_break'
+        ? 'fast'
+        : 'balanced';
+    const offenseStyle = presetToOffenseStyle(offensePreset);
+
+    return {
+      formation: recommendedFormation,
+      rotation: rotationRec,
+      tacticsPatch: {
+        offensePreset,
+        transitionStyle,
+        defensePreset,
+        pace,
+        offenseStyle,
+        defenseMode: defenseMapped.defenseMode,
+        defenseScheme: defenseMapped.defenseScheme,
+        instructions: {
+          fastBreak: offensePreset === 'fast_break' || transitionStyle === 'early_offense',
+          pressAfterMade: defensePreset === 'full_press',
+          isoStars: offensePreset === 'iso',
+          crashBoards: bigStrength >= 80,
+        },
+      },
+    };
+  };
+
+  const applyRecommendation = () => {
+    const rec = buildRecommendedPlan();
+    const base = FORMATIONS[rec.formation]?.board || FORMATIONS.traditional.board;
+    setFormation(rec.formation);
+    setRotation(rec.rotation);
+    setTactics((prev) => ({
+      ...prev,
+      ...rec.tacticsPatch,
+      board: {
+        PG: { ...base.PG, playerId: rec.rotation.PG },
+        SG: { ...base.SG, playerId: rec.rotation.SG },
+        SF: { ...base.SF, playerId: rec.rotation.SF },
+        PF: { ...base.PF, playerId: rec.rotation.PF },
+        C: { ...base.C, playerId: rec.rotation.C },
+      },
+      boards: {
+        ...(prev.boards || {}),
+        attack: {
+          PG: { ...base.PG, playerId: rec.rotation.PG },
+          SG: { ...base.SG, playerId: rec.rotation.SG },
+          SF: { ...base.SF, playerId: rec.rotation.SF },
+          PF: { ...base.PF, playerId: rec.rotation.PF },
+          C: { ...base.C, playerId: rec.rotation.C },
+        },
+        transition: {
+          PG: { ...base.PG, playerId: rec.rotation.PG },
+          SG: { ...base.SG, playerId: rec.rotation.SG },
+          SF: { ...base.SF, playerId: rec.rotation.SF },
+          PF: { ...base.PF, playerId: rec.rotation.PF },
+          C: { ...base.C, playerId: rec.rotation.C },
+        },
+        defense: {
+          PG: { ...base.PG, playerId: rec.rotation.PG },
+          SG: { ...base.SG, playerId: rec.rotation.SG },
+          SF: { ...base.SF, playerId: rec.rotation.SF },
+          PF: { ...base.PF, playerId: rec.rotation.PF },
+          C: { ...base.C, playerId: rec.rotation.C },
+        },
+      },
+    }));
+    setRecommendationNote(
+      opponentTeam
+        ? `Recommended for ${opponentTeam.shortName}: ${rec.tacticsPatch.offensePreset.replaceAll('_', ' ')} + ${rec.tacticsPatch.defensePreset.replaceAll('_', ' ')} (${rec.formation}).`
+        : `Recommendation applied: ${rec.tacticsPatch.offensePreset.replaceAll('_', ' ')} + ${rec.tacticsPatch.defensePreset.replaceAll('_', ' ')} (${rec.formation}).`,
+    );
+  };
+
+  const applyAndSaveRecommendation = async () => {
+    applyRecommendation();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await saveAll();
+  };
+
   const saveAll = async () => {
     setSaving(true);
     try {
@@ -328,6 +496,22 @@ export function Tactics() {
         </section>
 
         <aside className="tac-card tac-side">
+          <div className="tac-panel tac-reco-panel">
+            <h3>Recommended Setup</h3>
+            <p>
+              {opponentTeam
+                ? `Built from your starting 5 profile and next opponent (${opponentTeam.name}).`
+                : 'Built from your current starting 5 and squad profile.'}
+            </p>
+            <div className="tac-reco-actions">
+              <button type="button" className="tac-reco-btn" onClick={applyRecommendation}>Apply Recommendation</button>
+              <button type="button" className="tac-reco-btn is-save" onClick={applyAndSaveRecommendation} disabled={saving}>
+                {saving ? 'Saving...' : 'Apply + Save'}
+              </button>
+            </div>
+            {recommendationNote ? <small>{recommendationNote}</small> : null}
+          </div>
+
           {activePhase !== 'defense' ? (
             <div className="tac-panel">
               <h3>Offense</h3>

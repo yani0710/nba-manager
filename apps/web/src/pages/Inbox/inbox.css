@@ -71,6 +71,14 @@
   padding: 2px 7px;
 }
 
+.inbox-warning {
+  color: #ffd39a;
+  background: rgba(109, 67, 24, 0.56);
+  border: 1px solid rgba(227, 150, 67, 0.52);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+
 .inbox-unread-dot {
   width: 8px;
   height: 8px;
@@ -154,6 +162,19 @@
   color: #d8e6ff;
   font-size: 16px;
   line-height: 1.55;
+}
+
+.inbox-detail-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: #ffd59d;
+  background: rgba(94, 58, 21, 0.55);
+  border: 1px solid rgba(227, 150, 67, 0.52);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-weight: 700;
 }
 
 .inbox-replies {

@@ -632,6 +632,8 @@ export class SavesService {
           awayTactics,
           homeTeamForm: homeTeamState.form,
           awayTeamForm: awayTeamState.form,
+          homeTrainingRating: game.homeTeamId === save.teamId ? (currentData.training?.rating ?? 74) : 74,
+          awayTrainingRating: game.awayTeamId === save.teamId ? (currentData.training?.rating ?? 74) : 74,
         },
       );
 
@@ -791,6 +793,7 @@ export class SavesService {
     await this.tradesService.resolvePendingPlayerProposalResponsesForDay(save.id, nextSeasonDay, nextDate);
     await this.tradesService.resolvePendingContractOffersForDay(save.id, nextSeasonDay, nextDate);
     await this.tradesService.resolvePendingTradeProposalsForDay(save.id, nextSeasonDay, nextDate);
+    await this.tradesService.generateTradeBlockInterestForDay(save.id, nextSeasonDay, nextDate);
     await this.tradesService.snapshotTeamCapsForDay(save.id, nextSeasonDay);
     // Transfer execution may update Save.data.transferState inside TradesService.
     // Refresh and merge it here so the final save update below does not overwrite it with stale currentData.
@@ -1522,6 +1525,10 @@ export class SavesService {
       awayScore?: number;
       homePlayers?: unknown;
       awayPlayers?: unknown;
+      styleLoad?: {
+        home?: { defending?: number; normal?: number; attacking?: number };
+        away?: { defending?: number; normal?: number; attacking?: number };
+      };
     },
   ) {
     const save = await this.getSaveById(saveId);
@@ -1562,7 +1569,7 @@ export class SavesService {
       (allPlayerIds.length > 0
         ? await prisma.player.findMany({
             where: { id: { in: allPlayerIds } },
-            select: { id: true, teamId: true },
+            select: { id: true, teamId: true, fatigue: true, morale: true, form: true },
           })
         : []
       ).map((row) => [row.id, row]),
@@ -1619,6 +1626,59 @@ export class SavesService {
       ...toGameStats(awayRows, game.awayTeamId),
     ];
 
+    const currentData = ((save.data ?? {}) as SavePayload);
+    const playerState = currentData.playerState ?? {};
+    currentData.playerState = playerState;
+    const styleLoad = payload.styleLoad ?? {};
+    const normalizeLoad = (side: "home" | "away") => {
+      const row = styleLoad?.[side] ?? {};
+      const defending = Math.max(0, Number(row.defending ?? 0));
+      const normal = Math.max(0, Number(row.normal ?? 0));
+      const attacking = Math.max(0, Number(row.attacking ?? 0));
+      const total = Math.max(1, defending + normal + attacking);
+      const pressure = ((attacking * 1.2) + (normal * 0.8) + (defending * 0.45)) / total;
+      return {
+        defending,
+        normal,
+        attacking,
+        pressure,
+      };
+    };
+    const homeLoad = normalizeLoad("home");
+    const awayLoad = normalizeLoad("away");
+    const loadForTeam = (teamId: number) => (Number(teamId) === Number(game.homeTeamId) ? homeLoad : awayLoad);
+
+    [...homeRows, ...awayRows].forEach((row) => {
+      const playerId = Number((row?.playerId ?? row?.id));
+      if (!Number.isFinite(playerId)) return;
+      const meta = playersById.get(playerId);
+      if (!meta) return;
+      const key = String(playerId);
+      const prev = playerState[key] ?? {
+        fatigue: Number(meta.fatigue ?? 10),
+        morale: Number(meta.morale ?? 65),
+        form: Number(meta.form ?? 60),
+      };
+      const minutes = Math.max(0, Number(row?.minutes ?? 0));
+      const teamLoad = loadForTeam(meta.teamId);
+      const minutesFactor = minutes / 12;
+      const highUsageBonus = minutes >= 34 ? 0.8 : 0;
+      const fatigueDelta = this.clamp(Math.round((1.6 + teamLoad.pressure + highUsageBonus) * minutesFactor), 0, 12);
+      playerState[key] = {
+        ...prev,
+        fatigue: this.clamp(Math.round(Number(prev.fatigue ?? 10) + fatigueDelta), 0, 100),
+      };
+    });
+
+    // Keep form tracker in sync when a game is finalized directly from Match Center.
+    this.updateTeamStateAfterGame(
+      currentData,
+      game.homeTeamId,
+      game.awayTeamId,
+      homeScore,
+      awayScore,
+    );
+
     await prisma.$transaction(async (tx) => {
       await tx.game.update({
         where: { id: game.id },
@@ -1634,6 +1694,10 @@ export class SavesService {
           data: gameStatsPayload,
         });
       }
+      await tx.save.update({
+        where: { id: save.id },
+        data: { data: currentData as any },
+      });
     });
 
     return {
@@ -2082,6 +2146,62 @@ export class SavesService {
     const losses = managedStandingRow?.losses ?? 0;
     const gamesPlayed = wins + losses;
     const winRate = gamesPlayed > 0 ? wins / gamesPlayed : 0;
+    const recentWindow = recentResults.slice(0, 5);
+    const recentWins = recentWindow.reduce((sum, game) => {
+      const managedIsHome = game.homeTeamId === team?.id;
+      const managedScore = managedIsHome ? Number(game.homeScore ?? 0) : Number(game.awayScore ?? 0);
+      const oppScore = managedIsHome ? Number(game.awayScore ?? 0) : Number(game.homeScore ?? 0);
+      return sum + (managedScore > oppScore ? 1 : 0);
+    }, 0);
+    const recentWinRate = recentWindow.length > 0 ? recentWins / recentWindow.length : 0.5;
+
+    const managedRoster = team
+      ? await prisma.player.findMany({
+          where: { teamId: team.id, active: true },
+          select: { id: true, morale: true, fatigue: true },
+        })
+      : [];
+    const avgRosterMorale = managedRoster.length > 0
+      ? managedRoster.reduce((sum, player) => {
+          const stateMorale = payload.playerState?.[String(player.id)]?.morale;
+          return sum + Number(stateMorale ?? player.morale ?? 65);
+        }, 0) / managedRoster.length
+      : 65;
+    const avgRosterFatigue = managedRoster.length > 0
+      ? managedRoster.reduce((sum, player) => {
+          const stateFatigue = payload.playerState?.[String(player.id)]?.fatigue;
+          return sum + Number(stateFatigue ?? player.fatigue ?? 10);
+        }, 0) / managedRoster.length
+      : 15;
+    const trainingRating = Number(payload.training?.rating ?? 74);
+    const teamForm = Number(payload.teamState?.[String(team?.id ?? -1)]?.form ?? 50);
+    const responseDeltas = Object.values(payload.inboxState?.responses ?? {})
+      .map((item) => Number(item?.moraleDelta ?? 0))
+      .filter((value) => Number.isFinite(value))
+      .slice(-25);
+    const coachResponseImpact = responseDeltas.length > 0
+      ? responseDeltas.reduce((sum, value) => sum + value, 0) / responseDeltas.length
+      : 0;
+    const moraleScore = this.clamp(
+      Math.round(
+        avgRosterMorale * 0.55
+        + (recentWinRate * 100) * 0.2
+        + trainingRating * 0.15
+        + (coachResponseImpact * 8)
+        - (avgRosterFatigue * 0.1),
+      ),
+      0,
+      100,
+    );
+    const chemistryScore = this.clamp(
+      Math.round((moraleScore * 0.55) + (trainingRating * 0.25) + (teamForm * 0.2)),
+      0,
+      100,
+    );
+    const lockerRoom = moraleScore >= 78 ? "Excellent"
+      : moraleScore >= 64 ? "Stable"
+        : moraleScore >= 50 ? "Under Pressure"
+          : "Fractured";
 
     const recentPerformance = recentPerformanceGames
       .slice()
@@ -2116,6 +2236,10 @@ export class SavesService {
         wins,
         losses,
         teamValue,
+        moraleScore,
+        teamChemistry: chemistryScore,
+        lockerRoom,
+        moraleLabel: moraleScore >= 75 ? "High" : moraleScore >= 60 ? "Good" : moraleScore >= 45 ? "Mixed" : "Low",
         currentWeek,
         weekRange: {
           start: currentRange.start,
@@ -4210,7 +4334,13 @@ export class SavesService {
   ) {
     const state = playerState[String(player.id)];
     const form = state?.form ?? 60;
-    const matchOverall = this.clamp(Math.round(state?.effectiveOverall ?? player.overallCurrent ?? player.overall ?? 60), 40, 99);
+    const baseOverall = this.clamp(Math.round(state?.effectiveOverall ?? player.overallCurrent ?? player.overall ?? 60), 40, 99);
+    const fatigue = this.clamp(Number(state?.fatigue ?? 10), 0, 100);
+    const morale = this.clamp(Number(state?.morale ?? 65), 0, 100);
+    const fatiguePenalty = Math.max(0, fatigue - 45) * 0.2;
+    const moraleBonus = (morale - 50) * 0.06;
+    const formBonus = (form - 50) * 0.03;
+    const matchOverall = this.clamp(Math.round(baseOverall - fatiguePenalty + moraleBonus + formBonus), 35, 99);
     return {
       playerId: player.id,
       position: player.position ?? "N/A",

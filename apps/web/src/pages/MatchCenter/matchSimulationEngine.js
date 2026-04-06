@@ -87,8 +87,44 @@ function emptyTeamStats() {
   };
 }
 
+function getStyleModifiers(style) {
+  const normalized = String(style || 'normal').toLowerCase();
+  if (normalized === 'defending') {
+    return {
+      paceAdj: 2,
+      turnoverAdj: -0.01,
+      foulAdj: -0.01,
+      threeShareAdj: -0.03,
+      twoMakeAdj: -0.02,
+      threeMakeAdj: -0.01,
+      qualityAdj: -0.04,
+    };
+  }
+  if (normalized === 'attacking') {
+    return {
+      paceAdj: -2,
+      turnoverAdj: 0.02,
+      foulAdj: 0.015,
+      threeShareAdj: 0.03,
+      twoMakeAdj: 0.02,
+      threeMakeAdj: 0.02,
+      qualityAdj: 0.05,
+    };
+  }
+  return {
+    paceAdj: 0,
+    turnoverAdj: 0,
+    foulAdj: 0,
+    threeShareAdj: 0,
+    twoMakeAdj: 0,
+    threeMakeAdj: 0,
+    qualityAdj: 0,
+  };
+}
+
 function getPossessionSeconds(state, tactics) {
-  const paceAdj = tactics?.slowPace ? 3 : (tactics?.transitionPush ? -2 : 0);
+  const styleMods = getStyleModifiers(tactics?.playStyle || 'normal');
+  const paceAdj = (tactics?.slowPace ? 3 : (tactics?.transitionPush ? -2 : 0)) + styleMods.paceAdj;
   const base = 14 + Math.floor(state.rng() * 7);
   return clamp(base + paceAdj, 8, 24);
 }
@@ -169,6 +205,10 @@ export function createMatchState({
     possessionTarget: 14,
     eventCounter: 0,
     isFinal: false,
+    styleLoad: {
+      home: { defending: 0, normal: 0, attacking: 0 },
+      away: { defending: 0, normal: 0, attacking: 0 },
+    },
     rng,
     debug,
   };
@@ -213,20 +253,65 @@ export function resolvePossession(state, ctx) {
   const defenseStats = defenseSide === 'home' ? state.homeStats : state.awayStats;
   const offenseTeam = offenseSide === 'home' ? ctx.homeTeam : ctx.awayTeam;
   const defenseTeam = offenseSide === 'home' ? ctx.awayTeam : ctx.homeTeam;
+  const offenseDynamics = offenseSide === 'home' ? (ctx.homeDynamics || {}) : (ctx.awayDynamics || {});
+  const defenseDynamics = defenseSide === 'home' ? (ctx.homeDynamics || {}) : (ctx.awayDynamics || {});
+  const offenseTactics = offenseSide === 'home' ? (ctx.homeTactics || {}) : (ctx.awayTactics || {});
+  const defenseTactics = defenseSide === 'home' ? (ctx.homeTactics || {}) : (ctx.awayTactics || {});
+  const offenseStyleMods = getStyleModifiers(offenseTactics.playStyle || 'normal');
+  const defenseStyleMods = getStyleModifiers(defenseTactics.playStyle || 'normal');
 
   incPlayerMinutes(state.homePlayers, Math.max(1, state.possessionElapsed));
   incPlayerMinutes(state.awayPlayers, Math.max(1, state.possessionElapsed));
 
   const offenseRating = getTeamCoreRating(offenseTeam).offense;
   const defenseRating = getTeamCoreRating(defenseTeam).defense;
-  const quality = clamp((offenseRating - defenseRating) / 100, -0.25, 0.25);
-  const turnoverChance = clamp(0.11 - quality * 0.04, 0.06, 0.2);
-  const foulChance = clamp(0.09 + (ctx.tactics?.fullCourtPress ? 0.03 : 0), 0.05, 0.2);
-  const threeShare = clamp(0.36 + (ctx.tactics?.slowPace ? -0.03 : 0), 0.24, 0.48);
-  const threeMake = clamp(0.35 + quality * 0.15, 0.24, 0.48);
-  const twoMake = clamp(0.5 + quality * 0.15, 0.35, 0.63);
+  const offenseFormEdge = (Number(offenseDynamics.form || 50) - 50) * 0.0016;
+  const defenseFormEdge = (Number(defenseDynamics.form || 50) - 50) * 0.0012;
+  const offenseFatiguePenalty = Math.max(0, Number(offenseDynamics.fatigue || 10) - 48) * 0.0015;
+  const defenseFatiguePenalty = Math.max(0, Number(defenseDynamics.fatigue || 10) - 48) * 0.0011;
+  const offenseTrainingBoost = (Number(offenseDynamics.training || 72) - 72) * 0.0008;
+  const momentumShift = clamp((((offenseSide === 'home' ? state.momentum - 50 : 50 - state.momentum) / 50) * 0.06), -0.06, 0.06);
+  const quality = clamp(
+    ((offenseRating - defenseRating) / 100)
+    + offenseStyleMods.qualityAdj
+    - defenseStyleMods.qualityAdj
+    + offenseFormEdge
+    - defenseFormEdge
+    - offenseFatiguePenalty
+    + defenseFatiguePenalty
+    + offenseTrainingBoost
+    + momentumShift,
+    -0.35,
+    0.35,
+  );
+  const turnoverChance = clamp(
+    0.11
+    - quality * 0.05
+    + offenseStyleMods.turnoverAdj
+    + Math.max(0, Number(offenseDynamics.fatigue || 10) - 60) * 0.001,
+    0.05,
+    0.28,
+  );
+  const foulChance = clamp(
+    0.09
+    + (defenseTactics?.fullCourtPress ? 0.03 : 0)
+    + offenseStyleMods.foulAdj
+    + defenseStyleMods.foulAdj,
+    0.05,
+    0.22,
+  );
+  const threeShare = clamp(
+    0.36
+    + (offenseTactics?.slowPace ? -0.03 : 0)
+    + offenseStyleMods.threeShareAdj
+    - defenseStyleMods.threeShareAdj * 0.5,
+    0.2,
+    0.56,
+  );
+  const threeMake = clamp(0.36 + quality * 0.18 + offenseStyleMods.threeMakeAdj, 0.22, 0.56);
+  const twoMake = clamp(0.52 + quality * 0.2 + offenseStyleMods.twoMakeAdj, 0.34, 0.7);
 
-  const role = ctx.tactics?.isoPlays ? 'iso' : (ctx.tactics?.feedPost ? 'post' : 'balanced');
+  const role = offenseTactics?.isoPlays ? 'iso' : (offenseTactics?.feedPost ? 'post' : 'balanced');
   const scorer = pickFromLineup(offenseLineup, role, state.rng);
   const scorerRow = scorer ? offensePlayers[scorer.id] : null;
 
@@ -297,7 +382,7 @@ export function resolvePossession(state, ctx) {
   }
 
   if (pointsDelta > 0) {
-    const assistChance = clamp(0.58 - (ctx.tactics?.isoPlays ? 0.18 : 0), 0.2, 0.75);
+    const assistChance = clamp(0.58 - (offenseTactics?.isoPlays ? 0.18 : 0), 0.2, 0.75);
     if (state.rng() < assistChance) {
       const assister = pickFromLineup(offenseLineup, 'balanced', state.rng);
       if (assister && assister.id !== scorer?.id && offensePlayers[assister.id]) {
@@ -333,7 +418,7 @@ export function resolvePossession(state, ctx) {
   state.possession = defenseSide;
   state.possessionElapsed = 0;
   state.shotClock = 24;
-  state.possessionTarget = getPossessionSeconds(state, ctx.tactics || {});
+  state.possessionTarget = getPossessionSeconds(state, offenseSide === 'home' ? (ctx.awayTactics || {}) : (ctx.homeTactics || {}));
   const diff = state.homeScore - state.awayScore;
   state.momentum = clamp(50 + (diff * 1.25), 0, 100);
   state.status = 'live';
@@ -344,6 +429,14 @@ export function resolvePossession(state, ctx) {
 export function advanceSimulationSecond(state, ctx) {
   if (state.isFinal) return state;
   state.status = 'live';
+  const homeStyle = String(ctx?.homeTactics?.playStyle || 'normal').toLowerCase();
+  const awayStyle = String(ctx?.awayTactics?.playStyle || 'normal').toLowerCase();
+  if (state.styleLoad?.home && (homeStyle === 'defending' || homeStyle === 'normal' || homeStyle === 'attacking')) {
+    state.styleLoad.home[homeStyle] += 1;
+  }
+  if (state.styleLoad?.away && (awayStyle === 'defending' || awayStyle === 'normal' || awayStyle === 'attacking')) {
+    state.styleLoad.away[awayStyle] += 1;
+  }
   state.gameClockSeconds = Math.max(0, state.gameClockSeconds - 1);
   state.shotClock = Math.max(0, state.shotClock - 1);
   state.possessionElapsed += 1;

@@ -3,6 +3,17 @@ import { useGameStore } from '../../state/gameStore';
 import { EmptyState, PageHeader } from '../../components/ui';
 import './inbox.css';
 
+const TRANSFER_ALERT_KEYWORDS = [
+  'trade',
+  'offer',
+  'proposal',
+  'agent',
+  'listed',
+  'transfer',
+  'counter',
+  'negotiation',
+];
+
 function typeBadge(type) {
   const t = String(type || '').toLowerCase();
   if (t === 'player') return 'player';
@@ -11,6 +22,11 @@ function typeBadge(type) {
   if (t === 'media') return 'media';
   if (t === 'board') return 'board';
   return 'system';
+}
+
+function isTransferAlertMessage(message) {
+  const text = `${message?.subject || ''} ${message?.preview || ''} ${message?.body || ''} ${message?.from || ''}`.toLowerCase();
+  return TRANSFER_ALERT_KEYWORDS.some((keyword) => text.includes(keyword));
 }
 
 export function Inbox() {
@@ -83,6 +99,7 @@ export function Inbox() {
             {messages.map((message) => {
               const active = String(selected?.id) === String(message.id);
               const badge = typeBadge(message.type);
+              const isTransferAlert = isTransferAlertMessage(message);
               return (
                 <button
                   key={message.id}
@@ -98,6 +115,7 @@ export function Inbox() {
                   <div className="inbox-row-preview">{message.preview || message.body}</div>
                   <div className="inbox-row-foot">
                     <span>{message.createdAt}</span>
+                    {isTransferAlert ? <span className="inbox-warning">⚠️ Trade Alert</span> : null}
                     {message.needsResponse && !message.responded ? <span className="inbox-needs">Needs Response</span> : null}
                     {!message.read ? <span className="inbox-unread-dot" /> : null}
                   </div>
@@ -111,6 +129,7 @@ export function Inbox() {
               <EmptyState title="Select a message" description="Open a message from the list to view details." />
             ) : (
               <div className="inbox-detail-card">
+                {isTransferAlertMessage(selected) ? <div className="inbox-detail-warning">⚠️ Important transfer update</div> : null}
                 <div className="inbox-detail-top">
                   <div>
                     <div className="inbox-detail-from">{selected.from}</div>

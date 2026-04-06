@@ -56,6 +56,17 @@ const TEAM_COLORS_BY_SHORT = {
   WAS: '#002B5C',
 };
 
+const TRADE_ALERT_KEYWORDS = [
+  'trade',
+  'offer',
+  'proposal',
+  'agent',
+  'listed',
+  'transfer',
+  'negotiation',
+  'counter',
+];
+
 function colorHashFromString(input) {
   let h = 0;
   const s = String(input || 'NBA');
@@ -115,6 +126,11 @@ function eventBadgeClass(type) {
   if (type.includes('training') || type.includes('recovery')) return 'is-warning';
   if (type.includes('trade') || type.includes('transaction')) return 'is-accent';
   return 'is-info';
+}
+
+function isTradeAlertText(value) {
+  const text = String(value || '').toLowerCase();
+  return TRADE_ALERT_KEYWORDS.some((keyword) => text.includes(keyword));
 }
 
 function buildSeasonEvents({ scheduleGames, currentSave, teamShort }) {
@@ -201,16 +217,28 @@ function buildSeasonEvents({ scheduleGames, currentSave, teamShort }) {
 function buildSocialPosts({ currentSave, results, squadPlayers, tradeHistory, teamShort }) {
   const posts = [];
   const commentsAfterWin = [
-    'Great match tonight. We keep building.',
-    'Huge team effort. Onto the next one.',
-    'Defense set the tone tonight.',
-    'Bench energy changed the game.',
+    'Big win tonight. We earned that one together.',
+    'Love the way we competed for all 48 minutes.',
+    'That was a strong statement performance from the group.',
+    'Proud of the energy, focus, and finish tonight.',
   ];
   const commentsAfterLoss = [
-    'Not our standard. We bounce back next game.',
-    'Tough night, we learn and move forward.',
-    'Need better starts. Work continues tomorrow.',
-    'Film, practice, response. Next matchday mindset.',
+    'Tough one tonight, but we stay together and get back to work.',
+    'Not the result we wanted. We learn from it and respond stronger.',
+    'We will clean it up, stay locked in, and be ready next game.',
+    'Setback tonight, but this group will answer with the right mindset.',
+  ];
+  const fanCommentsAfterWin = [
+    'What a win. This team brought real energy tonight.',
+    'That is Lakers basketball. Big-time finish.',
+    'Statement win. Keep this momentum rolling.',
+    'Love the fight from this group. Huge result tonight.',
+  ];
+  const fanCommentsAfterLoss = [
+    'Tough result, but we keep believing in this group.',
+    'Not our night. Reset and come back stronger next game.',
+    'Heads up. Every season has nights like this.',
+    'Stay together and respond. The bounce-back is coming.',
   ];
 
   const roster = (squadPlayers || []).slice(0, 15);
@@ -250,7 +278,7 @@ function buildSocialPosts({ currentSave, results, squadPlayers, tradeHistory, te
       source: 'Fans',
       author: `${teamShort} Nation`,
       handle: `@${teamShort}Fans`,
-      body: `${isWin ? 'That is how you close games.' : 'We ride together, bounce-back next game.'} Next up: ${opponentShort === teamShort ? 'league battle' : 'new challenge'}. #${teamShort}`,
+      body: `${(isWin ? fanCommentsAfterWin : fanCommentsAfterLoss)[idx % 4]} Next up: ${opponentShort === teamShort ? 'league battle' : 'new challenge'}. #${teamShort}`,
       minutesAgo: 42 + idx * 45,
       likes: seededMetric(`fl-${g.id}`, 120, 3900),
       comments: seededMetric(`fc-${g.id}`, 20, 700),
@@ -305,6 +333,13 @@ function buildSocialPosts({ currentSave, results, squadPlayers, tradeHistory, te
   return posts.sort((a, b) => a.minutesAgo - b.minutesAgo);
 }
 
+function formatTradePlayerList(names = []) {
+  if (!names.length) return 'No players attached';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names[0]}, ${names[1]} +${names.length - 2} more`;
+}
+
 export function Schedule() {
   const {
     currentSave,
@@ -321,6 +356,8 @@ export function Schedule() {
     advanceDays,
     loadSave,
     saveTrainingConfig,
+    fetchDashboard,
+    dashboard,
   } = useGameStore();
 
   const [activeTab, setActiveTab] = useState('Calendar');
@@ -340,6 +377,10 @@ export function Schedule() {
   const teamShort = String(currentSave?.data?.career?.teamShortName || '').toUpperCase();
   const managedTeam = teams.find((t) => String(t.shortName).toUpperCase() === teamShort) || null;
   const currentDateKey = currentSave?.data?.currentDate || null;
+  const tradeBlockIds = useMemo(
+    () => (currentSave?.data?.rosterManagement?.tradeBlockPlayerIds || []).map(Number).filter(Number.isFinite),
+    [currentSave?.data?.rosterManagement?.tradeBlockPlayerIds],
+  );
 
   useEffect(() => {
     if (!currentSave?.id) return;
@@ -348,7 +389,8 @@ export function Schedule() {
     fetchInbox({ take: 80, skip: 0 });
     fetchSquad();
     fetchTeams();
-  }, [currentSave?.id, fetchSchedule, fetchResults, fetchInbox, fetchSquad, fetchTeams]);
+    fetchDashboard();
+  }, [currentSave?.id, fetchSchedule, fetchResults, fetchInbox, fetchSquad, fetchTeams, fetchDashboard]);
 
   useEffect(() => {
     if (!currentSave?.id || !managedTeam?.id) return;
@@ -447,41 +489,81 @@ export function Schedule() {
 
   const tradeCards = useMemo(() => {
     const myId = managedTeam?.id;
-    const proposals = (tradeData.proposals || []).map((p) => ({
-      id: `proposal-${p.id}`,
-      source: 'proposal',
-      team: p.toTeam,
-      status: p.status,
-      expiresIn: Math.max(0, safeNum(p.expiresDay, 0) - safeNum(p.submittedDay, 0)),
-      offer: (p.items || []).filter((i) => i.direction === 'IN' && i.player).map((i) => i.player.name),
-      want: (p.items || []).filter((i) => i.direction === 'OUT' && i.player).map((i) => i.player.name),
-      fairness: safeNum(p.aiScore, 0) > 6 ? 'Good' : safeNum(p.aiScore, 0) > 3 ? 'Fair' : 'Risky',
-      incoming: myId ? Number(p.toTeamId) === Number(myId) : false,
-      outgoing: myId ? Number(p.fromTeamId) === Number(myId) : false,
-    }));
-    const offers = (tradeData.offers || []).map((o) => ({
-      id: `offer-${o.id}`,
-      source: 'offer',
-      team: o.toTeam,
-      status: o.status,
-      expiresIn: Math.max(0, safeNum(o.resolveDay, 0) - safeNum(o.createdDay, 0)),
-      offer: (o.incomingPlayerIds || []).slice(0, 3),
-      want: (o.outgoingPlayerIds || []).slice(0, 3),
-      fairness: 'Fair',
-      incoming: myId ? Number(o.toTeamId) === Number(myId) : false,
-      outgoing: myId ? Number(o.fromTeamId) === Number(myId) : false,
-    }));
-    return [...proposals, ...offers];
-  }, [tradeData.proposals, tradeData.offers, managedTeam?.id]);
+    const proposals = (tradeData.proposals || []).map((p) => {
+      const incoming = myId ? Number(p.toTeamId) === Number(myId) : false;
+      const outgoing = myId ? Number(p.fromTeamId) === Number(myId) : false;
+      const incomingItems = (p.items || []).filter((i) => i.direction === 'IN' && i.player).map((i) => i.player.name);
+      const outgoingItems = (p.items || []).filter((i) => i.direction === 'OUT' && i.player).map((i) => i.player.name);
+      return {
+        id: `proposal-${p.id}`,
+        source: 'proposal',
+        team: incoming ? p.fromTeam : p.toTeam,
+        status: p.status,
+        expiresIn: Math.max(0, safeNum(p.expiresDay, 0) - safeNum(p.submittedDay, 0)),
+        offer: incoming ? outgoingItems : incomingItems,
+        want: incoming ? incomingItems : outgoingItems,
+        fairness: safeNum(p.aiScore, 0) > 6 ? 'Good' : safeNum(p.aiScore, 0) > 3 ? 'Fair' : 'Risky',
+        incoming,
+        outgoing,
+      };
+    });
+    return proposals;
+  }, [tradeData.proposals, managedTeam?.id]);
 
   const filteredTradeCards = useMemo(() => tradeCards.filter((c) => {
-    if (tradeFilter === 'Pending') return String(c.status).toUpperCase().includes('PENDING');
+    if (tradeFilter === 'Pending') {
+      const status = String(c.status || '').toUpperCase();
+      return status.includes('PENDING') || status.includes('OPEN') || status.includes('COUNTER');
+    }
     if (tradeFilter === 'Incoming') return c.incoming;
     if (tradeFilter === 'Outgoing') return c.outgoing;
     if (tradeFilter === 'League-wide') return true;
     if (tradeFilter === 'Expiring Soon') return c.expiresIn <= 2;
     return true;
   }), [tradeCards, tradeFilter]);
+  const listedTradeBlockPlayers = useMemo(() => (
+    (squadPlayers || [])
+      .filter((player) => tradeBlockIds.includes(Number(player.id)))
+      .sort((a, b) => Number(b.salary || 0) - Number(a.salary || 0))
+  ), [squadPlayers, tradeBlockIds]);
+  const listedTradeBlockCards = useMemo(() => {
+    const myId = Number(managedTeam?.id);
+    const activeStatuses = new Set(['PENDING', 'COUNTERED', 'OPEN']);
+    const activeProposals = (tradeData.proposals || []).filter((proposal) => activeStatuses.has(String(proposal.status || '').toUpperCase()));
+
+    return listedTradeBlockPlayers.map((player) => {
+      const relatedOffers = activeProposals.flatMap((proposal) => {
+        const incoming = myId ? Number(proposal.toTeamId) === myId : false;
+        const outgoing = myId ? Number(proposal.fromTeamId) === myId : false;
+        if (!incoming && !outgoing) return [];
+
+        const managedSideDirection = incoming ? 'IN' : 'OUT';
+        const counterpartDirection = incoming ? 'OUT' : 'IN';
+        const managedPlayers = (proposal.items || []).filter((item) => item.direction === managedSideDirection && item.player);
+        const isForPlayer = managedPlayers.some((item) => Number(item.player?.id) === Number(player.id));
+        if (!isForPlayer) return [];
+
+        const counterpartPlayers = (proposal.items || [])
+          .filter((item) => item.direction === counterpartDirection && item.player)
+          .map((item) => item.player.name);
+
+        return [{
+          id: proposal.id,
+          teamName: incoming ? (proposal.fromTeam?.name || proposal.fromTeam?.shortName || 'League Team') : (proposal.toTeam?.name || proposal.toTeam?.shortName || 'League Team'),
+          summary: incoming
+            ? `Incoming: ${formatTradePlayerList(counterpartPlayers)}`
+            : `Your offer: ${formatTradePlayerList(counterpartPlayers)}`,
+          status: proposal.status,
+        }];
+      });
+
+      return { ...player, relatedOffers };
+    });
+  }, [listedTradeBlockPlayers, tradeData.proposals, managedTeam?.id]);
+  const transferInboxAlerts = useMemo(
+    () => (inbox?.messages || []).filter((msg) => isTradeAlertText(msg.subject) || isTradeAlertText(msg.preview) || isTradeAlertText(msg.body)),
+    [inbox?.messages],
+  );
 
   const teamRows = useMemo(() => {
     const injurySet = new Set((currentSave?.data?.injuries || []).map((x) => String(x.playerName || '').toLowerCase()));
@@ -664,10 +746,42 @@ export function Schedule() {
           <article className="season-card season-main">
             <div className="season-toolbar"><h3>Active Trade Offers</h3><select value={tradeFilter} onChange={(e) => setTradeFilter(e.target.value)}>{['Pending', 'Incoming', 'Outgoing', 'League-wide', 'Expiring Soon'].map((x) => <option key={x} value={x}>{x}</option>)}</select></div>
             <div className="trade-list">
-              {filteredTradeCards.length === 0 ? <p className="none">No trade cards in this filter.</p> : filteredTradeCards.map((card) => <article key={card.id} className="trade-card"><div className="trade-head"><div className="avatar">{initials(card.team?.shortName || 'TR')}</div><div><b>{card.team?.name || 'Trade Package'}</b><small>Expires in {card.expiresIn} day(s)</small></div><span className={`badge ${eventBadgeClass(String(card.status || ''))}`}>{card.status}</span></div><div className="trade-cols"><div><h5>They Offer</h5>{(card.offer || []).slice(0, 3).map((x, i) => <p key={`${card.id}-o-${i}`}>{x}</p>)}</div><div><h5>They Want</h5>{(card.want || []).slice(0, 3).map((x, i) => <p key={`${card.id}-w-${i}`}>{x}</p>)}</div></div><div className="trade-foot"><span>Trade Value: <b>{card.fairness}</b></span><div><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>Accept</button><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>Reject</button><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>Counter</button><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>View Full Trade</button></div></div></article>)}
+              {filteredTradeCards.length === 0 ? <p className="none">No trade cards in this filter.</p> : filteredTradeCards.map((card) => <article key={card.id} className="trade-card"><div className="trade-head"><div className="avatar">{initials(card.team?.shortName || 'TR')}</div><div><b>{card.team?.name || 'Trade Package'}</b><small>Expires in {card.expiresIn} day(s)</small></div><span className={`badge ${eventBadgeClass(String(card.status || ''))}`}>{card.status}</span></div><div className="trade-cols"><div><h5>You Receive</h5>{(card.offer || []).slice(0, 3).map((x, i) => <p key={`${card.id}-o-${i}`}>{x}</p>)}</div><div><h5>You Send</h5>{(card.want || []).slice(0, 3).map((x, i) => <p key={`${card.id}-w-${i}`}>{x}</p>)}</div></div><div className="trade-foot"><span>Trade Value: <b>{card.fairness}</b></span><div><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>Accept</button><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>Reject</button><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>Counter</button><button type="button" onClick={() => { window.location.hash = 'transfers'; }}>View Full Trade</button></div></div></article>)}
             </div>
           </article>
           <aside className="season-side">
+            <div className="season-card">
+              <h3>Listed On Trade Block</h3>
+              {listedTradeBlockCards.length === 0 ? <p className="none">No listed players yet.</p> : listedTradeBlockCards.slice(0, 6).map((player) => (
+                <article key={`tb-${player.id}`} className="trade-block-card">
+                  <div className="trade-side-row">
+                    <span>{player.name} ({player.position || '-'})</span>
+                    <b>${(safeNum(player.salary, 0) / 1_000_000).toFixed(1)}M</b>
+                  </div>
+                  {player.relatedOffers.length === 0 ? (
+                    <small className="trade-block-empty">No active offers yet.</small>
+                  ) : (
+                    <div className="trade-block-offers">
+                      {player.relatedOffers.slice(0, 3).map((offer) => (
+                        <div key={`tb-${player.id}-offer-${offer.id}`} className="trade-block-offer">
+                          <strong>{offer.teamName}</strong>
+                          <span>{offer.summary}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+            <div className="season-card">
+              <h3>Trade Alerts ⚠️</h3>
+              {transferInboxAlerts.length === 0 ? <p className="none">No new offer updates.</p> : transferInboxAlerts.slice(0, 5).map((message) => (
+                <article key={`trade-alert-${message.id}`} className="activity-item">
+                  <b>⚠️ {message.subject || 'Trade update'}</b>
+                  <small>{message.preview || message.body}</small>
+                </article>
+              ))}
+            </div>
             <div className="season-card insights"><h3>Your Trade Assets</h3><p><span>Cap Space</span><b>${(safeNum(tradeData.cap?.capSpace, 0) / 1_000_000).toFixed(1)}M</b></p><p><span>Draft Picks</span><b>2024 1st, 2025 2nd, 2026 1st</b></p><p><span>Trade Exception</span><b>$5.9M</b></p></div>
             <div className="season-card"><h3>Recent League Trades</h3>{(tradeData.history || []).slice(0, 5).map((h) => <p key={h.id}><span>{h.title}</span><small>{h.body}</small></p>)}</div>
             <div className="season-card"><h3>Hot Trade Targets</h3>{(squadPlayers || []).slice(0, 5).map((p) => <p key={p.id}><span>{p.name}</span><b>{p.position}</b></p>)}</div>
@@ -680,7 +794,7 @@ export function Schedule() {
           <article className="season-card season-main">
             <div className="season-toolbar"><h3>Squad Health and Fitness</h3><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>{['All', 'Healthy', 'Injured', 'Fatigued', 'Returning Soon'].map((x) => <option key={x} value={x}>{x}</option>)}</select></div>
             <div className="status-list">{filteredTeamRows.map((p) => <article key={p.id} className="status-row"><div className="status-left"><div className="avatar">{initials(p.name)}</div><div><b>{p.name}</b><small>{p.position} • #{p.jerseyCode ?? p.jerseyNumber ?? p.number ?? '-'}</small></div></div><div className="status-right"><div className="fitness"><span style={{ width: `${p.fitness}%` }} /></div><span className={`badge ${eventBadgeClass(p.status.toLowerCase())}`}>{p.status}</span></div></article>)}</div>
-            <div className="chemistry-grid"><div className="season-card"><h4>Team Chemistry</h4><b>{clamp(58 + (safeNum(currentSave?.data?.training?.rating, 74) - 70), 40, 99)}%</b></div><div className="season-card"><h4>Overall Morale</h4><b>{Math.round(teamRows.reduce((s, p) => s + safeNum(currentSave?.data?.playerState?.[String(p.id)]?.morale, p.morale ?? 65), 0) / Math.max(1, teamRows.length))}%</b></div><div className="season-card"><h4>Locker Room</h4><b>{teamRows.filter((p) => p.status === 'Healthy').length >= Math.ceil(teamRows.length * 0.7) ? 'Stable' : 'Under Pressure'}</b></div></div>
+            <div className="chemistry-grid"><div className="season-card"><h4>Team Chemistry</h4><b>{Math.round(safeNum(dashboard?.overview?.teamChemistry, clamp(58 + (safeNum(currentSave?.data?.training?.rating, 74) - 70), 40, 99)))}%</b></div><div className="season-card"><h4>Overall Morale</h4><b>{Math.round(safeNum(dashboard?.overview?.moraleScore, teamRows.reduce((s, p) => s + safeNum(currentSave?.data?.playerState?.[String(p.id)]?.morale, p.morale ?? 65), 0) / Math.max(1, teamRows.length)))}%</b></div><div className="season-card"><h4>Locker Room</h4><b>{dashboard?.overview?.lockerRoom || (teamRows.filter((p) => p.status === 'Healthy').length >= Math.ceil(teamRows.length * 0.7) ? 'Stable' : 'Under Pressure')}</b></div></div>
           </article>
 
           <aside className="season-side">

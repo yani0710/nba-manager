@@ -44,6 +44,11 @@ type SubmitTradeProposalDto = {
     cashIn?: number;
     responseDays?: number;
 };
+type RespondTradeProposalDto = {
+    saveId: number;
+    proposalId: number;
+    action: "ACCEPT" | "REJECT" | "COUNTER";
+};
 declare function hashString(input: string): number;
 declare function mulberry32(seed: number): () => number;
 export declare const __transferTestUtils: {
@@ -343,6 +348,28 @@ export declare class TradesService {
         validation: import("@prisma/client/runtime/library").JsonValue | null;
         counterPayload: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
+    respondTradeProposal(dto: RespondTradeProposalDto): Promise<{
+        id: number;
+        createdAt: Date;
+        updatedAt: Date;
+        saveId: number;
+        status: string;
+        submittedDay: number;
+        decisionDay: number;
+        expiresDay: number | null;
+        decisionReason: string | null;
+        resolvedAt: Date | null;
+        fromTeamId: number;
+        toTeamId: number;
+        cashOut: number;
+        cashIn: number;
+        aiScore: number | null;
+        validation: import("@prisma/client/runtime/library").JsonValue | null;
+        counterPayload: import("@prisma/client/runtime/library").JsonValue | null;
+    } | {
+        success: boolean;
+    }>;
+    generateTradeBlockInterestForDay(saveId: number, day: number, date: Date): Promise<number>;
     listNegotiationEvents(saveId: number): Promise<{
         id: number;
         createdAt: Date;

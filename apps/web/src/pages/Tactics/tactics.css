@@ -59,6 +59,40 @@
   gap: 10px;
 }
 
+.tac-reco-panel p {
+  margin: 0;
+  color: #9db6dc;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.tac-reco-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tac-reco-btn {
+  border: 1px solid #385b8c;
+  border-radius: 9px;
+  background: rgba(23, 49, 82, 0.9);
+  color: #e9f2ff;
+  padding: 9px 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tac-reco-btn.is-save {
+  border-color: #b055ff;
+  background: linear-gradient(180deg, rgba(171, 65, 255, 0.36), rgba(120, 33, 210, 0.34));
+  color: #ffffff;
+}
+
+.tac-reco-panel small {
+  color: #7decb3;
+  font-size: 12px;
+}
+
 .tac-board-header {
   display: flex;
   justify-content: space-between;
@@ -199,6 +233,9 @@
 
 @media (max-width: 1100px) {
   .tac-grid {
+    grid-template-columns: 1fr;
+  }
+  .tac-reco-actions {
     grid-template-columns: 1fr;
   }
 }

@@ -63,7 +63,7 @@
 .league-main-card,
 .league-side-card {
   border: 1px solid rgba(128, 159, 233, 0.18);
-  border-radius: 14px;
+  border-radius: 16px;
   background: linear-gradient(180deg, rgba(12, 30, 72, 0.54), rgba(4, 14, 39, 0.74));
   overflow: hidden;
 }
@@ -87,6 +87,7 @@
 .league-main-card-head h2 {
   margin: 0;
   color: #f6faff;
+  font-size: 40px;
 }
 
 .league-main-card-head span {
@@ -101,14 +102,20 @@
 
 .league-table thead th {
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: 0.04em;
   color: #86a8d5;
+  background: rgba(12, 25, 53, 0.9);
 }
 
 .league-table tbody tr.is-managed {
   background: rgba(125, 32, 234, 0.2);
   box-shadow: inset 2px 0 0 #b24cff;
+}
+
+.league-table tbody td {
+  padding-top: 14px;
+  padding-bottom: 14px;
 }
 
 .league-rank-cell {
@@ -146,12 +153,12 @@
   display: block;
   color: #b87dff;
   margin-top: 2px;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .league-team-logo-wrap {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
   background: radial-gradient(circle at 30% 25%, #8c9ec2 0%, #3f537b 58%, #213053 100%);
   border: 1px solid rgba(152, 181, 247, 0.2);
@@ -180,19 +187,19 @@
 
 .league-w {
   color: #21e59b;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .league-l {
   color: #ff6888;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .league-streak-pill {
   border-radius: 999px;
   padding: 4px 9px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .league-streak-pill.is-win {

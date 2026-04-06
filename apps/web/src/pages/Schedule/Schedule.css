@@ -124,6 +124,42 @@
 .trade-foot span { color: #9ab3dc; }
 .trade-foot b { color: #fff; }
 .trade-foot div { display: flex; gap: 6px; flex-wrap: wrap; }
+.trade-side-row { display: flex; justify-content: space-between; gap: 8px; margin: 7px 0; color: #d7e8ff; }
+.trade-side-row span { color: #9cb6de; }
+.trade-side-row b { color: #ffffff; }
+.trade-block-card {
+  border: 1px solid rgba(58, 95, 142, 0.72);
+  border-radius: 10px;
+  background: rgba(18, 43, 83, 0.72);
+  padding: 8px 10px;
+  margin-top: 8px;
+}
+.trade-block-card:first-of-type {
+  margin-top: 0;
+}
+.trade-block-empty {
+  display: block;
+  color: #89a5d0;
+}
+.trade-block-offers {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.trade-block-offer {
+  border-left: 2px solid #56a2ff;
+  padding-left: 8px;
+  display: grid;
+  gap: 2px;
+}
+.trade-block-offer strong {
+  color: #f4f9ff;
+  font-size: 12px;
+}
+.trade-block-offer span {
+  color: #9cb6de;
+  font-size: 12px;
+}
 
 .status-list { display: grid; gap: 8px; }
 .status-row { border: 1px solid #3a6090; border-radius: 10px; background: #1a3d69; padding: 8px; display: flex; justify-content: space-between; gap: 10px; align-items: center; }

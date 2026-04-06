@@ -90,6 +90,19 @@ class TradesController {
             next(err);
         }
     }
+    async respondTradeProposal(req, res, next) {
+        try {
+            const data = await tradesService.respondTradeProposal({
+                saveId: Number(req.body?.saveId),
+                proposalId: Number(req.params.proposalId),
+                action: String(req.body?.action ?? "REJECT").toUpperCase(),
+            });
+            res.json(data);
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async listNegotiationEvents(req, res, next) {
         try {
             const saveId = Number(req.query.saveId);

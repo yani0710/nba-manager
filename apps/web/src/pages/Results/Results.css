@@ -94,7 +94,7 @@
 
 .results-game-card {
   border: 1px solid rgba(134, 165, 236, 0.2);
-  border-radius: 14px;
+  border-radius: 16px;
   background: linear-gradient(180deg, rgba(12, 30, 72, 0.54), rgba(4, 14, 39, 0.74));
   box-shadow: 0 10px 28px rgba(0, 5, 20, 0.3);
   padding: 14px;
@@ -116,6 +116,8 @@
   align-items: center;
   gap: 10px;
   color: #c4d7f8;
+  border-bottom: 1px solid rgba(147, 176, 241, 0.14);
+  padding-bottom: 10px;
 }
 
 .results-game-head small {
@@ -281,6 +283,7 @@
 .results-full-tabs button.active {
   background: linear-gradient(100deg, #7f15f1, #a61cff);
   color: #fff;
+  box-shadow: 0 6px 18px rgba(117, 22, 211, 0.42);
 }
 
 .results-team-stats-layout {
@@ -342,6 +345,15 @@
 
 .results-boxscore-table tbody td {
   border-bottom: 1px solid rgba(128, 159, 233, 0.07);
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.results-boxscore-table thead th {
+  background: rgba(11, 24, 52, 0.92);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
 }
 
 .results-player-cell {
@@ -360,7 +372,7 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #dce9ff;
   background: radial-gradient(circle at 30% 25%, #8f32ff 0%, #6730f1 58%, #3f52ff 100%);
@@ -377,6 +389,7 @@
   border-radius: 10px;
   background: rgba(13, 28, 62, 0.64);
   padding: 11px;
+  min-height: 92px;
 }
 
 .results-quarter-card span {

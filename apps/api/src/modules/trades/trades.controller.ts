@@ -90,6 +90,19 @@ export class TradesController {
     }
   }
 
+  async respondTradeProposal(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await tradesService.respondTradeProposal({
+        saveId: Number(req.body?.saveId),
+        proposalId: Number(req.params.proposalId),
+        action: String(req.body?.action ?? "REJECT").toUpperCase() as "ACCEPT" | "REJECT" | "COUNTER",
+      });
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async listNegotiationEvents(req: Request, res: Response, next: NextFunction) {
     try {
       const saveId = Number(req.query.saveId);

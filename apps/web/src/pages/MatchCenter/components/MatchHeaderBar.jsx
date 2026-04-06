@@ -21,7 +21,6 @@ export function MatchHeaderBar({
   onToggleRunning,
   onSetSpeed,
   onSetMode,
-  onJumpIn,
 }) {
   if (!game) return null;
   const quarterText = quarterLabel(quarter);
@@ -78,10 +77,8 @@ export function MatchHeaderBar({
         <button className="ui-btn ui-btn-primary" type="button" onClick={onToggleRunning}>
           {running ? 'Pause' : 'Continue'}
         </button>
-        <button className="ui-btn" type="button" onClick={onJumpIn}>Jump In</button>
         <span className="ui-badge">{matchState}</span>
       </div>
     </header>
   );
 }
-

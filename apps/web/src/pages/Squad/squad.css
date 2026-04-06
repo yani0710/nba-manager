@@ -200,7 +200,13 @@
   border: 0;
   background: transparent;
   color: #8fa9cf;
-  font-size: 36px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+  font-size: 30px;
   cursor: pointer;
 }
 

@@ -39,33 +39,51 @@ function winPct(team) {
 
 function parseLast5(last5) {
   const s = String(last5 || '').toUpperCase().replace(/[^WL]/g, '');
-  return s ? s.slice(-5).split('') : ['W', 'W', 'L', 'W', 'L'];
+  return s ? s.slice(-5).split('') : [];
+}
+
+function formatStreak(streakValue, formValue = 50) {
+  const n = Number(streakValue);
+  if (Number.isFinite(n) && n !== 0) return `${n > 0 ? 'W' : 'L'}${Math.abs(n)}`;
+  if (Number.isFinite(n) && n === 0) return 'Even';
+  return `${num(formValue, 50) >= 55 ? 'W' : 'L'}1`;
 }
 
 export function Teams() {
-  const { teams, fetchTeams, loading, currentSave } = useGameStore();
+  const { teams, standings, fetchTeams, fetchStandings, loading, currentSave } = useGameStore();
   const [conference, setConference] = useState('All Conference');
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [openTeam, setOpenTeam] = useState(null);
 
   useEffect(() => {
     fetchTeams();
-  }, [fetchTeams, currentSave?.id]);
+    fetchStandings();
+  }, [fetchTeams, fetchStandings, currentSave?.id]);
+
+  const standingsByShort = useMemo(() => {
+    const map = new Map();
+    [...(standings?.east || []), ...(standings?.west || [])].forEach((row) => {
+      const key = String(row?.shortName || '').toUpperCase();
+      if (key) map.set(key, row);
+    });
+    return map;
+  }, [standings?.east, standings?.west]);
 
   const decorated = useMemo(() => {
     return (teams || []).map((t) => {
       const conf = teamConference(t);
-      const streak = String(t.streak || '').toUpperCase() || `${num(t.form, 50) >= 55 ? 'W' : 'L'}${Math.max(1, Math.round(Math.abs(num(t.form, 50) - 50) / 6))}`;
+      const standing = standingsByShort.get(String(t.shortName || '').toUpperCase());
       return {
         ...t,
         conferenceLabel: conf,
-        wins: num(t.wins, Math.max(0, Math.round(num(t.form, 50) * 0.6))),
-        losses: num(t.losses, Math.max(0, 52 - Math.round(num(t.form, 50) * 0.6))),
+        wins: num(standing?.wins, num(t.wins, 0)),
+        losses: num(standing?.losses, num(t.losses, 0)),
+        gamesBehind: standing?.gb ?? t.gamesBehind ?? '-',
         avgPoints: Number(num(t.avgPoints, 106 + ((num(t.form, 50) - 50) * 0.2))).toFixed(1),
-        streak,
+        streak: String(standing?.streak || formatStreak(t.streak, t.form)).toUpperCase(),
       };
     });
-  }, [teams]);
+  }, [teams, standingsByShort]);
 
   const filtered = useMemo(() => {
     if (conference === 'All Conference') return decorated;
@@ -119,7 +137,9 @@ export function Teams() {
                   <div><span>GB</span><b>{num(team.gamesBehind, 0) || '-'}</b></div>
                 </div>
                 <div className="tmdb-last5">
-                  {parseLast5(team.last5).map((r, idx) => <i key={`${team.id}-${idx}`} className={r === 'W' ? 'is-win' : 'is-loss'}>{r}</i>)}
+                  {parseLast5(team.last5).length
+                    ? parseLast5(team.last5).map((r, idx) => <i key={`${team.id}-${idx}`} className={r === 'W' ? 'is-win' : 'is-loss'}>{r}</i>)
+                    : <small style={{ color: '#8ea9d2' }}>No recent games</small>}
                 </div>
                 <div className="tmdb-foot"><span>{team.streak}</span><b>Avg Points {team.avgPoints}</b></div>
               </button>

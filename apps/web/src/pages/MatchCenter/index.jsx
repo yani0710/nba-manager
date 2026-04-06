@@ -5,12 +5,9 @@ import { getFixtureDateKeyEt, isFixtureCompleted, isFixtureSimulatable } from '.
 import { buildAdvice, formatClock, getLineupByPosition, quarterLabel } from './matchSimUtils';
 import {
   advanceSimulationSecond,
-  applyOfficialResultToState,
   createMatchState,
   deriveTopPerformers,
   getConsistencySnapshot,
-  playOnePossession,
-  playUntilQuarterEnd,
   quickSimToEndLocal,
 } from './matchSimulationEngine';
 import './match-center.css';
@@ -38,6 +35,12 @@ function cloneState(state) {
   return out;
 }
 
+function mean(values, fallback = 0) {
+  if (!Array.isArray(values) || values.length === 0) return fallback;
+  const total = values.reduce((sum, value) => sum + Number(value || 0), 0);
+  return total / values.length;
+}
+
 export function MatchCenter() {
   const {
     currentSave,
@@ -50,7 +53,6 @@ export function MatchCenter() {
     fetchResults,
     fetchStandings,
     fetchDashboard,
-    fetchResultDetails,
   } = useGameStore();
 
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -61,6 +63,8 @@ export function MatchCenter() {
   const [persistingResult, setPersistingResult] = useState(false);
   const [simError, setSimError] = useState('');
   const [simState, setSimState] = useState(null);
+  const [homePlayStyle, setHomePlayStyle] = useState('normal');
+  const [awayPlayStyle, setAwayPlayStyle] = useState('normal');
   const tickerRef = useRef(null);
   const autoPersistRef = useRef(false);
 
@@ -98,6 +102,13 @@ export function MatchCenter() {
 
   const canLiveSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate));
   const canOfficialSim = Boolean(selectedGame && isFixtureSimulatable(selectedGame, currentDate));
+  const managedTeamId = currentSave?.managedTeamId || currentSave?.teamId || null;
+  const managedSide = useMemo(() => {
+    if (!selectedGame || !managedTeamId) return null;
+    if (Number(selectedGame.homeTeamId) === Number(managedTeamId)) return 'home';
+    if (Number(selectedGame.awayTeamId) === Number(managedTeamId)) return 'away';
+    return null;
+  }, [selectedGame, managedTeamId]);
 
   const homeTeamObj = useMemo(
     () => teams.find((t) => t.id === selectedGame?.homeTeamId) || selectedGame?.homeTeam || null,
@@ -124,13 +135,65 @@ export function MatchCenter() {
     };
   }, [selectedGame?.id, rosters.home, rosters.away]);
 
+  const savedTactics = currentSave?.data?.tactics || {};
+  const savePlayerState = currentSave?.data?.playerState || {};
+  const managedTrainingRating = Number(currentSave?.data?.training?.rating ?? 74);
+  const userBaseTactics = useMemo(() => {
+    const defenseMode = String(savedTactics?.defenseMode || 'man');
+    const defenseScheme = String(savedTactics?.defenseScheme || 'switch');
+    const offenseStyle = String(savedTactics?.offenseStyle || 'balanced');
+    const transitionStyle = String(savedTactics?.transitionStyle || 'early_offense');
+    const pace = String(savedTactics?.pace || 'balanced');
+    const instructions = savedTactics?.instructions || {};
+    return {
+      slowPace: pace === 'slow',
+      transitionPush: transitionStyle !== 'control_push' || pace === 'fast' || instructions.fastBreak === true,
+      fullCourtPress: defenseScheme === 'press' || instructions.pressAfterMade === true,
+      isoPlays: offenseStyle === 'iso' || instructions.isoStars === true,
+      feedPost: offenseStyle === 'post_up',
+      defenseMode: defenseMode === 'zone' ? 'zone' : 'man',
+      crashBoards: instructions.crashBoards === true,
+    };
+  }, [savedTactics]);
+
+  const userTactics = useMemo(
+    () => ({ ...userBaseTactics, playStyle: managedSide === 'home' ? homePlayStyle : awayPlayStyle }),
+    [userBaseTactics, managedSide, homePlayStyle, awayPlayStyle],
+  );
+
+  const aiTactics = useMemo(() => ({
+    slowPace: false,
+    transitionPush: true,
+    fullCourtPress: false,
+    isoPlays: false,
+    feedPost: false,
+    defenseMode: 'man',
+    crashBoards: false,
+    playStyle: managedSide === 'home' ? awayPlayStyle : homePlayStyle,
+  }), [managedSide, homePlayStyle, awayPlayStyle]);
+
   const ctx = useMemo(() => ({
+    homeDynamics: (() => {
+      const playersList = Object.values(lineups.home || {});
+      const form = mean(playersList.map((p) => Number(savePlayerState?.[String(p.id)]?.form ?? p.form ?? 60)), 60);
+      const fatigue = mean(playersList.map((p) => Number(savePlayerState?.[String(p.id)]?.fatigue ?? p.fatigue ?? 10)), 10);
+      const training = managedSide === 'home' ? managedTrainingRating : 72;
+      return { form, fatigue, training };
+    })(),
+    awayDynamics: (() => {
+      const playersList = Object.values(lineups.away || {});
+      const form = mean(playersList.map((p) => Number(savePlayerState?.[String(p.id)]?.form ?? p.form ?? 60)), 60);
+      const fatigue = mean(playersList.map((p) => Number(savePlayerState?.[String(p.id)]?.fatigue ?? p.fatigue ?? 10)), 10);
+      const training = managedSide === 'away' ? managedTrainingRating : 72;
+      return { form, fatigue, training };
+    })(),
     homeTeam: homeTeamObj || {},
     awayTeam: awayTeamObj || {},
     homeLineup: lineups.home,
     awayLineup: lineups.away,
-    tactics: { slowPace: false, transitionPush: true, fullCourtPress: false, isoPlays: false, feedPost: false },
-  }), [homeTeamObj, awayTeamObj, lineups.home, lineups.away]);
+    homeTactics: managedSide === 'home' ? userTactics : aiTactics,
+    awayTactics: managedSide === 'away' ? userTactics : aiTactics,
+  }), [homeTeamObj, awayTeamObj, lineups.home, lineups.away, managedSide, userTactics, aiTactics, savePlayerState, managedTrainingRating]);
 
   useEffect(() => {
     if (!selectedGame) return;
@@ -145,6 +208,8 @@ export function MatchCenter() {
     setRunning(false);
     setOfficialResultLocked(false);
     setPersistingResult(false);
+    setHomePlayStyle('normal');
+    setAwayPlayStyle('normal');
     autoPersistRef.current = false;
   }, [selectedGame?.id]);
 
@@ -199,26 +264,6 @@ export function MatchCenter() {
     };
   }, [running, speed, simState, officialResultLocked, canLiveSim, ctx]);
 
-  const onPlayPossession = () => {
-    if (!canLiveSim) return pushMatchdayWarning();
-    if (!simState || simState.isFinal || officialResultLocked) return;
-    safeSetSim((prev) => {
-      const next = cloneState(prev);
-      playOnePossession(next, ctx);
-      return next;
-    });
-  };
-
-  const onPlayQuarter = () => {
-    if (!canLiveSim) return pushMatchdayWarning();
-    if (!simState || simState.isFinal || officialResultLocked) return;
-    safeSetSim((prev) => {
-      const next = cloneState(prev);
-      playUntilQuarterEnd(next, ctx);
-      return next;
-    });
-  };
-
   const runOfficialSimToEnd = async () => {
     if (!currentSave?.id || !selectedGame || officialResultLocked) return;
     if (!canOfficialSim) return pushMatchdayWarning();
@@ -238,6 +283,10 @@ export function MatchCenter() {
         awayScore: finalState.awayScore,
         homePlayers: Object.values(finalState.homePlayers || {}),
         awayPlayers: Object.values(finalState.awayPlayers || {}),
+        styleLoad: finalState.styleLoad || {
+          home: { defending: 0, normal: 0, attacking: 0 },
+          away: { defending: 0, normal: 0, attacking: 0 },
+        },
       });
 
       await Promise.all([
@@ -246,16 +295,6 @@ export function MatchCenter() {
         fetchStandings(),
         fetchDashboard(),
       ]);
-
-      const details = await fetchResultDetails(selectedGame.id);
-      if (details) {
-        safeSetSim((prev) => {
-          if (!prev) return prev;
-          const next = cloneState(prev);
-          applyOfficialResultToState(next, details);
-          return next;
-        });
-      }
       setOfficialResultLocked(true);
     } finally {
       setPersistingResult(false);
@@ -275,15 +314,15 @@ export function MatchCenter() {
   const performers = useMemo(() => (state ? deriveTopPerformers(state) : { home: null, away: null, leader: null }), [state]);
   const advice = useMemo(
     () => (state ? buildAdvice({
-      homeTactics: { fullCourtPress: false, slowPace: false, isoPlays: false },
-      awayTactics: { feedPost: false },
+      homeTactics: ctx.homeTactics || {},
+      awayTactics: ctx.awayTactics || {},
       homeStats: state.homeStats || {},
       awayStats: state.awayStats || {},
       possessionSide: state.possession === 'home' ? 'home' : 'away',
       homeTeam: selectedGame?.homeTeam,
       awayTeam: selectedGame?.awayTeam,
     }) : []),
-    [state, selectedGame],
+    [state, selectedGame, ctx.homeTactics, ctx.awayTactics],
   );
 
   if (!selectedGame || !state) {
@@ -305,6 +344,15 @@ export function MatchCenter() {
   const attackingLabel = state.possession === 'home' ? selectedGame.homeTeam?.shortName : selectedGame.awayTeam?.shortName;
   const qAway = state.quarterScores?.away || [0, 0, 0, 0, 0];
   const qHome = state.quarterScores?.home || [0, 0, 0, 0, 0];
+  const userStyle = managedSide === 'home' ? homePlayStyle : (managedSide === 'away' ? awayPlayStyle : homePlayStyle);
+  const styleSeconds = managedSide === 'home'
+    ? (state.styleLoad?.home || { defending: 0, normal: 0, attacking: 0 })
+    : (managedSide === 'away'
+      ? (state.styleLoad?.away || { defending: 0, normal: 0, attacking: 0 })
+      : (state.styleLoad?.home || { defending: 0, normal: 0, attacking: 0 }));
+  const styleFatiguePressure = Math.round(
+    ((Number(styleSeconds.attacking || 0) * 1.2) + (Number(styleSeconds.normal || 0) * 0.8) + (Number(styleSeconds.defending || 0) * 0.45)) / 60,
+  );
 
   return (
     <div className="matchday-premium">
@@ -374,6 +422,31 @@ export function MatchCenter() {
       <section className="mc-grid">
         <article className="mc-card mc-controls">
           <h3>Simulation Controls</h3>
+          {managedSide ? (
+            <div className="mc-style-panel">
+              <div className="mc-style-title">Play Style</div>
+              <div className="mc-style-grid">
+                {['defending', 'normal', 'attacking'].map((style) => (
+                  <button
+                    key={style}
+                    className={`ui-btn ${userStyle === style ? 'is-active' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      if (managedSide === 'home') setHomePlayStyle(style);
+                      if (managedSide === 'away') setAwayPlayStyle(style);
+                    }}
+                  >
+                    {style === 'defending' ? 'Defending' : style === 'attacking' ? 'Attacking' : 'Normal'}
+                  </button>
+                ))}
+              </div>
+              <div className="mc-style-help">
+                {userStyle === 'defending' ? 'Lower tempo and safer possessions. Helps protect a lead, with lower scoring output.' : null}
+                {userStyle === 'normal' ? 'Balanced tempo and risk. Stable game flow with moderate fatigue load.' : null}
+                {userStyle === 'attacking' ? 'Higher tempo and aggressive offense. Better comeback potential, but more fatigue and risk.' : null}
+              </div>
+            </div>
+          ) : null}
           <div className="mc-controls-row">
             <button
               className="ui-btn"
@@ -388,14 +461,11 @@ export function MatchCenter() {
             </button>
             <button className="ui-btn" type="button" onClick={() => setSpeed((prev) => (prev === 1 ? 2 : (prev === 2 ? 4 : (prev === 4 ? 8 : 1))))}>{speed}x</button>
           </div>
-          <button className="ui-btn ui-btn-primary mc-full" type="button" onClick={() => { setSimMode('watch'); setRunning(false); }}>Play Game - Jump In</button>
           <button className="ui-btn mc-full" type="button" disabled={!canOfficialSim || officialResultLocked || persistingResult} onClick={runOfficialSimToEnd}>{persistingResult ? 'Saving result...' : 'Quick Sim to End'}</button>
-          <div className="mc-controls-row">
-            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked || persistingResult} onClick={onPlayPossession}>Play Possession</button>
-            <button className="ui-btn" type="button" disabled={!canLiveSim || officialResultLocked || persistingResult} onClick={onPlayQuarter}>Play Quarter</button>
-          </div>
           <div className="mc-status-row">
             <span className="mc-tag">{matchState}</span>
+            <span className="mc-tag">Style: {userStyle}</span>
+            <span className="mc-tag warn">Fatigue Pressure +{styleFatiguePressure}</span>
             {!canLiveSim ? <span className="mc-tag warn">Live sim unavailable for this date</span> : null}
             {!canOfficialSim ? <span className="mc-tag warn">Quick Sim locked to matchday</span> : null}
             {officialResultLocked ? <span className="mc-tag">Official Result Saved</span> : null}

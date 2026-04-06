@@ -250,6 +250,8 @@ export function Results() {
         const three = details ? pctText(pct((view.isHome ? home : away)?.threePtMade, (view.isHome ? home : away)?.threePtAtt)) : `${(hashMetric(`3-${game.id}`, 330, 440) / 10).toFixed(1)}%`;
         const rebs = (view.isHome ? home : away)?.rebounds ?? hashMetric(`reb-${game.id}`, 40, 56);
         const scorer = details?.topScorer ? `${details.topScorer.name} ${details.topScorer.points} PTS` : `Top scorer ${hashMetric(`pts-${game.id}`, 24, 38)} PTS`;
+        const leftScore = Number(view.myScore ?? 0);
+        const rightScore = Number(view.oppScore ?? 0);
 
         return (
           <article key={game.id} className={`results-game-card ${view.win ? 'is-win' : 'is-loss'}`}>
@@ -259,7 +261,10 @@ export function Results() {
             </div>
             <div className="results-game-main">
               <div className="results-team-side"><div className="results-team-logo-wrap"><img src={logoPath(view.me)} alt={view.me?.shortName} className="results-team-logo" onError={(e) => { e.currentTarget.style.display = 'none'; const f = e.currentTarget.nextElementSibling; if (f) f.style.display = 'grid'; }} /><span className="results-team-fallback">{initials(view.me)}</span></div><div><h3>{view.me?.name || view.me?.shortName}</h3><p>{view.isHome ? 'Home' : 'Away'}</p></div></div>
-              <div className="results-scoreline"><strong className={Number(game.homeScore) >= Number(game.awayScore) ? 'is-leading' : ''}>{Number(game.homeScore ?? 0)}</strong><strong className={Number(game.awayScore) > Number(game.homeScore) ? 'is-leading' : ''}>{Number(game.awayScore ?? 0)}</strong></div>
+              <div className="results-scoreline">
+                <strong className={leftScore >= rightScore ? 'is-leading' : ''}>{leftScore}</strong>
+                <strong className={rightScore > leftScore ? 'is-leading' : ''}>{rightScore}</strong>
+              </div>
               <div className="results-team-side is-opponent"><div><h3>{view.opp?.name || view.opp?.shortName}</h3><p>{view.isHome ? 'Away' : 'Home'}</p></div><div className="results-team-logo-wrap"><img src={logoPath(view.opp)} alt={view.opp?.shortName} className="results-team-logo" onError={(e) => { e.currentTarget.style.display = 'none'; const f = e.currentTarget.nextElementSibling; if (f) f.style.display = 'grid'; }} /><span className="results-team-fallback">{initials(view.opp)}</span></div></div>
             </div>
             <div className="results-metric-row"><div className="results-metric"><small>Top Scorer</small><strong>{scorer}</strong></div><div className="results-metric"><small>FG%</small><strong>{fg}</strong></div><div className="results-metric"><small>3PT%</small><strong>{three}</strong></div><div className="results-metric"><small>Rebounds</small><strong>{rebs}</strong></div><div className="results-metric"><small>Attendance</small><strong>{attendance}</strong></div></div>

@@ -13,17 +13,19 @@ function simulateGame(homePlayers, awayPlayers, homeTeamRating, awayTeamRating, 
     const awayPace = getPaceModifier(options.awayTactics?.pace);
     const paceFactor = (homePace + awayPace) / 2;
     const basePossessions = 95;
-    const possessions = Math.max(85, Math.min(110, Math.round(basePossessions * paceFactor + randomInRange(-4, 4))));
+    const possessions = Math.max(86, Math.min(109, Math.round(basePossessions * paceFactor + randomInRange(-2.5, 2.5))));
     const homeOffenseBoost = (options.homeTactics?.threePtFocus ?? 50) / 100;
     const awayOffenseBoost = (options.awayTactics?.threePtFocus ?? 50) / 100;
     const homeDefensePenalty = getDefensePenalty(options.awayTactics?.defenseScheme) + getFormDefensePenalty(options.awayTeamForm);
     const awayDefensePenalty = getDefensePenalty(options.homeTactics?.defenseScheme) + getFormDefensePenalty(options.homeTeamForm);
     const homeFormBoost = getTeamFormBoost(options.homeTeamForm);
     const awayFormBoost = getTeamFormBoost(options.awayTeamForm);
-    const homeEfficiency = 1.04 + (homeTeamRating - 75) * 0.006 + homeOffenseBoost * 0.05 + homeFormBoost - homeDefensePenalty;
-    const awayEfficiency = 1.02 + (awayTeamRating - 75) * 0.006 + awayOffenseBoost * 0.05 + awayFormBoost - awayDefensePenalty;
-    let homeScore = Math.floor(possessions * homeEfficiency + homeAdvantage + ratingDiff * 0.3 + randomInRange(-8, 8));
-    let awayScore = Math.floor(possessions * awayEfficiency - ratingDiff * 0.3 + randomInRange(-8, 8));
+    const homeTrainingBoost = getTrainingBoost(options.homeTrainingRating);
+    const awayTrainingBoost = getTrainingBoost(options.awayTrainingRating);
+    const homeEfficiency = 1.04 + (homeTeamRating - 75) * 0.0065 + homeOffenseBoost * 0.06 + homeFormBoost + homeTrainingBoost - homeDefensePenalty;
+    const awayEfficiency = 1.02 + (awayTeamRating - 75) * 0.0065 + awayOffenseBoost * 0.06 + awayFormBoost + awayTrainingBoost - awayDefensePenalty;
+    let homeScore = Math.floor(possessions * homeEfficiency + homeAdvantage + ratingDiff * 0.36 + randomInRange(-4.5, 4.5));
+    let awayScore = Math.floor(possessions * awayEfficiency - ratingDiff * 0.36 + randomInRange(-4.5, 4.5));
     if (homeScore === awayScore) {
         homeScore += 1;
     }
@@ -40,7 +42,7 @@ function getTeamRating(players, teamForm = 50) {
         .sort((a, b) => b.matchOverall - a.matchOverall)
         .slice(0, 10);
     const avgOverall = sorted.reduce((sum, p) => sum + p.matchOverall, 0) / sorted.length;
-    const formFactor = 1 + ((Math.max(0, Math.min(100, teamForm)) - 50) / 50) * 0.05;
+    const formFactor = 1 + ((Math.max(0, Math.min(100, teamForm)) - 50) / 50) * 0.02;
     return Math.round(Math.min(99, Math.max(50, avgOverall * formFactor)));
 }
 function getPaceModifier(pace) {
@@ -59,11 +61,15 @@ function getDefensePenalty(scheme) {
 }
 function getTeamFormBoost(form = 50) {
     const bounded = Math.max(0, Math.min(100, form));
-    return (bounded - 50) * 0.0009;
+    return (bounded - 50) * 0.00045;
 }
 function getFormDefensePenalty(opponentForm = 50) {
     const bounded = Math.max(0, Math.min(100, opponentForm));
-    return (bounded - 50) * 0.0004;
+    return (bounded - 50) * 0.0002;
+}
+function getTrainingBoost(trainingRating = 74) {
+    const bounded = Math.max(50, Math.min(95, Number(trainingRating) || 74));
+    return (bounded - 74) * 0.0008;
 }
 function randomInRange(min, max) {
     return Math.random() * (max - min) + min;

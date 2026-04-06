@@ -27,7 +27,7 @@ function initials(name) {
 }
 
 export function Transfers() {
-  const { currentSave, teams, fetchTeams, fetchInbox, fetchPlayers, advanceSave } = useGameStore();
+  const { currentSave, teams, fetchTeams, fetchInbox, fetchPlayers, advanceSave, saveRosterManagement } = useGameStore();
   const [tab, setTab] = useState(TABS[0]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -55,10 +55,16 @@ export function Transfers() {
   const [transferFee, setTransferFee] = useState(0);
   const [signingBonus, setSigningBonus] = useState(0);
   const [performanceBonus, setPerformanceBonus] = useState(0);
+  const [squadSearchText, setSquadSearchText] = useState('');
+  const [squadPositionFilter, setSquadPositionFilter] = useState('ALL');
 
   const managedTeamCode = currentSave?.data?.career?.teamShortName;
   const managedTeam = teams.find((t) => t.shortName === managedTeamCode) || null;
   const saveId = currentSave?.id;
+  const tradeBlockIds = useMemo(
+    () => (currentSave?.data?.rosterManagement?.tradeBlockPlayerIds || []).map(Number).filter(Number.isFinite),
+    [currentSave?.data?.rosterManagement?.tradeBlockPlayerIds],
+  );
 
   useEffect(() => { if (saveId) fetchTeams(); }, [saveId, fetchTeams]);
 
@@ -78,7 +84,10 @@ export function Transfers() {
       ]);
       setFreeAgents(Array.isArray(faRes?.data) ? faRes.data : []);
       setContractOffers(offersRes?.data || []);
-      setTradeProposals(proposalsRes?.data || []);
+      const allProposals = proposalsRes?.data || [];
+      setTradeProposals(Array.isArray(allProposals)
+        ? allProposals.filter((proposal) => Number(proposal.toTeamId) === Number(managedTeam.id))
+        : []);
       setNegotiations(negotiationsRes?.data || []);
       setHistory(historyRes?.data || []);
       setCapSummary(capRes?.data || null);
@@ -156,6 +165,16 @@ export function Transfers() {
       nextCapSpace: Number(capSummary.salaryCap || 0) - nextPayroll,
     };
   }, [capSummary, incomingPlayers, outgoingPlayers]);
+
+  const filteredMyRoster = useMemo(() => {
+    const query = String(squadSearchText || '').trim().toLowerCase();
+    return myRoster.filter((player) => {
+      const byName = !query || String(player.name || '').toLowerCase().includes(query);
+      const byPosition = squadPositionFilter === 'ALL'
+        || String(player.position || '').toUpperCase().includes(squadPositionFilter);
+      return byName && byPosition;
+    });
+  }, [myRoster, squadSearchText, squadPositionFilter]);
 
   const toggleId = (setter, id) => setter((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
@@ -238,6 +257,37 @@ export function Transfers() {
       setToast('Advanced one day');
     } catch (error) {
       setToast(error.response?.data?.message || 'Advance failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleTradeBlock = async (playerId) => {
+    if (!saveId) return;
+    setSaving(true);
+    try {
+      const next = tradeBlockIds.includes(playerId)
+        ? tradeBlockIds.filter((id) => id !== playerId)
+        : [...tradeBlockIds, playerId];
+      await saveRosterManagement({ tradeBlockPlayerIds: next });
+      setToast(tradeBlockIds.includes(playerId) ? 'Player removed from trade block' : 'Player listed for sale and placed on trade block');
+      await Promise.all([loadData(), fetchInbox({ take: 80, skip: 0 })]);
+    } catch (error) {
+      setToast(error.response?.data?.message || 'Could not update trade block');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const respondTeamProposal = async (proposalId, action) => {
+    if (!saveId) return;
+    setSaving(true);
+    try {
+      await api.transfers.respondTradeProposal(proposalId, { saveId, action });
+      setToast(action === 'ACCEPT' ? 'Trade accepted and executed' : action === 'COUNTER' ? 'Counter sent' : 'Proposal rejected');
+      await Promise.all([loadData(), fetchPlayers(), fetchInbox({ take: 80, skip: 0 })]);
+    } catch (error) {
+      setToast(error.response?.data?.message || 'Failed to respond to proposal');
     } finally {
       setSaving(false);
     }
@@ -415,20 +465,50 @@ export function Transfers() {
             <h3>Current Squad</h3>
             <div className="transfer-stat-label">Total Value: <b style={{ color: 'var(--tr-green)' }}>{money(myRoster.reduce((sum, p) => sum + Number(p.salary || 0), 0))}</b></div>
           </div>
-          {myRoster.length === 0 ? <EmptyState title="No players in squad" description="Load squad data to manage outgoing players." /> : (
-            <div className="transfer-offers-list">
-              {myRoster.map((p) => (
+          <div className="transfer-squad-toolbar">
+            <div className="transfer-search-wrap">
+              <span>🔎</span>
+              <input
+                className="transfer-search"
+                value={squadSearchText}
+                onChange={(e) => setSquadSearchText(e.target.value)}
+                placeholder="Search your players..."
+              />
+            </div>
+            <div className="transfer-pos-tabs transfer-squad-filters">
+              {['ALL', 'PG', 'SG', 'SF', 'PF', 'C'].map((pos) => (
+                <button
+                  key={pos}
+                  type="button"
+                  className={`transfer-pos-tab ${squadPositionFilter === pos ? 'is-active' : ''}`}
+                  onClick={() => setSquadPositionFilter(pos)}
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+          </div>
+          {filteredMyRoster.length === 0 ? <EmptyState title="No players in this filter" description="Try another position or clear search." /> : (
+            <div className="transfer-offers-list transfer-squad-list">
+              {filteredMyRoster.map((p) => (
                 <article key={p.id} className="transfer-offer-item">
                   <div className="transfer-offer-top">
                     <div className="transfer-player-card-mini">
                       <div className="transfer-avatar">{initials(p.name)}</div>
-                      <div>
-                        <strong>{p.name}</strong>
-                        <div className="transfer-offer-sub">{p.position || '-'} • #{p.jerseyCode ?? p.jerseyNumber ?? p.number ?? '--'}</div>
+                      <div className="transfer-squad-meta">
+                        <div className="transfer-squad-headline">
+                          <strong>{p.name}</strong>
+                          <span className="transfer-chip">{p.position || '-'}</span>
+                          {tradeBlockIds.includes(p.id) ? <span className="transfer-chip is-active">Trade Block</span> : null}
+                          <span className="transfer-offer-sub">#{p.jerseyCode ?? p.jerseyNumber ?? p.number ?? '--'}</span>
+                        </div>
+                        <div className="transfer-offer-sub">
+                          {p.age ? `${p.age} years` : 'Age N/A'} • Contract: {Math.max(1, Number(p.contractYears || 2))} years
+                        </div>
                       </div>
                     </div>
-                    <button type="button" className="ui-btn" onClick={() => setToast(`${p.name} listed on internal trade block`)}>
-                      List for Sale
+                    <button type="button" className="ui-btn" onClick={() => toggleTradeBlock(p.id)} disabled={saving}>
+                      {tradeBlockIds.includes(p.id) ? 'Listed' : 'List for Sale'}
                     </button>
                   </div>
                   <div className="transfer-summary-box">
@@ -483,9 +563,13 @@ export function Transfers() {
                   </div>
                   <div className="transfer-offer-sub">{p.decisionReason || 'Review and respond to this proposal.'}</div>
                   <div className="transfer-proposal-actions">
-                    <button type="button" className="ui-btn ui-btn-positive" onClick={() => setToast('Accept flow for team proposals will be wired in the next patch.')}>Accept Offer</button>
-                    <button type="button" className="ui-btn ui-btn-primary" onClick={() => setToast('Counter flow for team proposals will be wired in the next patch.')}>Counter Offer</button>
-                    {['PENDING', 'COUNTERED'].includes(String(p.status)) ? <button type="button" className="ui-btn ui-btn-danger" onClick={() => withdrawTradeProposal(p.id)}>Reject</button> : null}
+                    {['PENDING', 'COUNTERED'].includes(String(p.status)) ? (
+                      <>
+                        <button type="button" className="ui-btn ui-btn-positive" onClick={() => respondTeamProposal(p.id, 'ACCEPT')} disabled={saving}>Accept Offer</button>
+                        <button type="button" className="ui-btn ui-btn-primary" onClick={() => respondTeamProposal(p.id, 'COUNTER')} disabled={saving}>Counter Offer</button>
+                        <button type="button" className="ui-btn ui-btn-danger" onClick={() => respondTeamProposal(p.id, 'REJECT')} disabled={saving}>Reject</button>
+                      </>
+                    ) : null}
                   </div>
                 </article>
               ))}

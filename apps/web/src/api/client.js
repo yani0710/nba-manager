@@ -86,6 +86,7 @@ export const api = {
     getTradeProposals: (params = {}) => client.get('/transfers/trade-proposals', { params }),
     submitTradeProposal: (data) => client.post('/transfers/trade-proposals', data),
     withdrawTradeProposal: (proposalId, data) => client.post(`/transfers/trade-proposals/${proposalId}/withdraw`, data),
+    respondTradeProposal: (proposalId, data) => client.post(`/transfers/trade-proposals/${proposalId}/respond`, data),
     getNegotiations: (params = {}) => client.get('/transfers/negotiations', { params }),
     getHistory: (params = {}) => client.get('/transfers/history', { params }),
   },

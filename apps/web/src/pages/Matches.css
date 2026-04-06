@@ -10,47 +10,93 @@
 .matches-hero {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
+  border: 1px solid rgba(128, 160, 226, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(18, 35, 71, 0.72), rgba(9, 22, 52, 0.72));
+  padding: 12px 14px;
+}
+
+.matches-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.matches-hero-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  background: linear-gradient(140deg, #ad2fff, #6828f3);
 }
 
 .matches-hero h1 {
   margin: 0;
-  font-size: clamp(30px, 3.2vw, 54px);
+  font-size: clamp(28px, 2.4vw, 42px);
   line-height: 1;
   letter-spacing: 0.02em;
   color: #f5f8ff;
 }
 
 .matches-hero p {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: #8ea6d0;
-  font-size: 15px;
+  font-size: 16px;
 }
 
-.matches-next-chip {
+.matches-hero-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.matches-top-pill {
   border: 1px solid rgba(148, 178, 255, 0.2);
   background: rgba(9, 22, 56, 0.65);
-  border-radius: 14px;
-  padding: 10px 14px;
-  min-width: 120px;
+  border-radius: 12px;
+  padding: 9px 12px;
+  min-width: 128px;
   text-align: center;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
-.matches-next-chip span {
+.matches-top-pill span {
   display: block;
   font-size: 11px;
   color: #89a6d7;
   letter-spacing: 0.08em;
 }
 
-.matches-next-chip strong {
+.matches-top-pill strong {
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 19px;
   line-height: 1;
+}
+
+.matches-top-pill strong.is-green {
+  color: #1de791;
+}
+
+.matches-team-token {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(145deg, #971dff, #5723ef);
 }
 
 .matches-tabbar {
@@ -563,8 +609,12 @@
     align-items: stretch;
   }
 
-  .matches-next-chip {
-    width: fit-content;
+  .matches-hero-right {
+    justify-content: flex-start;
+  }
+
+  .matches-top-pill {
+    min-width: 0;
   }
 
   .matches-tabbar {

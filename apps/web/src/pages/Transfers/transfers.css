@@ -193,6 +193,41 @@
   font-size: 12px;
 }
 
+.transfer-squad-toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 420px) 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.transfer-squad-filters {
+  margin-top: 0;
+  justify-content: flex-start;
+}
+
+.transfer-squad-list .transfer-offer-item {
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(18, 35, 65, 0.84), rgba(12, 25, 50, 0.9));
+}
+
+.transfer-squad-meta {
+  display: grid;
+  gap: 5px;
+}
+
+.transfer-squad-headline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.transfer-squad-headline strong {
+  font-size: clamp(18px, 1.4vw, 28px);
+}
+
 .transfer-section-head {
   display: flex;
   justify-content: space-between;
@@ -574,6 +609,10 @@
 }
 
 @media (max-width: 700px) {
+  .transfer-squad-toolbar {
+    grid-template-columns: 1fr;
+  }
+
   .transfer-player-row {
     grid-template-columns: 44px 1fr;
   }

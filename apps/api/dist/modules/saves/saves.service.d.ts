@@ -880,6 +880,18 @@ export declare class SavesService {
         awayScore?: number;
         homePlayers?: unknown;
         awayPlayers?: unknown;
+        styleLoad?: {
+            home?: {
+                defending?: number;
+                normal?: number;
+                attacking?: number;
+            };
+            away?: {
+                defending?: number;
+                normal?: number;
+                attacking?: number;
+            };
+        };
     }): Promise<{
         success: boolean;
         game: import("../fixtures/fixtureModel").FixtureModel;
@@ -1044,6 +1056,10 @@ export declare class SavesService {
             wins: number;
             losses: number;
             teamValue: number;
+            moraleScore: number;
+            teamChemistry: number;
+            lockerRoom: string;
+            moraleLabel: string;
             currentWeek: number;
             weekRange: {
                 start: string;

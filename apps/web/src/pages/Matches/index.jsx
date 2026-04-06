@@ -6,6 +6,7 @@ import '../Matches.css';
 
 const TAB_UPCOMING = 'upcoming';
 const TAB_RESULTS = 'results';
+const pct = (v) => `${Number(v || 0).toFixed(1)}%`;
 
 const initials = (team) => String(team?.shortName || 'NBA').slice(0, 3).toUpperCase();
 
@@ -79,14 +80,6 @@ function toMatchView(game, teamShort) {
     managedTeam,
     opponentTeam,
   };
-}
-
-function daysUntilGame(gameDate, currentDateKey) {
-  if (!gameDate || !currentDateKey) return null;
-  const target = getFixtureDateKeyEt(gameDate);
-  if (!target) return null;
-  const delta = Math.round((new Date(`${target}T00:00:00Z`) - new Date(`${currentDateKey}T00:00:00Z`)) / 86400000);
-  return Math.max(0, delta);
 }
 
 function buildImportanceTone(index) {
@@ -224,9 +217,9 @@ export function Matches() {
       .sort((a, b) => new Date(b.game.gameDate) - new Date(a.game.gameDate));
   }, [results, managedTeamShort]);
 
-  const nextMatchDays = upcomingMatches[0]
-    ? daysUntilGame(upcomingMatches[0].game.gameDate, currentDateKey)
-    : null;
+  const nextMatchDateLabel = upcomingMatches[0]?.game?.gameDate
+    ? formatFixtureDate(upcomingMatches[0].game.gameDate)
+    : '-';
 
   const teamFallbackRecordMap = useMemo(() => {
     const map = new Map();
@@ -339,19 +332,44 @@ export function Matches() {
     () => buildForm(results || [], managedTeamShort, 5),
     [results, managedTeamShort]
   );
+  const managedRecord = teamRecordMap.get(managedTeamShort) || null;
+  const managedGamesPlayed = managedRecord ? Math.max(1, managedRecord.wins + managedRecord.losses) : 1;
+  const managedWinRate = managedRecord ? ((managedRecord.wins / managedGamesPlayed) * 100) : 0;
+  const managedRank = rankingByShort.get(managedTeamShort) ?? null;
+  const currentWeek = Number(currentSave?.data?.week ?? 1);
+  const stageLabel = currentWeek >= 22 ? 'Playoffs' : currentWeek >= 18 ? 'Play-In Push' : 'Regular Season';
+  const stageProgress = `${Math.min(6, Math.max(1, Math.ceil(currentWeek / 4)))}/6`;
 
   if (loading && scheduleGames.length === 0) return <SkeletonCard />;
 
   return (
     <div className="matches-page matches-v2">
       <section className="matches-hero">
-        <div>
-          <h1>FIXTURES &amp; RESULTS</h1>
-          <p>View upcoming matches and recent results</p>
+        <div className="matches-hero-left">
+          <div className="matches-hero-icon">M</div>
+          <div>
+            <h1>Matches</h1>
+            <p>{currentSave?.data?.season || currentSave?.season || '2025-26'} Season</p>
+          </div>
         </div>
-        <div className="matches-next-chip">
-          <span>NEXT MATCH</span>
-          <strong>{Number.isFinite(nextMatchDays) ? `${nextMatchDays} days` : '-'}</strong>
+        <div className="matches-hero-right">
+          <div className="matches-top-pill">
+            <span>NEXT MATCH</span>
+            <strong>{nextMatchDateLabel}</strong>
+          </div>
+          <div className="matches-top-pill">
+            <span>SEASON</span>
+            <strong>{currentSave?.data?.season || currentSave?.season || '-'}</strong>
+          </div>
+          <div className="matches-top-pill">
+            <span>WIN RATE</span>
+            <strong className="is-green">{pct(managedWinRate)}</strong>
+          </div>
+          <div className="matches-top-pill">
+            <span>STAGE</span>
+            <strong>{stageLabel} {stageProgress}</strong>
+          </div>
+          <div className="matches-team-token">{managedTeamShort || 'NBA'}</div>
         </div>
       </section>
 

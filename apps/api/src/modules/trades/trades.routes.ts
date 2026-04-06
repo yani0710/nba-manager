@@ -11,6 +11,7 @@ router.post("/contract-offers/:offerId/withdraw", (req, res, next) => controller
 router.get("/trade-proposals", (req, res, next) => controller.listTradeProposals(req, res, next));
 router.post("/trade-proposals", (req, res, next) => controller.submitTradeProposal(req, res, next));
 router.post("/trade-proposals/:proposalId/withdraw", (req, res, next) => controller.withdrawTradeProposal(req, res, next));
+router.post("/trade-proposals/:proposalId/respond", (req, res, next) => controller.respondTradeProposal(req, res, next));
 router.get("/negotiations", (req, res, next) => controller.listNegotiationEvents(req, res, next));
 router.get("/history", (req, res, next) => controller.listTransactionHistory(req, res, next));
 router.get("/free-agents", (req, res, next) => controller.listFreeAgents(req, res, next));

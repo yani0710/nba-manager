@@ -327,6 +327,276 @@ class TradesService {
             },
         });
     }
+    async respondTradeProposal(dto) {
+        const save = await this.ensureSave(dto.saveId);
+        const proposal = await prisma_1.default.tradeProposal.findFirst({
+            where: { id: dto.proposalId, saveId: dto.saveId },
+            include: {
+                fromTeam: { select: { id: true, name: true, shortName: true } },
+                toTeam: { select: { id: true, name: true, shortName: true } },
+                items: { include: { player: { select: { id: true, name: true, salary: true } } } },
+            },
+        });
+        if (!proposal)
+            throw new AppError_1.NotFoundError("Trade proposal");
+        if (!["PENDING", "COUNTERED"].includes(proposal.status)) {
+            throw new AppError_1.BadRequestError("Only pending/countered proposals can be responded to");
+        }
+        const today = seasonDayFromSave(save);
+        if (dto.action === "REJECT") {
+            const updated = await prisma_1.default.tradeProposal.update({
+                where: { id: proposal.id },
+                data: {
+                    status: "REJECTED",
+                    resolvedAt: save.currentDate,
+                    decisionReason: "Rejected by manager.",
+                },
+            });
+            await this.createInboxMessage({
+                saveId: dto.saveId,
+                date: save.currentDate,
+                type: "transfer",
+                title: "Trade proposal rejected",
+                body: `You rejected ${proposal.fromTeam.shortName}'s offer.`,
+                fromName: "Sporting Director",
+            });
+            await prisma_1.default.negotiationEvent.create({
+                data: {
+                    saveId: dto.saveId,
+                    entityType: "TRADE_PROPOSAL",
+                    entityId: proposal.id,
+                    eventType: "REJECTED",
+                    actor: "USER",
+                    day: today,
+                    title: "Trade proposal rejected",
+                    body: `Manager rejected proposal from ${proposal.fromTeam.shortName}.`,
+                },
+            });
+            return updated;
+        }
+        if (dto.action === "COUNTER") {
+            const delay = clamp(1 + (hashString(`${dto.saveId}:${proposal.id}:${today}:counter`) % 2), 1, 2);
+            const updated = await prisma_1.default.tradeProposal.update({
+                where: { id: proposal.id },
+                data: {
+                    status: "COUNTERED",
+                    decisionDay: today + delay,
+                    decisionReason: "Manager requested improved return.",
+                    counterPayload: {
+                        requestedByManager: true,
+                        askForExtraAsset: true,
+                    },
+                },
+            });
+            await this.createInboxMessage({
+                saveId: dto.saveId,
+                date: save.currentDate,
+                type: "transfer",
+                title: "Counter-offer sent",
+                body: `Counter-offer sent to ${proposal.fromTeam.shortName}. Expected reply in ${delay} day(s).`,
+                fromName: "Sporting Director",
+            });
+            await prisma_1.default.negotiationEvent.create({
+                data: {
+                    saveId: dto.saveId,
+                    entityType: "TRADE_PROPOSAL",
+                    entityId: proposal.id,
+                    eventType: "COUNTERED",
+                    actor: "USER",
+                    day: today,
+                    title: "Counter-offer sent",
+                    body: `Manager requested improved return from ${proposal.fromTeam.shortName}.`,
+                },
+            });
+            return updated;
+        }
+        await prisma_1.default.tradeProposal.update({
+            where: { id: proposal.id },
+            data: {
+                status: "ACCEPTED",
+                resolvedAt: save.currentDate,
+                decisionReason: "Accepted by manager.",
+            },
+        });
+        await this.executeAcceptedTradeProposal(dto.saveId, proposal.id, today, save.currentDate);
+        await this.createInboxMessage({
+            saveId: dto.saveId,
+            date: save.currentDate,
+            type: "transfer",
+            title: "Trade completed",
+            body: `You accepted ${proposal.fromTeam.shortName}'s proposal. The trade has been executed.`,
+            fromName: "League Office",
+        });
+        await prisma_1.default.negotiationEvent.create({
+            data: {
+                saveId: dto.saveId,
+                entityType: "TRADE_PROPOSAL",
+                entityId: proposal.id,
+                eventType: "ACCEPTED",
+                actor: "USER",
+                day: today,
+                title: "Trade proposal accepted",
+                body: `Manager accepted proposal from ${proposal.fromTeam.shortName}.`,
+            },
+        });
+        return { success: true };
+    }
+    async generateTradeBlockInterestForDay(saveId, day, date) {
+        const save = await this.ensureSave(saveId);
+        const payload = (save.data ?? {});
+        const managedTeamId = save.managedTeamId ?? save.teamId ?? null;
+        const tradeBlockPlayerIds = [...new Set((payload.rosterManagement?.tradeBlockPlayerIds ?? []).map(Number).filter(Number.isFinite))];
+        if (!managedTeamId || tradeBlockPlayerIds.length === 0)
+            return 0;
+        const activePending = await prisma_1.default.tradeProposal.count({
+            where: {
+                saveId,
+                toTeamId: managedTeamId,
+                status: { in: ["PENDING", "COUNTERED"] },
+            },
+        });
+        if (activePending >= 6)
+            return 0;
+        const listedPlayers = await prisma_1.default.player.findMany({
+            where: {
+                id: { in: tradeBlockPlayerIds },
+                teamId: managedTeamId,
+                active: true,
+            },
+            select: {
+                id: true,
+                name: true,
+                position: true,
+                salary: true,
+                overallCurrent: true,
+                overallBase: true,
+                age: true,
+            },
+            orderBy: [{ overallCurrent: "desc" }, { salary: "desc" }],
+        });
+        if (listedPlayers.length === 0)
+            return 0;
+        const teams = await prisma_1.default.team.findMany({
+            where: {
+                id: { not: managedTeamId },
+                shortName: { not: FREE_AGENT_TEAM_SHORT },
+            },
+            select: { id: true, name: true, shortName: true },
+        });
+        if (teams.length === 0)
+            return 0;
+        let createdCount = 0;
+        for (const listed of listedPlayers) {
+            if (createdCount >= 2)
+                break;
+            const score = Number(listed.overallCurrent ?? listed.overallBase ?? 70);
+            const playerSeed = hashString(`${saveId}:${day}:${listed.id}:interest`);
+            const interestRoll = mulberry32(playerSeed)();
+            const interestThreshold = score >= 84 ? 0.28 : score >= 78 ? 0.2 : 0.12;
+            if (interestRoll > interestThreshold)
+                continue;
+            const teamIdx = hashString(`${saveId}:${day}:${listed.id}:team`) % teams.length;
+            const buyer = teams[teamIdx];
+            const duplicate = await prisma_1.default.tradeProposal.findFirst({
+                where: {
+                    saveId,
+                    fromTeamId: buyer.id,
+                    toTeamId: managedTeamId,
+                    status: { in: ["PENDING", "COUNTERED"] },
+                    items: {
+                        some: {
+                            playerId: listed.id,
+                            direction: "IN",
+                        },
+                    },
+                },
+            });
+            if (duplicate)
+                continue;
+            const buyerCandidates = await prisma_1.default.player.findMany({
+                where: {
+                    teamId: buyer.id,
+                    active: true,
+                    id: { not: listed.id },
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    position: true,
+                    salary: true,
+                    overallCurrent: true,
+                    overallBase: true,
+                    age: true,
+                },
+                orderBy: [{ overallCurrent: "desc" }],
+            });
+            if (buyerCandidates.length === 0)
+                continue;
+            const targetSalary = Number(listed.salary ?? 0);
+            const packageCandidate = buyerCandidates
+                .map((p) => ({
+                ...p,
+                delta: Math.abs(Number(p.salary ?? 0) - targetSalary),
+            }))
+                .sort((a, b) => a.delta - b.delta)[0];
+            if (!packageCandidate)
+                continue;
+            const validation = await this.capService.validateTradeProposal({
+                fromTeamId: buyer.id,
+                toTeamId: managedTeamId,
+                outgoingPlayerIds: [packageCandidate.id],
+                incomingPlayerIds: [listed.id],
+            });
+            if (!validation.legal)
+                continue;
+            const responseDays = clamp(2 + (hashString(`${saveId}:${day}:${listed.id}:delay`) % 3), 2, 4);
+            const proposal = await prisma_1.default.tradeProposal.create({
+                data: {
+                    saveId,
+                    fromTeamId: buyer.id,
+                    toTeamId: managedTeamId,
+                    status: "PENDING",
+                    submittedDay: day,
+                    decisionDay: day + responseDays,
+                    expiresDay: day + responseDays + 4,
+                    cashOut: 0,
+                    cashIn: 0,
+                    decisionReason: "Incoming interest generated from active trade block.",
+                    validation: validation,
+                    items: {
+                        create: [
+                            { itemType: "PLAYER", direction: "OUT", playerId: packageCandidate.id },
+                            { itemType: "PLAYER", direction: "IN", playerId: listed.id },
+                        ],
+                    },
+                },
+            });
+            const listedValue = this.formatMoney(Number(listed.salary ?? 0));
+            const returnValue = this.formatMoney(Number(packageCandidate.salary ?? 0));
+            await this.createInboxMessage({
+                saveId,
+                date,
+                type: "transfer",
+                title: "Incoming trade offer",
+                body: `${buyer.shortName} offered ${packageCandidate.name} (${returnValue}) for ${listed.name} (${listedValue}). Review in Team Proposals.`,
+                fromName: `${buyer.name} GM`,
+            });
+            await prisma_1.default.negotiationEvent.create({
+                data: {
+                    saveId,
+                    entityType: "TRADE_PROPOSAL",
+                    entityId: proposal.id,
+                    eventType: "SUBMITTED",
+                    actor: "AI_TEAM",
+                    day,
+                    title: "Incoming offer received",
+                    body: `${buyer.shortName} submitted a proposal for ${listed.name}.`,
+                },
+            });
+            createdCount += 1;
+        }
+        return createdCount;
+    }
     async listNegotiationEvents(saveId) {
         await this.ensureSave(saveId);
         return prisma_1.default.negotiationEvent.findMany({
