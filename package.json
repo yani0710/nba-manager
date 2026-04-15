@@ -18,7 +18,7 @@
     "test:transfer-scenarios": "npm --prefix apps/api run test:transfer-scenarios",
     "export:missing-salary": "npm --prefix apps/api run export:missing-salary",
     "export:missing-number": "npm --prefix apps/api run export:missing-number",
-    "prisma:push": "npm --prefix apps/api exec prisma db push --accept-data-loss",
+    "prisma:push": "npm --prefix apps/api run prisma:push",
     "seed": "npm --prefix apps/api run seed",
     "setup": "npm run db:up && npm run api:env && npm run install:all && npm run prisma:generate && npm run prisma:push && npm run seed",
     "dev:api": "npm --prefix apps/api run dev",

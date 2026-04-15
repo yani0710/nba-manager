@@ -12,6 +12,7 @@
     "sync:nba": "npm run import:nba && npm run seed",
     "report:data": "ts-node scripts/reportData.ts",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push --accept-data-loss",
     "prisma:generate": "prisma generate",
     "import:bio": "ts-node scripts/import/importBioPlayers.ts",
     "import:advanced": "ts-node scripts/import/importAdvancedSeason.ts",

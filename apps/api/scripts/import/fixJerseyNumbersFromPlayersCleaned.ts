@@ -181,7 +181,7 @@ async function main() {
     if (conflictingHolders.length > 0) {
       await prisma.player.updateMany({
         where: { id: { in: conflictingHolders.map((p) => p.id) } },
-        data: { number: null, jerseyNumber: null },
+        data: { number: null, jerseyNumber: null, jerseyCode: null },
       });
       clearedConflicts += conflictingHolders.length;
     }
@@ -189,7 +189,7 @@ async function main() {
     // Two-phase assignment avoids unique conflicts when players swap numbers.
     await prisma.player.updateMany({
       where: { id: { in: assignedIds } },
-      data: { number: null, jerseyNumber: null },
+      data: { number: null, jerseyNumber: null, jerseyCode: null },
     });
 
     for (const a of finalAssignments) {
