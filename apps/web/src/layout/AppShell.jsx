@@ -6,7 +6,6 @@ import { Topbar } from './Topbar';
 
 export function AppShell({ children, title = 'NBA Manager' }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [dark, setDark] = useState(true);
   const { currentPage } = useRouter();
   const { currentSave } = useGameStore();
 
@@ -16,14 +15,12 @@ export function AppShell({ children, title = 'NBA Manager' }) {
   }, [currentPage]);
 
   return (
-    <div className={`ui-shell ${dark ? 'theme-dark' : 'theme-light'} ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <div className={`ui-shell theme-dark ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
       <main className="ui-shell-main">
         <Topbar
           title={title}
           breadcrumbs={breadcrumbs}
-          isDark={dark}
-          onToggleTheme={() => setDark((v) => !v)}
           actions={(
             <>
               <span className="ui-topbar-pill">{currentSave?.data?.currentDate || 'No Date'}</span>

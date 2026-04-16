@@ -110,15 +110,10 @@ function initials(name) {
   return String(name || '').split(' ').map((x) => x[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'NA';
 }
 
-function seededMetric(seed, min, max) {
-  let h = 2166136261;
-  const s = String(seed || '0');
-  for (let i = 0; i < s.length; i += 1) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  const t = (h >>> 0) / 4294967295;
-  return Math.round(min + (max - min) * t);
+function minutesSince(dateValue) {
+  const diffMs = Date.now() - new Date(dateValue || Date.now()).getTime();
+  if (!Number.isFinite(diffMs)) return 0;
+  return Math.max(0, Math.round(diffMs / 60000));
 }
 
 function eventBadgeClass(type) {
@@ -214,125 +209,6 @@ function buildSeasonEvents({ scheduleGames, currentSave, teamShort }) {
 
   return out.sort((a, b) => new Date(`${a.dateKey}T00:00:00Z`) - new Date(`${b.dateKey}T00:00:00Z`));
 }
-function buildSocialPosts({ currentSave, results, squadPlayers, tradeHistory, teamShort }) {
-  const posts = [];
-  const commentsAfterWin = [
-    'Big win tonight. We earned that one together.',
-    'Love the way we competed for all 48 minutes.',
-    'That was a strong statement performance from the group.',
-    'Proud of the energy, focus, and finish tonight.',
-  ];
-  const commentsAfterLoss = [
-    'Tough one tonight, but we stay together and get back to work.',
-    'Not the result we wanted. We learn from it and respond stronger.',
-    'We will clean it up, stay locked in, and be ready next game.',
-    'Setback tonight, but this group will answer with the right mindset.',
-  ];
-  const fanCommentsAfterWin = [
-    'What a win. This team brought real energy tonight.',
-    'That is Lakers basketball. Big-time finish.',
-    'Statement win. Keep this momentum rolling.',
-    'Love the fight from this group. Huge result tonight.',
-  ];
-  const fanCommentsAfterLoss = [
-    'Tough result, but we keep believing in this group.',
-    'Not our night. Reset and come back stronger next game.',
-    'Heads up. Every season has nights like this.',
-    'Stay together and respond. The bounce-back is coming.',
-  ];
-
-  const roster = (squadPlayers || []).slice(0, 15);
-  const completedTeamGames = (results || [])
-    .filter((g) => {
-      const homeShort = String(g.homeTeam?.shortName || '').toUpperCase();
-      const awayShort = String(g.awayTeam?.shortName || '').toUpperCase();
-      return Boolean(teamShort) && (homeShort === teamShort || awayShort === teamShort);
-    })
-    .slice(0, 8);
-
-  completedTeamGames.forEach((g, idx) => {
-    const isWin = String(g.result || '').toUpperCase() === 'W';
-    const homeShort = String(g.homeTeam?.shortName || '').toUpperCase();
-    const isHome = homeShort === teamShort;
-    const opponentShort = isHome ? g.awayTeam?.shortName : g.homeTeam?.shortName;
-    const scoreText = `${isHome ? g.homeScore : g.awayScore}-${isHome ? g.awayScore : g.homeScore}`;
-    const pool = isWin ? commentsAfterWin : commentsAfterLoss;
-    const player = roster[(idx * 3 + 1) % Math.max(roster.length, 1)];
-    const playerName = player?.name || `${teamShort} Player`;
-    const handleName = playerName.replace(/[^A-Za-z0-9]/g, '');
-
-    posts.push({
-      id: `player-post-${g.id}`,
-      source: 'Players',
-      author: playerName,
-      handle: `@${handleName}`,
-      body: `${pool[idx % pool.length]} ${isWin ? 'W' : 'L'} vs ${opponentShort} (${scoreText}). #${teamShort} #NBAMatchday`,
-      minutesAgo: 35 + idx * 41,
-      likes: seededMetric(`pl-${g.id}-${player?.id}`, 240, 6800),
-      comments: seededMetric(`pc-${g.id}-${player?.id}`, 35, 950),
-      reposts: seededMetric(`pr-${g.id}-${player?.id}`, 50, 1200),
-    });
-
-    posts.push({
-      id: `fan-post-${g.id}`,
-      source: 'Fans',
-      author: `${teamShort} Nation`,
-      handle: `@${teamShort}Fans`,
-      body: `${(isWin ? fanCommentsAfterWin : fanCommentsAfterLoss)[idx % 4]} Next up: ${opponentShort === teamShort ? 'league battle' : 'new challenge'}. #${teamShort}`,
-      minutesAgo: 42 + idx * 45,
-      likes: seededMetric(`fl-${g.id}`, 120, 3900),
-      comments: seededMetric(`fc-${g.id}`, 20, 700),
-      reposts: seededMetric(`fr-${g.id}`, 20, 800),
-    });
-  });
-
-  const winCount = completedTeamGames.filter((g) => String(g.result || '').toUpperCase() === 'W').length;
-  if (winCount >= 3) {
-    posts.push({
-      id: 'media-streak',
-      source: 'Media',
-      author: 'ESPN NBA',
-      handle: '@espn',
-      body: `${teamShort} have won ${winCount} of their last ${completedTeamGames.length}. Momentum building toward the next matchday.`,
-      minutesAgo: 58,
-      likes: seededMetric('streak-likes', 700, 5200),
-      comments: seededMetric('streak-comments', 90, 900),
-      reposts: seededMetric('streak-reposts', 120, 1400),
-    });
-  }
-
-  (tradeHistory || []).slice(0, 3).forEach((h, idx) => {
-    posts.push({
-      id: `trade-${h.id}`,
-      source: 'League',
-      author: 'League Insider',
-      handle: '@NBAInsider',
-      body: `${h.title}: ${h.body || 'Front-office movement around the league.'} #TradeWatch`,
-      minutesAgo: 130 + idx * 37,
-      likes: seededMetric(`tl-${h.id}`, 100, 2600),
-      comments: seededMetric(`tc-${h.id}`, 20, 640),
-      reposts: seededMetric(`tr-${h.id}`, 40, 1100),
-    });
-  });
-
-  if (posts.length < 6) {
-    const fallbackPlayer = roster[0]?.name || `${teamShort} Captain`;
-    posts.push({
-      id: 'fallback-player',
-      source: 'Players',
-      author: fallbackPlayer,
-      handle: `@${fallbackPlayer.replace(/[^A-Za-z0-9]/g, '')}`,
-      body: 'Focused session today. Ready for the next game night.',
-      minutesAgo: 25,
-      likes: seededMetric('fallback-pl', 260, 2400),
-      comments: seededMetric('fallback-pc', 18, 420),
-      reposts: seededMetric('fallback-pr', 22, 500),
-    });
-  }
-
-  return posts.sort((a, b) => a.minutesAgo - b.minutesAgo);
-}
-
 function formatTradePlayerList(names = []) {
   if (!names.length) return 'No players attached';
   if (names.length === 1) return names[0];
@@ -465,10 +341,14 @@ export function Schedule() {
     return key && key >= String(currentDateKey || '') && Boolean(gameSummaryForTeam(g, teamShort)) && !isFixtureCompleted(g);
   }), [scheduleGames, currentDateKey, teamShort]);
 
-  const socialPosts = useMemo(
-    () => buildSocialPosts({ currentSave, results, squadPlayers, tradeHistory: tradeData.history, teamShort }),
-    [currentSave, results, squadPlayers, tradeData.history, teamShort]
-  );
+  const socialPosts = useMemo(() => (
+    (currentSave?.data?.socialFeed || [])
+      .map((post) => ({
+        ...post,
+        minutesAgo: minutesSince(post.date),
+      }))
+      .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+  ), [currentSave?.data?.socialFeed]);
   const filteredPosts = useMemo(() => {
     if (socialFilter === 'All Posts') return socialPosts;
     if (socialFilter === 'Team') return socialPosts.filter((p) => p.source === 'Team');
@@ -726,7 +606,7 @@ export function Schedule() {
         <section className="season-grid social-grid">
           <article className="season-card season-main">
             <div className="season-toolbar"><h3>Social Media Feed</h3><select value={socialFilter} onChange={(e) => setSocialFilter(e.target.value)}>{['All Posts', 'Team', 'League', 'Media', 'Players', 'Fans'].map((x) => <option key={x} value={x}>{x}</option>)}</select></div>
-            <div className="feed-list">{filteredPosts.map((p) => <article key={p.id} className="post-card"><div className="post-head"><div className="avatar">{initials(p.author)}</div><div><b>{p.author}</b><small>{p.handle} • {p.minutesAgo}m ago</small></div></div><p>{p.body}</p><div className="post-metrics"><span>Likes {p.likes}</span><span>Comments {p.comments}</span><span>Reposts {p.reposts}</span></div></article>)}</div>
+            <div className="feed-list">{filteredPosts.length === 0 ? <p className="none">No saved posts yet. Finish a matchday to generate the first social reaction.</p> : filteredPosts.map((p) => <article key={p.id} className="post-card"><div className="post-head"><div className="avatar">{initials(p.author)}</div><div><b>{p.author}</b><small>{p.handle} • {p.minutesAgo}m ago</small></div></div><p>{p.body}</p><div className="post-metrics"><span>Likes {p.likes}</span><span>Comments {p.comments}</span><span>Reposts {p.reposts}</span></div></article>)}</div>
           </article>
           <aside className="season-side">
             <div className="season-card"><h3>Trending Topics</h3>{(trendMap.length ? trendMap : [['#NBA', 1]]).map(([tag, count]) => <p key={tag}><span>{tag}</span><b>{count}k posts</b></p>)}</div>

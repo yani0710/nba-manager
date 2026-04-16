@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGameStore } from '../../state/gameStore';
 import '../SaveLoad.css';
 
@@ -22,8 +22,7 @@ function initials(label) {
 }
 
 export function SaveLoad() {
-  const { saves, createSave, loadSave, fetchSaves, deleteSave, currentSave } = useGameStore();
-  const [creating, setCreating] = useState(false);
+  const { saves, loadSave, fetchSaves, deleteSave, currentSave, clearCurrentSave } = useGameStore();
   const sorted = useMemo(
     () => [...(saves || [])].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
     [saves],
@@ -33,19 +32,9 @@ export function SaveLoad() {
     fetchSaves();
   }, [fetchSaves]);
 
-  const handleCreate = async () => {
-    setCreating(true);
-    try {
-      const nextNumber = (sorted?.length ?? 0) + 1;
-      await createSave({
-        name: `Career ${nextNumber}`,
-        description: `Career save #${nextNumber}`,
-      });
-      await fetchSaves();
-      window.location.hash = 'dashboard';
-    } finally {
-      setCreating(false);
-    }
+  const handleCreate = () => {
+    clearCurrentSave();
+    window.location.hash = 'dashboard';
   };
 
   const onDelete = async (saveId) => {
@@ -62,8 +51,8 @@ export function SaveLoad() {
           <h1>Career Saves</h1>
           <p>Manage your career saves and start new ones</p>
         </div>
-        <button type="button" className="career-new-btn" onClick={handleCreate} disabled={creating}>
-          + {creating ? 'Creating...' : 'New Career'}
+        <button type="button" className="career-new-btn" onClick={handleCreate}>
+          + New Career
         </button>
       </div>
 
@@ -120,7 +109,7 @@ export function SaveLoad() {
           );
         })}
 
-        <button type="button" className="career-add-card" onClick={handleCreate} disabled={creating}>
+        <button type="button" className="career-add-card" onClick={handleCreate}>
           <span>+</span>
         </button>
       </div>

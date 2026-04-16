@@ -41,8 +41,12 @@ export const useGameStore = create((set, get) => ({
         ? { name: payload, description: `Save: ${payload}` }
         : payload;
 
-      const { data } = await api.saves.create(request);
-      set((state) => ({ saves: [...state.saves, data], currentSave: data }));
+      const { data: created } = await api.saves.create(request);
+      const { data } = await api.saves.getById(created.id);
+      set((state) => {
+        const existing = state.saves.filter((save) => save.id !== data.id);
+        return { saves: [data, ...existing], currentSave: data };
+      });
       await get().fetchDashboard();
       await get().fetchInbox();
       await get().fetchSchedule();
@@ -480,6 +484,21 @@ export const useGameStore = create((set, get) => ({
       set({ error: error.message });
     }
   },
+
+  clearCurrentSave: () => set({
+    currentSave: null,
+    dashboard: null,
+    inbox: { total: 0, unread: 0, take: 30, skip: 0, messages: [] },
+    scheduleGames: [],
+    results: [],
+    selectedResult: null,
+    standings: { east: [], west: [] },
+    nextMatchScouting: null,
+    managerProfile: null,
+    squadPlayers: [],
+    playerTrainingPlans: [],
+    trainingConfig: null,
+  }),
 
   setSelectedPlayer: (player) => set({ selectedPlayer: player }),
 }));

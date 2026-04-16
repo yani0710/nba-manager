@@ -211,6 +211,19 @@ type SavePayload = {
       type?: string;
     }>;
   };
+  socialFeed?: Array<{
+    id: string;
+    date: string;
+    source: "Team" | "Players" | "League" | "Media" | "Fans";
+    author: string;
+    handle: string;
+    body: string;
+    likes: number;
+    comments: number;
+    reposts: number;
+    relatedGameId?: number | null;
+    tags?: string[];
+  }>;
 };
 
 type InboxType = "board" | "media" | "scouting" | "training" | "injury" | "player" | "staff";
@@ -232,6 +245,8 @@ type StandingsRow = {
   streak: string;
   l10: string;
 };
+
+type SavedSocialPost = NonNullable<SavePayload["socialFeed"]>[number];
 
 const ET_TIMEZONE = "America/New_York";
 const FREE_AGENT_TEAM_SHORT = "FA";
@@ -382,6 +397,7 @@ export class SavesService {
           type: "career",
         }],
       },
+      socialFeed: [],
     };
 
     const save = await prisma.save.create({
@@ -532,6 +548,7 @@ export class SavesService {
     const save = await this.getSaveById(id);
     const currentData = (save.data ?? {}) as SavePayload;
     await this.ensureOwnerManagementState(save, currentData);
+    currentData.socialFeed = currentData.socialFeed ?? [];
 
     const currentDate = new Date(currentData.currentDate ?? save.currentDate.toISOString().slice(0, 10));
     const currentDateEtKey = String(currentData.currentDate ?? currentDate.toISOString().slice(0, 10));
@@ -580,6 +597,7 @@ export class SavesService {
     });
     const playerPlanByPlayerId = new Map(playerPlans.map((p) => [p.playerId, p]));
     const playedToday = new Set<number>();
+    const matchdaySocialPosts: SavedSocialPost[] = [];
     const playerTeamOverrides = currentData.transferState?.playerTeamOverrides ?? {};
     const movedPlayerIds = Object.keys(playerTeamOverrides).map(Number).filter(Number.isFinite);
     const movedPlayers = movedPlayerIds.length > 0
@@ -752,6 +770,47 @@ export class SavesService {
       }
 
       this.updateTeamStateAfterGame(currentData, game.homeTeamId, game.awayTeamId, result.homeScore, result.awayScore);
+
+      if (save.teamId && (game.homeTeamId === save.teamId || game.awayTeamId === save.teamId)) {
+        const managedIsHome = game.homeTeamId === save.teamId;
+        const managedStats = managedIsHome ? result.homeStats : result.awayStats;
+        const managedTopStat = [...managedStats].sort((a, b) => {
+          const perfDiff = Number(b.performanceRating ?? 0) - Number(a.performanceRating ?? 0);
+          if (perfDiff !== 0) return perfDiff;
+          return Number(b.points ?? 0) - Number(a.points ?? 0);
+        })[0] ?? null;
+        const managedRawPlayers = managedIsHome ? effectiveHomePlayersRaw : effectiveAwayPlayersRaw;
+        const topPlayerRaw = managedTopStat
+          ? managedRawPlayers.find((p) => p.id === managedTopStat.playerId) ?? null
+          : null;
+        const teamStateAfterGame = currentData.teamState?.[String(save.teamId)] ?? null;
+        const socialPost = this.buildSavedMatchdaySocialPost({
+          saveId: save.id,
+          dateKey: currentDateEtKey,
+          managedTeam: save.team ? { name: save.team.name, shortName: save.team.shortName } : null,
+          opponentTeam: managedIsHome
+            ? { name: game.awayTeam.name, shortName: game.awayTeam.shortName }
+            : { name: game.homeTeam.name, shortName: game.homeTeam.shortName },
+          gameId: game.id,
+          didWin: managedIsHome ? result.homeScore > result.awayScore : result.awayScore > result.homeScore,
+          managedScore: managedIsHome ? result.homeScore : result.awayScore,
+          opponentScore: managedIsHome ? result.awayScore : result.homeScore,
+          teamStreak: Number(teamStateAfterGame?.streak ?? 0),
+          topPlayer: topPlayerRaw && managedTopStat
+            ? {
+                id: topPlayerRaw.id,
+                name: String((topPlayerRaw as any).name ?? "Star Player"),
+                points: Number(managedTopStat.points ?? 0),
+                rebounds: Number(managedTopStat.rebounds ?? 0),
+                assists: Number(managedTopStat.assists ?? 0),
+                performanceRating: Number(managedTopStat.performanceRating ?? 50),
+              }
+            : null,
+        });
+        if (socialPost) {
+          matchdaySocialPosts.push(socialPost);
+        }
+      }
     }
 
     this.applyDailyTeamFormDecay(currentData, todaysGames);
@@ -820,6 +879,9 @@ export class SavesService {
       where: { saveId: save.id, isRead: false },
     });
     currentData.inboxUnread = unread;
+    if (matchdaySocialPosts.length > 0) {
+      currentData.socialFeed = [...matchdaySocialPosts, ...(currentData.socialFeed ?? [])].slice(0, 120);
+    }
 
     return prisma.save.update({
       where: { id },
@@ -4784,6 +4846,199 @@ export class SavesService {
     const x = Math.sin(seed * 12.9898) * 43758.5453;
     const frac = x - Math.floor(x);
     return Math.round(min + frac * (max - min));
+  }
+
+  private buildSavedMatchdaySocialPost(params: {
+    saveId: number;
+    dateKey: string;
+    managedTeam: { name: string; shortName: string } | null;
+    opponentTeam: { name: string; shortName: string } | null;
+    gameId: number;
+    didWin: boolean;
+    managedScore: number;
+    opponentScore: number;
+    teamStreak: number;
+    topPlayer: {
+      id: number;
+      name: string;
+      points: number;
+      rebounds: number;
+      assists: number;
+      performanceRating: number;
+    } | null;
+  }): SavedSocialPost | null {
+    const teamShort = String(params.managedTeam?.shortName ?? "").toUpperCase();
+    const opponentShort = String(params.opponentTeam?.shortName ?? "").toUpperCase();
+    if (!teamShort || !opponentShort) return null;
+
+    const scoreText = `${params.managedScore}-${params.opponentScore}`;
+    const topPlayerName = params.topPlayer?.name ?? `${teamShort} Star`;
+    const topHandle = `@${topPlayerName.replace(/[^A-Za-z0-9]/g, "")}`;
+    const streakText = params.teamStreak >= 2
+      ? `${teamShort} are now rolling on a ${params.teamStreak}-game win streak.`
+      : params.teamStreak <= -2
+        ? `${teamShort} have dropped ${Math.abs(params.teamStreak)} straight and need a response.`
+        : `${teamShort} stay focused on the next game.`;
+
+    const candidates: SavedSocialPost[] = [
+      {
+        id: `social-${params.gameId}-team-win`,
+        date: `${params.dateKey}T22:00:00.000Z`,
+        source: "Team",
+        author: `${teamShort} Basketball`,
+        handle: `@${teamShort}Official`,
+        body: params.didWin
+          ? `Final: ${teamShort} ${scoreText} ${opponentShort}. Strong finish from the group tonight. #${teamShort} #NBAMatchday`
+          : `Final: ${teamShort} ${scoreText} ${opponentShort}. Back to work tomorrow. #${teamShort} #NBAMatchday`,
+        likes: this.socialMetric(`team-${params.gameId}`, 500, 8200),
+        comments: this.socialMetric(`team-comments-${params.gameId}`, 60, 1300),
+        reposts: this.socialMetric(`team-reposts-${params.gameId}`, 90, 1800),
+        relatedGameId: params.gameId,
+        tags: [`#${teamShort}`, "#NBAMatchday"],
+      },
+      {
+        id: `social-${params.gameId}-player-top`,
+        date: `${params.dateKey}T22:05:00.000Z`,
+        source: "Players",
+        author: topPlayerName,
+        handle: topHandle,
+        body: `${params.didWin ? "Big one tonight." : "We needed more tonight."} ${topPlayerName} finished with ${params.topPlayer?.points ?? 0} PTS, ${params.topPlayer?.rebounds ?? 0} REB, ${params.topPlayer?.assists ?? 0} AST vs ${opponentShort}. #${teamShort}`,
+        likes: this.socialMetric(`player-${params.gameId}-${params.topPlayer?.id ?? 0}`, 280, 6900),
+        comments: this.socialMetric(`player-comments-${params.gameId}-${params.topPlayer?.id ?? 0}`, 35, 900),
+        reposts: this.socialMetric(`player-reposts-${params.gameId}-${params.topPlayer?.id ?? 0}`, 40, 1200),
+        relatedGameId: params.gameId,
+        tags: [`#${teamShort}`],
+      },
+      {
+        id: `social-${params.gameId}-fans-react`,
+        date: `${params.dateKey}T22:09:00.000Z`,
+        source: "Fans",
+        author: `${teamShort} Nation`,
+        handle: `@${teamShort}Fans`,
+        body: params.didWin
+          ? `What a finish. ${teamShort} showed real fight tonight against ${opponentShort}.`
+          : `Tough one for ${teamShort} tonight. Need a bounce-back performance next game.`,
+        likes: this.socialMetric(`fans-${params.gameId}`, 140, 4200),
+        comments: this.socialMetric(`fans-comments-${params.gameId}`, 20, 780),
+        reposts: this.socialMetric(`fans-reposts-${params.gameId}`, 18, 860),
+        relatedGameId: params.gameId,
+        tags: [`#${teamShort}`],
+      },
+      {
+        id: `social-${params.gameId}-media-recap`,
+        date: `${params.dateKey}T22:12:00.000Z`,
+        source: "Media",
+        author: "ESPN NBA",
+        handle: "@espn",
+        body: `${teamShort} ${params.didWin ? "take down" : "fall to"} ${opponentShort} ${scoreText}. ${topPlayerName} was at the center of the story.`,
+        likes: this.socialMetric(`media-${params.gameId}`, 800, 5600),
+        comments: this.socialMetric(`media-comments-${params.gameId}`, 90, 980),
+        reposts: this.socialMetric(`media-reposts-${params.gameId}`, 120, 1500),
+        relatedGameId: params.gameId,
+        tags: ["#NBA", `#${teamShort}`],
+      },
+      {
+        id: `social-${params.gameId}-league-angle`,
+        date: `${params.dateKey}T22:15:00.000Z`,
+        source: "League",
+        author: "League Insider",
+        handle: "@NBAInsider",
+        body: `${streakText} Result tonight: ${teamShort} ${scoreText} ${opponentShort}.`,
+        likes: this.socialMetric(`league-${params.gameId}`, 320, 3100),
+        comments: this.socialMetric(`league-comments-${params.gameId}`, 25, 680),
+        reposts: this.socialMetric(`league-reposts-${params.gameId}`, 30, 920),
+        relatedGameId: params.gameId,
+        tags: ["#NBA"],
+      },
+      {
+        id: `social-${params.gameId}-captain`,
+        date: `${params.dateKey}T22:18:00.000Z`,
+        source: "Players",
+        author: topPlayerName,
+        handle: topHandle,
+        body: params.didWin
+          ? `We stayed composed, trusted each other, and closed it out. On to the next one.`
+          : `Not good enough from us. We own it, fix it, and move forward together.`,
+        likes: this.socialMetric(`captain-${params.gameId}`, 240, 5000),
+        comments: this.socialMetric(`captain-comments-${params.gameId}`, 30, 760),
+        reposts: this.socialMetric(`captain-reposts-${params.gameId}`, 25, 880),
+        relatedGameId: params.gameId,
+        tags: [`#${teamShort}`],
+      },
+      {
+        id: `social-${params.gameId}-stats-nerd`,
+        date: `${params.dateKey}T22:21:00.000Z`,
+        source: "Media",
+        author: "Stats Desk",
+        handle: "@StatsDeskNBA",
+        body: `${topPlayerName} posted a ${Math.round(params.topPlayer?.performanceRating ?? 50)} performance rating in ${teamShort}'s ${scoreText} ${params.didWin ? "win" : "loss"} vs ${opponentShort}.`,
+        likes: this.socialMetric(`stats-${params.gameId}`, 180, 2800),
+        comments: this.socialMetric(`stats-comments-${params.gameId}`, 12, 520),
+        reposts: this.socialMetric(`stats-reposts-${params.gameId}`, 18, 640),
+        relatedGameId: params.gameId,
+        tags: ["#NBAStats", `#${teamShort}`],
+      },
+      {
+        id: `social-${params.gameId}-road-home`,
+        date: `${params.dateKey}T22:24:00.000Z`,
+        source: "Fans",
+        author: "Hardwood Pulse",
+        handle: "@HardwoodPulse",
+        body: `${teamShort} ${params.didWin ? "made enough winning plays late" : "couldn't find enough stops late"} against ${opponentShort}. ${scoreText} tells the story.`,
+        likes: this.socialMetric(`pulse-${params.gameId}`, 160, 2600),
+        comments: this.socialMetric(`pulse-comments-${params.gameId}`, 16, 540),
+        reposts: this.socialMetric(`pulse-reposts-${params.gameId}`, 14, 620),
+        relatedGameId: params.gameId,
+        tags: ["#NBATalk"],
+      },
+      {
+        id: `social-${params.gameId}-bench`,
+        date: `${params.dateKey}T22:27:00.000Z`,
+        source: "Team",
+        author: `${teamShort} Basketball`,
+        handle: `@${teamShort}Official`,
+        body: params.didWin
+          ? `Locked in on both ends and earned it. Appreciate the home support tonight.`
+          : `A frustrating result, but the work continues. We regroup and get ready for the next challenge.`,
+        likes: this.socialMetric(`bench-${params.gameId}`, 300, 4600),
+        comments: this.socialMetric(`bench-comments-${params.gameId}`, 22, 610),
+        reposts: this.socialMetric(`bench-reposts-${params.gameId}`, 20, 700),
+        relatedGameId: params.gameId,
+        tags: [`#${teamShort}`],
+      },
+      {
+        id: `social-${params.gameId}-radio`,
+        date: `${params.dateKey}T22:30:00.000Z`,
+        source: "League",
+        author: "Postgame Radio",
+        handle: "@PostgameRadio",
+        body: `${teamShort} ${params.didWin ? "bank a needed win" : "take a hit"} against ${opponentShort}. Watch the conversation around ${topPlayerName} tonight.`,
+        likes: this.socialMetric(`radio-${params.gameId}`, 150, 2200),
+        comments: this.socialMetric(`radio-comments-${params.gameId}`, 15, 480),
+        reposts: this.socialMetric(`radio-reposts-${params.gameId}`, 12, 590),
+        relatedGameId: params.gameId,
+        tags: ["#NBA", `#${teamShort}`],
+      },
+    ];
+
+    const pickIndex = this.socialMetric(`pick-${params.saveId}-${params.dateKey}-${params.gameId}`, 0, candidates.length - 1);
+    return candidates[pickIndex] ?? candidates[0] ?? null;
+  }
+
+  private socialMetric(seed: string, min: number, max: number): number {
+    const hash = this.socialHash(seed);
+    const range = Math.max(0, max - min);
+    return min + (range === 0 ? 0 : (hash % (range + 1)));
+  }
+
+  private socialHash(seed: string): number {
+    let hash = 2166136261;
+    const normalized = String(seed || "0");
+    for (let i = 0; i < normalized.length; i += 1) {
+      hash ^= normalized.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
   }
 
   private getAgeFromBirthDate(birthDate: Date | null | undefined): number {

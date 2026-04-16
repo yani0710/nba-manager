@@ -3,6 +3,8 @@ export declare class CoachesService {
         id: string;
         name: string;
         imageUrl: string;
+        specialty: string;
+        style: string;
     }[];
 }
 //# sourceMappingURL=coaches.service.d.ts.map

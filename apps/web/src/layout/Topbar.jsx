@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../state/gameStore';
 
-export function Topbar({ title, breadcrumbs, actions = null, isDark = true, onToggleTheme = () => {} }) {
+export function Topbar({ title, breadcrumbs, actions = null }) {
   const { currentSave, teams, inbox } = useGameStore();
   const [now, setNow] = useState(() => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   const careerTeamCode = currentSave?.data?.career?.teamShortName;
@@ -28,11 +28,7 @@ export function Topbar({ title, breadcrumbs, actions = null, isDark = true, onTo
           {team?.logoPath ? <img src={team.logoPath} alt={team.shortName} /> : <span>{careerTeamCode || 'FA'}</span>}
           <span>{team?.shortName || careerTeamCode || 'FA'}</span>
         </div>
-        <button type="button" className="ui-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
-          {isDark ? '☀' : '☾'}
-        </button>
       </div>
     </header>
   );
 }
-
